@@ -1,6 +1,7 @@
 import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS, RACE_SPEED, TRUCKS } from './core.mjs';
 import { makeTruck, disposeTruck } from './models.mjs';
 import { sampleTrack, laneOffset } from './track.mjs';
+import { BuddySignals } from './buddy-signals.mjs';
 
 const TAU = Math.PI * 2;
 const JUMP_SPEED = 16;
@@ -19,7 +20,9 @@ function playerDistance(race) {
 export function sampleRaceBuddies(race) {
   if (Array.isArray(race?.buddies) && race.buddies.length === BUDDIES.length && race.buddies.every((pose, index) =>
     pose?.id === BUDDIES[index].id && ['distance', 'lane', 'height', 'velocityY'].every(key => Number.isFinite(pose[key])))) {
-    return race.buddies.map(pose => ({ id: pose.id, name: pose.name, distance: pose.distance, lane: pose.lane, height: pose.height, velocityY: pose.velocityY }));
+    return race.buddies.map(pose => ({ id: pose.id, name: pose.name, distance: pose.distance, lane: pose.lane, height: pose.height, velocityY: pose.velocityY,
+      intent: typeof pose.intent === 'string' ? pose.intent : 'follow', signal: typeof pose.signal === 'string' ? pose.signal : '',
+      signalTime: Number.isFinite(pose.signalTime) ? Math.max(0, pose.signalTime) : 0, speed: Number.isFinite(pose.speed) ? pose.speed : RACE_SPEED }));
   }
   const progress = playerDistance(race);
   return BUDDIES.map(buddy => {
@@ -35,7 +38,7 @@ export function sampleRaceBuddies(race) {
         }
       }
     }
-    return { id: buddy.id, name: buddy.name, distance, lane: buddy.lane, height, velocityY };
+    return { id: buddy.id, name: buddy.name, distance, lane: buddy.lane, height, velocityY, intent: 'follow', signal: '', signalTime: 0, speed: RACE_SPEED };
   });
 }
 
@@ -54,6 +57,8 @@ export class RaceBuddies {
       return truck;
     });
     this.disposed = false;
+    this.signals = new BuddySignals(scene);
+    this.steering = [0, 0];
     this.reset();
   }
 
@@ -67,28 +72,37 @@ export class RaceBuddies {
 
   /** Zero/invalid time freezes every pose and wheel even if race input changes.
    * Visibility can still change so menu transitions work on a paused frame. */
-  update(dt, race, visible = true) {
+  update(dt, race, visible = true, { camera, reducedMotion = false } = {}) {
     if (this.disposed) return;
     for (const truck of this.trucks) truck.group.visible = Boolean(visible);
+    if (!visible) this.signals.update(dt, { visible: false });
     if (!visible || !Number.isFinite(dt) || dt <= 0 || race?.phase === 'paused') return;
     const poses = sampleRaceBuddies(race);
     for (let i = 0; i < this.trucks.length; i++) {
       const truck = this.trucks[i];
       const travel = poses[i].distance - this.poses[i].distance;
-      for (const wheel of truck.wheels) {
+      const lateralSpeed = (poses[i].lane - this.poses[i].lane) * 3.4 / dt;
+      const targetSteer = Math.max(-.16, Math.min(.16, -lateralSpeed / Math.max(10, poses[i].speed)));
+      this.steering[i] += (targetSteer - this.steering[i]) * (1 - Math.exp(-8 * dt));
+      truck.body.rotation.z = reducedMotion ? 0 : -this.steering[i] * .35;
+      for (const [index, wheel] of truck.wheels.entries()) {
+        wheel.rotation.order = 'YXZ'; wheel.rotation.y = index > 1 ? this.steering[i] : 0;
         wheel.rotation.x = (wheel.rotation.x + travel / (1.07 * truck.spec.scale)) % TAU;
       }
       this.place(truck, poses[i]);
     }
     this.poses = poses;
+    this.signals.update(dt, { race, poses, trucks: this.trucks, camera, reducedMotion });
   }
 
   reset() {
     if (this.disposed) return;
+    this.signals.reset(); this.steering = [0, 0];
     this.poses = sampleRaceBuddies({ distance: 0 });
     this.trucks.forEach((truck, i) => {
       truck.group.visible = false;
-      for (const wheel of truck.wheels) wheel.rotation.set(0, 0, 0);
+      truck.body.rotation.z = 0;
+      for (const wheel of truck.wheels) { wheel.rotation.order = 'YXZ'; wheel.rotation.set(0, 0, 0); }
       this.place(truck, this.poses[i]);
     });
   }
@@ -96,6 +110,7 @@ export class RaceBuddies {
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
+    this.signals.dispose();
     for (const truck of this.trucks) {
       truck.group.removeFromParent();
       disposeTruck(truck);

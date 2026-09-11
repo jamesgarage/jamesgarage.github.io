@@ -4,6 +4,7 @@ const MAX_VOICES = 24;
 const EVENT_GAPS = Object.freeze({
   jump: 0.11, land: 0.13, star: 0.065, transform: 0.8,
   loop: 0.7, finish: 1.2, start: 0.5, select: 0.08, turbo: 0.7, crush: 0.25,
+  'buddy-sunny': 1.8, 'buddy-splash': 1.8,
 });
 
 export class GameAudio {
@@ -105,6 +106,14 @@ export class GameAudio {
           this._tone(145, 0, .13, .09, 'triangle', 68);
           this._tone(659.25, .055, .17, .085);
           this._tone(987.77, .14, .23, .065);
+          break;
+        case 'buddy-sunny':
+          this._tone(523.25, 0, .12, .035, 'sine', 659.25);
+          this._tone(783.99, .13, .13, .025);
+          break;
+        case 'buddy-splash':
+          this._tone(392, 0, .15, .035, 'sine', 523.25);
+          this._tone(587.33, .17, .17, .025);
           break;
         case 'jump':
           this._tone(196, 0, 0.23, 0.12, 'sine', 523.25);

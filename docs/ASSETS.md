@@ -6,6 +6,8 @@ There are no downloaded character models, branded vehicle logos, texture packs, 
 
 `src/flames.mjs` renders original procedural exhaust: a shader generates the soft density and hot-core color of attached jets and a short cooling trail. The effect uses owned geometry, shader material and reused instance buffers rather than downloaded flame images. Rounded tree crowns and terrain use locally generated geometry and vertex shading.
 
+`src/surfaces.mjs` generates small original material tiles for ground, timber, stone and water. They use filtered local pixel data and physical-scale UVs. `src/world-life.mjs` builds and instances the butterflies, cattails and ripples; repeated races reuse its buffers. `src/buddy-signals.mjs` creates the friends' pictorial reaction bubbles from vector shapes. The friends' two-note replies are synthesized locally. No new downloaded assets or services are used by these additions.
+
 ## Garage portraits
 
 `public/trucks/` contains transparent 720×480 PNG portraits of all six original trucks. These are rendered from the same `makeTruck()` models used in play. The lobby displays the live selected model; garage cards use the PNGs so each card does not need its own WebGL renderer.

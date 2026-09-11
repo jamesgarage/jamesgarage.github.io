@@ -6,8 +6,9 @@ import { createWorld } from '../src/world.mjs';
 import { sampleTrack, trackCenter } from '../src/track.mjs';
 
 function dispose(group) {
-  const geometries = new Set(), materials = new Set();
-  group.traverse(mesh => { if (mesh.isMesh) { geometries.add(mesh.geometry); materials.add(mesh.material); } });
+  const geometries = new Set(), materials = new Set(), textures = new Set();
+  group.traverse(mesh => { if (mesh.isMesh) { geometries.add(mesh.geometry); materials.add(mesh.material); if (mesh.material.map) textures.add(mesh.material.map); } });
+  textures.forEach(texture => texture.dispose());
   geometries.forEach(geometry => geometry.dispose()); materials.forEach(material => material.dispose());
 }
 
@@ -36,6 +37,24 @@ test('three recognizable adventure scenes use finite, owned, spatially batched g
       assert.ok(!geometry.has(mesh.geometry)); assert.ok(!materials.has(mesh.material));
     } });
   } finally { dispose(adventure); dispose(second); }
+});
+
+test('timber and stone have owned physical-scale texture detail with a clear wet/dry contrast', () => {
+  const a = createAdventureScenery(), b = createAdventureScenery(), maps = new Set();
+  try {
+    let checked = 0;
+    a.traverse(mesh => {
+      if (!mesh.isMesh || !mesh.material.userData.surface) return;
+      checked++; maps.add(mesh.material.map);
+      assert.equal(mesh.material.map, mesh.material.bumpMap);
+      assert.ok(mesh.geometry.attributes.uv.array.every(Number.isFinite));
+      assert.ok(new Set(mesh.geometry.attributes.uv.array).size > 3);
+      if (mesh.material.userData.surface === 'water') assert.ok(mesh.material.roughness <= .3);
+      else assert.ok(mesh.material.roughness >= .9);
+    });
+    b.traverse(mesh => { if (mesh.isMesh && mesh.material.map) assert.ok(!maps.has(mesh.material.map)); });
+    assert.ok(checked > 15); assert.equal(maps.size, 5);
+  } finally { dispose(a); dispose(b); }
 });
 
 test('actual roadside scenery stays outside the curved drive corridor and the whole loop', () => {

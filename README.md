@@ -16,7 +16,9 @@ On iPad, open the game in Safari. Landscape gives the track more room, and portr
 
 Choose **Let's play** to start a race of roughly a minute, depending on turbo and jumps. The truck accelerates automatically, six ramps launch automatically, and the loop guides the truck through safely. A driver can enjoy and complete a race without pressing any driving controls.
 
-Sunny and Splash jump and loop with you. They draw close during two stretches, and Sunny can briefly pull ahead. Crushing a toy car gives you a little speed burst; turbo helps you pull ahead even faster. Gentle steering assistance keeps close passes clear. The position badge follows the actual race, and your chosen truck takes the spotlight at the finish. Winning does not make the next race harder.
+Sunny and Splash are your little racing friends. They greet you with a smile, copy safe jumps after you, and cheer when you crush a car or use turbo. Sunny likes a playful race and can briefly pull ahead; Splash enjoys the puddles. Little pictures above their trucks show what they are doing. Their timing and the butterflies' colors change between completed races, while the familiar route stays easy to follow.
+
+Crushing a toy car gives you a little speed burst; turbo helps you pull ahead even faster. Gentle steering assistance keeps close passes clear. The position badge follows the actual race, and your chosen truck takes the spotlight at the finish. Winning does not make the next race harder.
 
 - **Touch:** use the large on-screen controls to jump, steer, fire the turbo, or transform when energy is ready.
 - **Keyboard:** use the arrow keys to steer, Space to jump, B or Shift for turbo, T to transform, and P or Escape to pause. Menus also support Tab and Enter.
@@ -49,6 +51,8 @@ These are original models inspired by broad toy and vehicle interests. The game 
 ![Rumbler celebrating a flattened toy car with stars and a speed burst](docs/screenshots/race.png)
 
 Bear Woods climbs a timber bridge beside a giant waterwheel. Rocket Runway adds a launch pad, a tall toy rocket, and a boost toward the next ramp. Gator Falls brings a broad waterfall, reeds, and a waterfront boardwalk to the rainy lagoon. Picnic stops, balloons, friendly bears and alligators, stands, and the finish trophy garden fill out the route.
+
+Wood grain, mottled grass, worn stone and water highlights give those places more texture. Small butterflies flutter beside the woods; cattails sway and gentle ripples move through the lagoon. Gentler motion keeps these extra details still.
 
 ![A close race across the raised timber bridge beside its waterwheel](docs/screenshots/bridge.png)
 
@@ -115,6 +119,8 @@ The game needs a browser and device with WebGL 2 enabled. Rendering uses bundled
 The running game does not fetch third-party assets, call external services, or require an account. Loading the site downloads its own application files from the host. Installing development dependencies requires an internet connection. There is no offline service worker in this release.
 
 ## Validation
+
+The friends use small local decision systems with individual timers and preferences. They react to successful actions and obey the same safe passing rules every time. They do not use a network AI service. See the [playful world design](docs/DESIGN-PLAYFUL-WORLD.md) and [research into comparable games and engines](docs/RESEARCH-PLAYFUL-WORLD.md).
 
 Run `npm test` for race rules, progression and save recovery, truck and effect lifecycles, friendly racer behavior, and world geometry. The browser suite also checks steering against the visible road and completes a full race.
 

@@ -55,6 +55,27 @@ test(`keyboard and on-screen steering move in the direction shown by the arrows 
 });
 }
 
+test('friends greet and imitate a touch jump with visible reactions that pause', async ({ page }, testInfo) => {
+  await openGame(page);
+  await page.getByRole('button', { name: "Let's play", exact: true }).tap();
+  await page.waitForFunction(() => window.__skyway.buddySignals.includes('hello'));
+  await page.screenshot({ path: testInfo.outputPath('friends-say-hello.png') });
+  await page.waitForFunction(() => window.__skyway.distance > 48);
+  await page.getByRole('button', { name: 'Jump', exact: true }).tap();
+  await page.waitForFunction(() => window.__skyway.buddies.every(b => b.height > 0 && b.signal === 'jump'));
+  expect(await page.evaluate(() => window.__skyway.buddySignals)).toEqual(['jump', 'jump']);
+  await page.getByRole('button', { name: 'Pause game', exact: true }).tap();
+  const frozen = await page.evaluate(() => window.__skyway);
+  await page.waitForTimeout(250);
+  expect(await page.evaluate(() => window.__skyway.buddies)).toEqual(frozen.buddies);
+  expect(await page.evaluate(() => window.__skyway.buddySignals)).toEqual(frozen.buddySignals);
+  expect(await page.evaluate(() => window.__skyway.worldLife)).toEqual(frozen.worldLife);
+  await page.getByRole('button', { name: 'Keep going', exact: true }).tap();
+  await page.screenshot({ path: testInfo.outputPath('friends-jump-together.png') });
+  await page.waitForFunction(() => window.__skyway.buddies.every(b => b.signal !== 'jump'));
+  expect(await page.evaluate(() => window.__skyway.speed)).toBeGreaterThanOrEqual(26);
+});
+
 test('keyboard and touch jumps, pause, and resume work after a garage visit', async ({ page }) => {
   await openGame(page);
   await page.getByRole('button', { name: 'Your garage', exact: true }).click();
@@ -140,6 +161,7 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   await expect(page.locator('#race-place')).toHaveText('1st');
   await page.waitForFunction(() => window.__skyway.distance > 20);
   const field = await page.evaluate(() => window.__skyway);
+  expect(field.variant).toBe(0);
   expect(field.buddies).toHaveLength(2);
   expect(field.buddies.every(buddy => buddy.distance < field.distance)).toBe(true);
 
@@ -176,6 +198,7 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   await page.waitForTimeout(250);
   expect(await page.evaluate(() => window.__skyway.mudSpray)).toBe(rainyPause.mudSpray);
   expect(await page.evaluate(() => window.__skyway.buddies)).toEqual(rainyPause.buddies);
+  expect(await page.evaluate(() => window.__skyway.worldLife)).toEqual(rainyPause.worldLife);
   await page.getByRole('button', { name: 'Keep going', exact: true }).tap();
 
   await page.waitForFunction(() => window.__skyway.distance >= 1350, null, { timeout: 90_000 });
@@ -217,6 +240,8 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   expect(replay.loops).toBe(0);
   expect(replay.totalStars).toBe(finish.totalStars);
   expect(replay.races).toBe(1);
+  expect(replay.variant).toBe(1);
+  expect(replay.worldLife.variant).toBe(1);
   expect(replay.buddies.every(buddy => buddy.distance < replay.distance)).toBe(true);
   expect(replay.rain).toBe(false);
   expect(replay.mudSpray).toBe(0);

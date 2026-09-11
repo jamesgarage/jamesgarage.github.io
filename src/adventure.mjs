@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { sampleTrack } from './track.mjs';
+import { createSurfaceTexture, surfaceUVs } from './surfaces.mjs';
 
 // These deliberate clearings make the large landmarks readable from the moving
 // chase camera. The opposite sky/bay banks and the entire loop stay untouched.
@@ -35,6 +36,16 @@ export function createAdventureScenery() {
     new THREE.MeshStandardMaterial({ color, roughness: name === 'water' ? .24 : ['teal', 'gold'].includes(name) ? .4 : .84,
       metalness: name === 'gold' ? .24 : 0, vertexColors: name === 'water' || name === 'foam',
       side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })]));
+  // Textures are owned by this factory instance, shared only within its venues.
+  // Existing callers dispose the maps alongside each unique owned material.
+  for (const [name, paint] of Object.entries(paints)) {
+    const surface = name.includes('wood') ? 'wood' : name === 'rock' ? 'stone' : name === 'water' ? 'water' : '';
+    if (!surface) continue;
+    paint.map = createSurfaceTexture(surface); paint.bumpMap = paint.map;
+    paint.bumpScale = surface === 'stone' ? .13 : surface === 'wood' ? .05 : .07;
+    paint.userData.surface = surface;
+    if (surface !== 'water') paint.roughness = .94;
+  }
   const shapes = {
     box: new THREE.BoxGeometry(1, 1, 1), ball: new THREE.SphereGeometry(1, 10, 6),
     cylinder: new THREE.CylinderGeometry(1, 1, 1, 12), cone: new THREE.ConeGeometry(1, 1, 12),
@@ -55,7 +66,8 @@ export function createAdventureScenery() {
       if (!buckets.has(key)) buckets.set(key, { paint, shadow, roadSurface, geometries: [] });
       if (geometry.index) { const expanded = geometry.toNonIndexed(); geometry.dispose(); geometry = expanded; }
       // Shapes and sampled surfaces share the same attributes before merging.
-      geometry.deleteAttribute('uv');
+      if (paints[paint].userData.surface) surfaceUVs(geometry, paints[paint].userData.surface);
+      else geometry.deleteAttribute('uv');
       if (paints[paint].vertexColors && !geometry.hasAttribute('color')) {
         geometry.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(geometry.attributes.position.count * 3).fill(1), 3));
       }
@@ -64,7 +76,17 @@ export function createAdventureScenery() {
     function part(kind, paint, p, s, r = [0, 0, 0], shadow = true, transform = base) {
       rotation.setFromEuler(euler.set(...r));
       matrix.compose(position.set(...p), rotation, scale.set(...s)); world.multiplyMatrices(transform, matrix);
-      addGeometry(shapes[kind].clone().applyMatrix4(world), paint, shadow);
+      const geometry = shapes[kind].clone().applyMatrix4(world);
+      if (paint === 'rock') {
+        const positions = geometry.attributes.position, colors = [];
+        for (let i = 0; i < positions.count; i++) {
+          const localY = (positions.getY(i) - world.elements[13]) / s[1];
+          const shade = .77 + .23 * THREE.MathUtils.clamp(localY + .5, 0, 1);
+          colors.push(shade, shade, shade);
+        }
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); paints.rock.vertexColors = true;
+      }
+      addGeometry(geometry, paint, shadow);
     }
     function atTrack(station, kind, paint, p, s, r = [0, 0, 0]) {
       const f = sampleTrack(station), transform = new THREE.Matrix4().compose(f.position, f.quaternion, new THREE.Vector3(1, 1, 1));

@@ -158,3 +158,20 @@ test('pause silences driving and effects; resume reuses and restores the graph',
   audio.setDriving(false);
   assert.equal(audio.engineGain.gain.value, 0);
 });
+
+test('both friends have distinct audible replies with repeat limits and immediate mute', async t => {
+  installAudio(t);
+  const audio = new GameAudio(); await audio.start();
+  audio.play('buddy-sunny');
+  const sunny = [...audio.voices];
+  assert.equal(sunny.length, 2, 'Sunny must schedule an audible reply');
+  audio.play('buddy-sunny');
+  assert.equal(audio.voices.size, 2, 'A repeated event in the same frame stays quiet');
+  audio.play('buddy-splash');
+  assert.equal(audio.voices.size, 4, 'Splash has its own reply');
+  const splash = [...audio.voices].slice(2);
+  assert.notEqual(sunny[0].oscillator.frequency.value, splash[0].oscillator.frequency.value);
+  audio.setMuted(true); audio.play('buddy-sunny');
+  assert.equal(audio.voices.size, 0);
+  assert.ok([...sunny, ...splash].every(voice => voice.oscillator.stoppedImmediately));
+});

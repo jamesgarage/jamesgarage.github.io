@@ -1,5 +1,6 @@
 /** Pure game rules. Rendering, audio, and storage are owned by the application. */
 import { CRUSH_CARS, TURBO_PADS } from './encounters.mjs';
+import { createBuddyMind, normalizeRaceVariant, stepBuddyMind } from './buddy-brain.mjs';
 
 export const COURSE_LENGTH = 1900;
 export const RACE_SPEED = 26;
@@ -81,8 +82,10 @@ export function awardRace(progress, bonusStars = 0) {
   };
 }
 
-export function createRace() {
+export function createRace(seed = 0) {
+  const variant = normalizeRaceVariant(seed);
   return {
+    variant,
     phase: 'ready',
     distance: 0,
     elapsed: 0,
@@ -108,7 +111,7 @@ export function createRace() {
     crushBoostTime: 0,
     crushes: 0,
     crushedCars: [],
-    buddies: BUDDY_GRID.map(buddy => ({ ...buddy, height: 0, velocityY: 0 })),
+    buddies: BUDDY_GRID.map((buddy, index) => ({ ...buddy, height: 0, velocityY: 0, ...createBuddyMind(variant, index) })),
   };
 }
 
@@ -175,16 +178,22 @@ function holdClearLane(state, previousLane) {
   }
 }
 
-function stepBuddies(state, step, steering) {
+function stepBuddies(state, step, steering, events) {
   const predictedLane = clamp(state.targetLane + steering * .6 * 2.4, -1, 1);
   const width = passingWidth(state);
+  const playerEvents = events.slice();
   for (const [index, buddy] of state.buddies.entries()) {
     const previousDistance = buddy.distance;
     const gap = state.distance - buddy.distance;
-    const approach = Math.max(approachStrength(state.distance, 175, 335), approachStrength(state.distance, 1020, 1200));
+    const offset = buddy.brain.approachOffset;
+    const approach = Math.max(approachStrength(state.distance, 175 + offset, 335 + offset), approachStrength(state.distance, 1020 + offset, 1200 + offset));
+    const safeJump = buddy.height === 0 && buddy.velocityY === 0 &&
+      (buddy.distance < LOOP_START - 34 || buddy.distance > LOOP_END + 12) &&
+      RAMPS.every(ramp => buddy.distance < ramp - 34 || buddy.distance > ramp + 10);
+    const decision = stepBuddyMind(buddy, step, { elapsed: state.elapsed, approach, safeJump, playerEvents }, events);
     // Sunny offers a brief lead challenge; Splash stays close behind so the
     // smallest drivers never fall to last place during ordinary cruising.
-    const desiredGap = -BUDDY_GRID[index].distance - (index === 0 ? 17 : 11) * approach;
+    const desiredGap = -BUDDY_GRID[index].distance - (index === 0 ? 17 : 11) * approach + decision.gapAdjustment;
     let speed = RACE_SPEED + clamp((gap - desiredGap) * .5, -3.5, 4.5);
 
     // Read steering intent before a pass; once alongside, hold the outer lane
@@ -207,11 +216,13 @@ function stepBuddies(state, step, steering) {
     // sides, so the two small trucks cannot merge into each other either.
     if (index > 0) nextDistance = Math.min(nextDistance, state.buddies[index - 1].distance - BUDDY_FOLLOWING_GAP);
     buddy.distance = Math.max(previousDistance, nextDistance);
+    buddy.speed = (buddy.distance - previousDistance) / step;
     buddy.lane = nextLane;
     if (buddy.distance >= LOOP_START && buddy.distance < LOOP_END) {
       buddy.height = 0;
       buddy.velocityY = 0;
     } else {
+      if (decision.jump) buddy.velocityY = JUMP_SPEED;
       if (RAMPS.some(ramp => previousDistance < ramp && buddy.distance >= ramp)) buddy.velocityY = RAMP_JUMP_SPEED;
       if (buddy.height > 0 || buddy.velocityY > 0) {
         buddy.velocityY -= GRAVITY * step;
@@ -314,7 +325,7 @@ export function stepRace(state, dt, inputs = {}) {
     }
   }
   state.speed = travelSpeed(state);
-  stepBuddies(state, step, steering);
+  stepBuddies(state, step, steering, events);
 
   if (previousDistance < LOOP_END && state.distance >= LOOP_END) {
     state.loops += 1;

@@ -64,8 +64,10 @@ See [the smoother world brief](DESIGN-SMOOTHER-WORLD.md) for scope and [validati
 
 ## Next: physical device and child observations
 
+The playful-world increment gives Sunny and Splash independent local decision state: staggered greetings, delayed safe jump imitation, bounded celebrations and different preferences for racing or puddles. Completed races vary reaction timing and incidental world accents. Original material tiles add grass, timber, stone and water detail; small butterflies, moving cattails and ripples add life around the unchanged route. See [the design](DESIGN-PLAYFUL-WORLD.md) and [primary-source engine/game research](RESEARCH-PLAYFUL-WORLD.md).
+
 1. Play on a real iPad in Safari and a representative phone, in portrait and landscape. Check touch controls, orientation changes, frame pacing, and camera comfort.
-2. Watch James squash a toy car, recognize the reward and speed burst, use turbo, finish, choose an earned truck, and replay. Revise anything that requires adult explanation.
+2. Watch James squash a toy car, recognize the reward and speed burst, use turbo, finish, choose an earned truck, and replay. Notice whether he recognizes the friends' smiles, jump imitation and cheering; tune their timing and visibility from his reaction. Revise anything that requires adult explanation.
 3. Check that the richer scenery and weather feel exciting without hiding the route or making the controls harder to understand.
 4. Tune collectible placement, reward pacing, sound, motion, and rendering cost using those observations.
 
@@ -75,7 +77,7 @@ The parent has shared enthusiastic feedback from James, but his play device is u
 
 Continue with Three.js for the guided racer. This update's needs are visual presentation, accessible controls, and scenery; a language change alone would not deliver them. Reconsider Unity or Godot if measured device limits, scene-authoring needs, or richer physical interactions justify a migration. Swift/RealityKit remains an Apple-focused option.
 
-Before a rewrite, compare one truck, one ramp, and one landing on a real target device. Keep the current playable game available while evaluating that small prototype. The [friendly racing brief](DESIGN-FRIENDLY-RACING.md) records the decision and references.
+Before a rewrite, compare one truck, one ramp, and one landing on a real target device. Keep the current playable game available while evaluating that small prototype. The [game and engine research](RESEARCH-PLAYFUL-WORLD.md) records the current comparison and primary sources, including verified Unity/Unreal references and the distinction between native and browser renderers.
 
 ## Deferred: playful racing additions
 

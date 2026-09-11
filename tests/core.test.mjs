@@ -7,8 +7,8 @@ import {
 import { CRUSH_CARS, TURBO_PADS } from '../src/encounters.mjs';
 import { racePlace } from '../src/buddies.mjs';
 
-function runningRace() {
-  return { ...createRace(), phase: 'running' };
+function runningRace(seed = 0) {
+  return { ...createRace(seed), phase: 'running' };
 }
 
 test('a no-input run finishes with every ramp, a loop, and an automatic transformation', () => {
@@ -269,21 +269,33 @@ test('friendly approach stretches allow a real pass and a no-input comeback with
   assert.ok(recovered, 'Cruising speed restores the lead without a precision input');
 });
 
-test('all truck sizes finish first with no input, held controls, and repeated alternating inputs', () => {
+test('all truck sizes and seeded variants finish first with no input, held controls, and alternating inputs', () => {
   const patterns = [() => ({}), () => ({ turbo: true, jump: true, steer: 1, transform: true }),
     frame => ({ turbo: frame % 2 === 0, jump: frame % 3 === 0, steer: frame % 180 < 90 ? -1 : 1, transform: true })];
-  for (const truck of TRUCKS) for (const pattern of patterns) {
-    const state = { ...runningRace(), truckScale: truck.scale }, events = [];
+  for (const seed of [0, 1, 7, 999_999_999]) for (const truck of TRUCKS) for (const pattern of patterns) {
+    const state = { ...runningRace(seed), truckScale: truck.scale }, events = [];
     for (let frame = 0; frame < 5000 && !state.finished; frame++) {
-      events.push(...stepRace(state, 1 / 60, pattern(frame)));
+      const frameEvents = stepRace(state, 1 / 60, pattern(frame));
+      events.push(...frameEvents);
+      assert.ok(frameEvents.filter(event => event.type === 'buddy').length <= 2);
       for (const value of [state.distance, state.height, state.speed, state.turboEnergy, state.turboTime, state.crushBoostTime]) assert.ok(Number.isFinite(value));
       assert.ok(state.turboEnergy >= 0 && state.turboEnergy <= 100);
       assert.ok(state.crushBoostTime >= 0 && state.crushBoostTime <= 1);
       assert.ok(state.speed >= 26 && state.speed <= 26 * 1.55);
       for (const buddy of state.buddies) {
         assert.ok(Math.abs(buddy.lane) <= 1.65 && buddy.height >= 0);
-        assert.ok([buddy.distance, buddy.lane, buddy.height, buddy.velocityY].every(Number.isFinite));
+        assert.ok([buddy.distance, buddy.lane, buddy.height, buddy.velocityY, buddy.speed, buddy.signalTime].every(Number.isFinite));
+        assert.ok(buddy.speed >= 0 && buddy.speed <= 30.5 + 1e-8);
+        assert.ok(['', 'hello', 'jump', 'star', 'turbo', 'splash'].includes(buddy.signal));
+        assert.ok(buddy.signalTime >= 0 && buddy.signalTime <= 1.65);
+        assert.ok(Object.values(buddy.brain).filter(value => typeof value === 'number').every(Number.isFinite));
+        const lateral = Math.abs(state.lane - buddy.lane) * 3.4;
+        const longitudinal = Math.abs(state.distance - buddy.distance);
+        const playerWidth = (state.transformTime > 0 || state.guardianClearTime > 0 ? 3.2 : 2.5) * truck.scale;
+        assert.ok(lateral >= playerWidth + 1.125 || longitudinal >= 2.8 * truck.scale + 1.4,
+          `${truck.id} seed ${seed} keeps physical room for ${buddy.id}`);
       }
+      assert.ok(state.buddies[0].distance - state.buddies[1].distance >= 4 - 1e-8);
     }
     assert.equal(state.finished, true, `${truck.id} completes`);
     assert.equal(racePlace(state), 1, `${truck.id} earns the lead back before the finish`);
@@ -293,6 +305,8 @@ test('all truck sizes finish first with no input, held controls, and repeated al
     assert.ok(state.crushes <= CRUSH_CARS.length);
     assert.equal(state.stars, 2 * state.crushes);
     assert.equal(state.rewardGranted, false);
+    assert.ok(events.filter(event => event.type === 'buddy').length < 80, 'Signals stay sparse even with held controls');
+    assert.deepEqual(JSON.parse(JSON.stringify(state)), state);
   }
 });
 

@@ -62,7 +62,8 @@ test('stateful sampling copies real poses and place reflects actual overtakes', 
   race.buddies[1].distance = 108;
   assert.equal(racePlace(race), 2);
   const poses = sampleRaceBuddies(race);
-  assert.deepEqual(poses, race.buddies);
+  assert.deepEqual(poses.map(({ intent, signal, signalTime, speed, ...pose }) => pose), race.buddies.map(({ brain, intent, signal, signalTime, speed, ...pose }) => pose));
+  assert.ok(poses.every(pose => !('brain' in pose)), 'Private decision memories stay in the simulation');
   assert.notEqual(poses, race.buddies);
   poses[0].distance = 0;
   poses[1].height = 99;
@@ -120,7 +121,7 @@ test('the rendered field uses simulated poses without changing them', () => {
       field.update(1 / 60, race);
       if (field.poses[0].distance > race.distance) passed = true;
     }
-    assert.deepEqual(field.poses, race.buddies);
+    assert.deepEqual(field.poses, sampleRaceBuddies(race));
     assert.ok(passed, 'The renderer showed Sunny actually passing during the approach');
     const frozen = structuredClone(race);
     field.update(.05, race);
@@ -225,7 +226,7 @@ test('invalid progress and extreme finite inputs yield a safe finite grid or fin
 test('reused detailed trucks follow the real road frame through every point of the loop', () => {
   const scene = new THREE.Scene(), field = new RaceBuddies(scene);
   try {
-    assert.equal(scene.children.length, 2);
+    assert.equal(scene.children.length, 4);
     for (const truck of field.trucks) {
       assert.ok(truck.spec.scale >= .45 && truck.spec.scale <= .55);
       assert.ok(truck.body.getObjectByName(`character-${truck.spec.id}`).children.length > 0);
@@ -299,7 +300,7 @@ test('field resources stay bounded and dispose once without releasing player or 
     field.reset();
     for (let distance = 0; distance <= COURSE_LENGTH; distance += 25) field.update(.016, { distance });
     field.trucks.forEach((truck, i) => assert.deepEqual(resources(truck), original[i]));
-    assert.equal(scene.children.length, 3);
+    assert.equal(scene.children.length, 5);
   }
   field.dispose(); field.dispose(); field.reset(); field.update(.016, { distance: 400 });
   assert.ok([...counts.values()].every(count => count === 1));

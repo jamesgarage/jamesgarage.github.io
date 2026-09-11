@@ -4,6 +4,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS } from './core.mjs';
 import { sampleTrack, trackCenter } from './track.mjs';
 import { isAdventureClearing } from './adventure.mjs';
+import { createSurfaceTexture, surfaceUVs } from './surfaces.mjs';
 
 export const DRIVE_HALF_WIDTH = 8.02;
 
@@ -77,14 +78,19 @@ const geo = {
   cylinder: new THREE.CylinderGeometry(1, 1, 1, 10),
 };
 const materials = new Map();
-function material(color, roughness = .8, vertexColors = false) {
-  const key = `${color}:${roughness}:${vertexColors}`;
-  if (!materials.has(key)) materials.set(key, new THREE.MeshStandardMaterial({ color, roughness, vertexColors }));
+function material(color, roughness = .8, vertexColors = false, surface = '') {
+  const key = `${color}:${roughness}:${vertexColors}:${surface}`;
+  if (!materials.has(key)) {
+    const map = surface ? createSurfaceTexture(surface) : null;
+    const paint = new THREE.MeshStandardMaterial({ color, roughness, vertexColors, map, bumpMap: map, bumpScale: surface === 'wood' ? .045 : .07 });
+    paint.userData.surface = surface; materials.set(key, paint);
+  }
   return materials.get(key);
 }
 function piece(group, kind, color, position, scale, rotation = [0, 0, 0], shadow = true) {
   const foliage = kind === 'crown' || kind === 'farCrown';
-  const mesh = new THREE.Mesh(geo[kind], material(color, foliage ? .94 : .8, foliage || kind === 'palmTrunk'));
+  const surface = kind === 'rock' ? 'stone' : [0x8e5834, 0xbd8c51, 0x927055].includes(color) ? 'wood' : '';
+  const mesh = new THREE.Mesh(geo[kind], material(color, foliage || surface ? .94 : .8, foliage || kind === 'palmTrunk', surface));
   mesh.userData.canopy = foliage;
   mesh.userData.frond = kind === 'frond';
   mesh.position.set(...position); mesh.scale.set(...scale); mesh.rotation.set(...rotation);
@@ -105,6 +111,7 @@ function batch(source) {
     const key = `${mesh.material.uuid}:${mesh.castShadow}:${mesh.receiveShadow}`;
     if (!buckets.has(key)) buckets.set(key, { material: mesh.material, cast: mesh.castShadow, receive: mesh.receiveShadow, canopy: mesh.userData.canopy === true, frond: mesh.userData.frond === true, parts: [] });
     let geometry = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);
+    if (mesh.material.userData.surface) surfaceUVs(geometry, mesh.material.userData.surface);
     if (geometry.index) { const expanded = geometry.toNonIndexed(); geometry.dispose(); geometry = expanded; }
     buckets.get(key).parts.push(geometry);
   });
@@ -179,12 +186,17 @@ function makeTerrain() {
     const x = positions.getX(i), z = positions.getZ(i), y = terrainHeight(x, z);
     positions.setY(i, y);
     color.setHex(z > 920 ? 0x3d9f8d : y > 2 ? 0x64a547 : 0x82bc50);
-    color.multiplyScalar(.94 + .08 * Math.sin(x / 31 + z / 40));
+    // Larger dry/moss patches read at driving distance; the fine texture only
+    // adds a soft tactile finish when close to the bank.
+    const meadow = Math.sin(x / 18 + z / 23) * Math.cos(z / 31 - x / 13);
+    color.lerp(new THREE.Color(0xb3bd69), Math.max(0, meadow) * .28);
+    color.multiplyScalar(.92 + .10 * Math.sin(x / 31 + z / 40));
     colors.push(color.r, color.g, color.b);
   }
   geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geometry.computeVertexNormals();
-  const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
+  const map = createSurfaceTexture('ground'); surfaceUVs(geometry, 'ground');
+  const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, map, bumpMap: map, bumpScale: .035 }));
   mesh.name = 'rolling-landscape'; mesh.receiveShadow = true;
   return mesh;
 }
@@ -359,20 +371,12 @@ function makeLoopSupport() {
 export function createWorld() {
   const world = new THREE.Group(); world.name = 'monster-skyway-world';
   world.add(makeTerrain(), makeRoad());
-  const waterPaint = new THREE.MeshStandardMaterial({ color: 0x29bfc7, roughness: .6, envMapIntensity: .08 });
-  if (typeof document !== 'undefined') {
-    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 256;
-    const context = canvas.getContext('2d'); context.fillStyle = '#25b7c6'; context.fillRect(0, 0, 256, 256);
-    context.strokeStyle = '#62cfd2'; context.lineWidth = 2.5; context.lineCap = 'round';
-    for (const [x, y, length] of [[22, 38, 60], [135, 94, 70], [39, 178, 83], [181, 230, 40]]) {
-      context.beginPath(); context.moveTo(x, y); context.quadraticCurveTo(x + length * .5, y + 7, x + length, y); context.stroke();
-    }
-    const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(55, 110);
-    waterPaint.map = texture; waterPaint.color.setHex(0xffffff);
-  }
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(550, 1100), waterPaint);
-  water.rotation.x = -Math.PI / 2; water.position.set(0, -1.7, 1450); water.receiveShadow = true; water.name = 'gator-lagoon'; world.add(water);
+  const waterMap = createSurfaceTexture('water');
+  const waterPaint = new THREE.MeshStandardMaterial({ color: 0x32b8bd, roughness: .38, envMapIntensity: .11, map: waterMap, bumpMap: waterMap, bumpScale: .045 });
+  const waterGeometry = new THREE.PlaneGeometry(550, 1100);
+  waterGeometry.rotateX(-Math.PI / 2); waterGeometry.translate(0, -1.7, 1450); surfaceUVs(waterGeometry, 'water');
+  const water = new THREE.Mesh(waterGeometry, waterPaint);
+  water.receiveShadow = true; water.name = 'gator-lagoon'; world.add(water);
 
   for (let start = -48; start < COURSE_LENGTH + 90; start += 144) {
     const chunk = new THREE.Group(); chunk.name = `scenery-chunk-${start}`;

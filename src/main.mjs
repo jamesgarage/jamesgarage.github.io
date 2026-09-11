@@ -70,7 +70,7 @@ function renderGarage(){
 function showGarage(){menu();renderGarage();showModal('garage');}
 function menu(){clearInput();race.phase='ready';audio.setDriving(false);audio.pause();world.menu();hideModals();$('menu').hidden=false;$('hud').hidden=true;$('controls').hidden=true;document.body.classList.remove('playing');clearCallout();refreshMenu();}
 async function start(){
-  clearInput();hideModals();race=createRace();race.truckScale=selected().scale;race.phase='running';world.reset();world.setTruck(selected());
+  clearInput();hideModals();race=createRace(progress.races);race.truckScale=selected().scale;race.phase='running';world.reset(race.variant);world.setTruck(selected());
   $('menu').hidden=true;$('hud').hidden=false;$('controls').hidden=false;document.body.classList.add('playing');
   previous=performance.now();accumulator=0;await audio.start();await audio.resume();audio.setMuted(progress.muted);audio.setDriving(true);audio.play('start');updateStage();updatePosition();say('Let’s race!',1.6,2);$('jump-btn').focus();
 }
@@ -148,7 +148,10 @@ try {
         input.steer=(held.has('right')?1:0)-(held.has('left')?1:0);
         const events=stepRace(race,1/60,input);input.jump=false;input.transform=false;input.turbo=false;accumulator-=1/60;
         for(const event of events){if(event.type==='crush'){world.crush();say('MONSTER POWER! +2 ★',1.25,2);}if(event.type==='turbo')say('TURBO!',1.1,2);}
-        for(const event of events){audio.play(event.type);if(event.type==='jump'&&event.auto)say('BIG AIR!',1.25);if(event.type==='land'){world.land(event.strength);if(event.strength>.7)say('Nailed it!',1.15);}if(event.type==='transform'){say('GUARDIAN MODE!',2.3,3);world.burst(true,25);}if(event.type==='loop')say('LOOP LEGEND!',2.3,3);if(event.type==='finish')finish();}
+        for(const event of events){
+          if(event.type==='buddy') {if(event.action==='hello'||event.action==='jump')audio.play(`buddy-${event.id}`);continue;}
+          audio.play(event.type);if(event.type==='jump'&&event.auto)say('BIG AIR!',1.25);if(event.type==='land'){world.land(event.strength);if(event.strength>.7)say('Nailed it!',1.15);}if(event.type==='transform'){say('GUARDIAN MODE!',2.3,3);world.burst(true,25);}if(event.type==='loop')say('LOOP LEGEND!',2.3,3);if(event.type==='finish')finish();
+        }
       }
     }
     const visualDt=race.phase==='paused'?0:dt;
@@ -169,7 +172,7 @@ try {
     const frame=sampleTrack(race.distance);
     const center=frame.position.addScaledVector(frame.up,race.height).project(world.camera);
     const screenLane=world.truck.group.position.clone().project(world.camera).x-center.x;
-    return Object.freeze({phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,place:racePlace(race),buddies:world.buddies.poses.map(p=>({...p})),screenLane,speed:race.speed,turboTime:race.turboTime,turboEnergy:race.turboEnergy,crushBoostTime:race.crushBoostTime,crushes:race.crushes,crushedCars:race.crushedCars?.slice(),crushedModels:world.encounters.cars.filter(car=>car.crush>.95).map(car=>car.id),rain:world.weather.rain.visible&&world.weather.group.visible,mudSpray:world.weather.spray.count,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles,flames:world.flames.mesh.count});
+    return Object.freeze({phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,variant:race.variant,place:racePlace(race),buddies:world.buddies.poses.map(p=>({...p})),buddySignals:world.buddies.signals.badges.filter(b=>b.visible).map(b=>b.userData.signal),worldLife:world.life.diagnostics,screenLane,speed:race.speed,turboTime:race.turboTime,turboEnergy:race.turboEnergy,crushBoostTime:race.crushBoostTime,crushes:race.crushes,crushedCars:race.crushedCars?.slice(),crushedModels:world.encounters.cars.filter(car=>car.crush>.95).map(car=>car.id),rain:world.weather.rain.visible&&world.weather.group.visible,mudSpray:world.weather.spray.count,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles,flames:world.flames.mesh.count});
   }});
 } catch(error) {
   $('loading').hidden=true;$('error').hidden=false;$('error').textContent='This adventure needs a browser with 3D graphics (WebGL 2). Try an updated Safari, Chrome, or Edge with graphics acceleration enabled.';
