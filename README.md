@@ -46,7 +46,7 @@ These are original models inspired by broad toy and vehicle interests. The game 
 
 ## Around the skyway
 
-![Rumbler using turbo to regain the lead after crushing a toy car](docs/screenshots/race.png)
+![Rumbler celebrating a flattened toy car with stars and a speed burst](docs/screenshots/race.png)
 
 Bear Woods climbs a timber bridge beside a giant waterwheel. Rocket Runway adds a launch pad, a tall toy rocket, and a boost toward the next ramp. Gator Falls brings a broad waterfall, reeds, and a waterfront boardwalk to the rainy lagoon. Picnic stops, balloons, friendly bears and alligators, stands, and the finish trophy garden fill out the route.
 
@@ -62,7 +62,7 @@ Steering turns the front wheels and leans the body. Left and right follow the ch
 
 Shallow mud patches send little flecks from the tires, and a short, gentle shower passes through Gator Bay. Mud and rain are visual effects: they never slow the truck, change steering, or make winning harder.
 
-Twin exhausts shoot bright flames and leave a fiery trail through jumps and loops. Bigger trucks bring bigger flames; guardian mode and turbo turn them up further. **Gentler motion** reduces camera movement, removes the landing ring, moving flame trail, rain, and tire spray, and keeps two small, steady exhaust flames and the mud scenery. Crushed cars show their flattened state immediately with this setting.
+Twin exhausts have pale hot cores, flowing amber flames and a soft cooling trail through jumps and loops. Bigger trucks bring bigger flames; guardian mode and turbo turn them up further. **Gentler motion** reduces camera movement, removes the landing ring, moving flame trail, rain, and tire spray, and keeps two small, steady exhaust flames and the mud scenery. Crushed cars show their flattened state immediately with this setting.
 
 ![Mega Titan airborne with twin exhaust flames and a fiery trail](docs/screenshots/flames.png)
 

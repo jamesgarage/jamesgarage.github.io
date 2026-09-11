@@ -50,6 +50,10 @@ Root owns src/core.mjs, src/main.mjs, src/audio.mjs, src/scene.mjs if needed; te
 
 ## 5. Publish and document
 
-- [ ] Update README/design/roadmap/validation to describe the new positive-crush behavior and smoother art with actual evidence; commit/push on main.
-- [ ] Dispatch Pages, verify runtime head and asset hashes, run all public Chrome/WebKit tests and inspect public screenshots.
-- [ ] Refresh screenshots, record final review/deployment evidence, finish this checklist and push clean documentation. Report the playable result and real-device limit.
+- [x] Update README/design/roadmap/validation to describe the new positive-crush behavior and smoother art with actual evidence; commit/push on main.
+- [x] Dispatch Pages, verify runtime head and asset hashes, run all public Chrome/WebKit tests and inspect public screenshots.
+- [x] Refresh screenshots, record final review/deployment evidence, finish this checklist and push clean documentation. Report the playable result and real-device limit.
+
+## Release evidence
+
+Runtime `21c3039` was published by successful Pages run `34632816929`. Matching public assets: `index-Dbdk0O_j.js` and `index-L73CJAqG.css`. All 89 unit tests and the production build passed; all six browser tests passed in Chrome and WebKit against both local production and the public site. Controlled browser play, four public viewport layouts, resource/pause checks and independent code/visual reviews are recorded in `docs/VALIDATION.md`. All nine README screenshots show the published build. Physical iPad/Safari performance remains unverified.

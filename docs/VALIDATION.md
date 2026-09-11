@@ -108,6 +108,12 @@ Independent rules review and a final independent code/visual review reported no 
 
 The final local production build passed all **six browser tests in Chrome (about 1.8 minutes) and WebKit (about 2.0 minutes)**. Both exercised the positive speed burst and flattened car, paused reward timer, later friendly challenge and manual turbo comeback, touch turbo/jump, correct steering in both tablet orientations, and a complete unattended race through every landmark, guardian, loop and rainy bay. First-place reward, earned-truck selection, persistent reload, clean replay, blocked storage, unavailable audio and gentler motion also passed. Neither suite recorded JavaScript, console, failed-request or HTTP resource errors.
 
+The [smoother world deployment](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34632816929) built and published runtime commit `21c3039` successfully. The public site serves the matching `index-Dbdk0O_j.js` and `index-L73CJAqG.css` assets and the six regenerated truck portraits.
+
+All **six browser tests passed against that public URL in Chrome (about 1.8 minutes) and WebKit (about 2.0 minutes)**. Both engines verified the rewarding crush, actual friendly overtake and turbo comeback, pause/resume, keyboard and touchscreen controls, a complete unattended first-place race, saved unlock and replay, and unavailable storage/audio. Neither public run recorded JavaScript, console, failed-request or HTTP resource errors.
+
+A separate public capture checked desktop 1440×900, tablet landscape 1024×768, tablet portrait 768×1024 and phone 390×844. All six garage portraits loaded, the garage had no horizontal overflow, and essential controls stayed inside each viewport without overlapping. All nine README screenshots now come from this public build. Collection and lobby captures use a prepared browser save to show the complete garage. Public crush, airborne Titan and loop captures were visually inspected; independent review also checked phone driving/garage and WebKit loop/falls views, with no material visual findings. Physical iPad/Safari performance and James's response to this update remain to be observed.
+
 ## Practical limits
 
 - Chrome and Playwright WebKit on a desktop with emulated touch are not a physical iPad or iPhone. Shipping Safari behavior, actual device frame pacing, battery use, and orientation changes still need a real-device pass.
