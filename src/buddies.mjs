@@ -14,10 +14,13 @@ function playerDistance(race) {
   return Number.isFinite(race?.distance) ? Math.min(COURSE_LENGTH, Math.max(0, race.distance)) : 0;
 }
 
-/** Visual followers only: sampling never changes physics, pickups or rewards.
- * Negative starting distances keep the whole field separated on the grid.
- * Jumps are analytic, so seeking, slow frames and replay need no event history. */
+/** Rendering samples defensive copies of the simulation's real opponent poses.
+ * Distance-only tools still get an analytic preview without creating a race. */
 export function sampleRaceBuddies(race) {
+  if (Array.isArray(race?.buddies) && race.buddies.length === BUDDIES.length && race.buddies.every((pose, index) =>
+    pose?.id === BUDDIES[index].id && ['distance', 'lane', 'height', 'velocityY'].every(key => Number.isFinite(pose[key])))) {
+    return race.buddies.map(pose => ({ id: pose.id, name: pose.name, distance: pose.distance, lane: pose.lane, height: pose.height, velocityY: pose.velocityY }));
+  }
   const progress = playerDistance(race);
   return BUDDIES.map(buddy => {
     const distance = progress - buddy.gap;

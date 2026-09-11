@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { COURSE_LENGTH, LOOP_START, LOOP_END } from './core.mjs';
+import { COURSE_LENGTH, LOOP_START, LOOP_END, RACE_SPEED } from './core.mjs';
 import { ExhaustFlames } from './flames.mjs';
 import { makeTruck, disposeTruck } from './models.mjs';
 import { sampleTrack, trackCenter, laneOffset } from './track.mjs';
@@ -8,6 +8,8 @@ import { createWorld } from './world.mjs';
 import { RaceBuddies } from './buddies.mjs';
 import { createRaceFestival } from './festival.mjs';
 import { RaceWeather } from './weather.mjs';
+import { RoadEncounters } from './encounter-scene.mjs';
+import { createAdventureScenery } from './adventure.mjs';
 export { makeTruck } from './models.mjs';
 export { sampleTrack } from './track.mjs';
 
@@ -29,7 +31,7 @@ function makeStarGeometry() {
 
 export class GameScene {
   constructor(canvas,spec) {
-    this.canvas=canvas;this.reducedMotion=false;this.mode='menu';this.time=0;this.transform=0;this.squash=0;this.steerLean=0;
+    this.canvas=canvas;this.reducedMotion=false;this.mode='menu';this.time=0;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;
     this.renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
     this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -50,10 +52,11 @@ export class GameScene {
       vertexShader:'varying vec3 direction; void main(){direction=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
       fragmentShader:'uniform vec3 top; uniform vec3 bottom; varying vec3 direction; void main(){float h=pow(max(normalize(direction).y,0.0),0.55);gl_FragColor=vec4(mix(bottom,top,h),1.0);\n#include <colorspace_fragment>\n}'
     }));this.sky.renderOrder=-100;this.scene.add(this.sky);
-    this.world=createWorld();this.world.add(createRaceFestival());this.scene.add(this.world);
+    this.world=createWorld();this.world.add(createRaceFestival(),createAdventureScenery());this.scene.add(this.world);
     this.truck=makeTruck(spec);this.scene.add(this.truck.group);
     this.buddies=new RaceBuddies(this.scene);
     this.weather=new RaceWeather(this.scene);
+    this.encounters=new RoadEncounters(this.scene);
     const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=128;
     const shadowContext=shadowCanvas.getContext('2d');const gradient=shadowContext.createRadialGradient(64,64,8,64,64,64);
     gradient.addColorStop(0,'rgba(25,32,35,.75)');gradient.addColorStop(.5,'rgba(25,32,35,.38)');gradient.addColorStop(1,'rgba(25,32,35,0)');
@@ -80,9 +83,9 @@ export class GameScene {
   setTruck(spec) {
     this.flames.clear();this.weather.reset();
     disposeTruck(this.truck);
-    this.scene.remove(this.truck.group);this.truck=makeTruck(spec);this.scene.add(this.truck.group);this.transform=0;
+    this.scene.remove(this.truck.group);this.truck=makeTruck(spec);this.scene.add(this.truck.group);this.transform=0;this.boost=0;
   }
-  reset() {this.flames.clear();this.buddies.reset();this.weather.reset();this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.squash=0;this.steerLean=0;this.particles.forEach(p=>{p.life=0;p.mesh.visible=false;});}
+  reset() {this.flames.clear();this.buddies.reset();this.weather.reset();this.encounters.reset();this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;this.particles.forEach(p=>{p.life=0;p.mesh.visible=false;});}
   menu() {this.flames.clear();this.weather.reset();this.mode='menu';this.snapCamera=true;}
   resize() {this.width=innerWidth;this.height=innerHeight;this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();this.renderer.setSize(this.width,this.height,false);this.snapCamera=true;}
   burst(colorful=true,count=20,origin=this.truck.group.position) {
@@ -108,6 +111,7 @@ export class GameScene {
     if(isMenu)g.rotateY(-.15+Math.sin(this.time*.32)*.1);
     else if(race.height>0)g.rotateX(clamp(-race.velocityY*.025,-.28,.35));
     this.transform=lerp(this.transform,!isMenu&&race.transformTime>0?1:0,1-Math.exp(-dt*5));
+    this.boost=lerp(this.boost,!isMenu&&race.turboTime>0?1:0,1-Math.exp(-dt*4));
     this.squash=Math.max(0,this.squash-dt*3.5);
     this.steerLean=lerp(this.steerLean,isMenu?0:-(race.targetLane-race.lane)*.16,1-Math.exp(-dt*7));
     this.truck.body.position.y=this.transform*1.8-this.squash*.2+(isMenu?.035*Math.sin(this.time*2):Math.sin(this.time*16)*.025);
@@ -115,7 +119,7 @@ export class GameScene {
     this.truck.head.visible=this.transform>.06;this.truck.head.scale.setScalar(Math.max(.01,this.transform));
     this.truck.arms.forEach((arm,i)=>{arm.visible=this.transform>.06;arm.rotation.z=(i===0?-1:1)*this.transform*.85;});
     this.truck.struts.forEach(leg=>{leg.visible=this.transform>.06;leg.scale.y=1.2+this.transform*1.9;leg.position.y=1.7+this.transform*.8;});
-    this.truck.wheels.forEach((wheel,i)=>{wheel.position.x=(i%2===0?-1:1)*(1.65+this.transform*.7);wheel.rotation.order='YXZ';wheel.rotation.y=i>1?this.steerLean*1.4:0;if(!isMenu&&race.phase==='running')wheel.rotation.x+=dt*19;});
+    this.truck.wheels.forEach((wheel,i)=>{wheel.position.x=(i%2===0?-1:1)*(1.65+this.transform*.7);wheel.rotation.order='YXZ';wheel.rotation.y=i>1?this.steerLean*1.4:0;if(!isMenu&&race.phase==='running')wheel.rotation.x+=dt*19*(race.speed??RACE_SPEED)/RACE_SPEED;});
     this.flames.update(dt,{truck:this.truck,time:this.time,mode:this.mode,race,transform:this.transform,reducedMotion:this.reducedMotion});
     this.contactShadow.position.copy(f.position).addScaledVector(f.right,laneOffset(isMenu?0:race.lane)).addScaledVector(f.up,.042);
     this.contactShadow.quaternion.copy(f.quaternion);this.contactShadow.rotateX(-Math.PI/2);
@@ -142,7 +146,7 @@ export class GameScene {
       const distance=(this.width<this.height?34:26)+(this.truck.spec.scale-1)*4;
       this.targetCamera.copy(g.position).addScaledVector(horizontal,-distance).add(new THREE.Vector3(0,13.5+race.height*.1+(this.truck.spec.scale-1)*2.5,0));
       this.targetLook.copy(f.position).addScaledVector(horizontal,3).add(new THREE.Vector3(0,2.4+race.height*.4,0));
-      this.camera.fov=55+(this.reducedMotion?0:this.transform*3);
+      this.camera.fov=55+(this.reducedMotion?0:this.transform*3+this.boost*3);
       if(!this.reducedMotion)this.targetCamera.y-=this.squash*.32;
     }
     this.camera.updateProjectionMatrix();
@@ -163,6 +167,7 @@ export class GameScene {
     if(this.transform>.5&&Math.random()<dt*20&&!this.reducedMotion)this.burst(true,1);
     this.buddies.update(dt,race,!isMenu);
     this.weather.update(dt,{race,truck:this.truck,mode:this.mode,reducedMotion:this.reducedMotion});
+    this.encounters.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});
     this.renderer.render(this.scene,this.camera);
     return collected;
   }

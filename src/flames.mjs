@@ -67,7 +67,8 @@ export class ExhaustFlames {
     const running = mode === 'race' && race.phase === 'running';
     const paused = mode === 'race' && race.phase === 'paused';
     const cruising = running || paused;
-    const boost = cruising ? transform : 0;
+    const boost = cruising ? transform + (race.turboTime > 0 ? 1.2 : 0) : 0;
+    const speed = Number.isFinite(race.speed) ? Math.max(0, race.speed) : 26;
     const airborne = cruising && race.height > .2;
     const size = truck.group.scale.x;
     const power = reducedMotion ? (cruising ? .85 : .45) : cruising ? 2.4 + boost * 1.7 + (airborne ? .6 : 0) : .5;
@@ -102,7 +103,7 @@ export class ExhaustFlames {
         p.size = size * (.7 + boost * .22);
         // Stagger births along the previous frame's path, including slow frames.
         const age = (emitCount - i - 1) / EMISSION_RATE;
-        p.position.copy(this.emitter).addScaledVector(this.direction, size * power * .5 + age * 26);
+        p.position.copy(this.emitter).addScaledVector(this.direction, size * power * .5 + age * speed);
         p.velocity.copy(this.direction).multiplyScalar(5 + boost * 3);
         p.velocity.y += 1.3;
         p.quaternion.copy(this.orientation);

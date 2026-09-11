@@ -27,7 +27,11 @@ export function trackCenter(distance) {
     if (diff > -24 && diff <= 0) ramp = 2.6 * ((diff + 24) / 24) ** 2;
     else if (diff > 0 && diff < 38) ramp = 2.6 * (1 - diff / 38);
   }
-  return new THREE.Vector3(13 * Math.sin(z / 135) + 6 * Math.sin(z / 57) + xOffset, 1.5 + hill + y + ramp, z);
+  // The timber bridge rises gently, with zero added slope at either end. Every
+  // actor and road treatment uses this same centerline, including nearby cars.
+  const bridgeT = (d - 310) / 65;
+  const bridge = bridgeT > 0 && bridgeT < 1 ? 2.4 * Math.sin(Math.PI * bridgeT) ** 2 : 0;
+  return new THREE.Vector3(13 * Math.sin(z / 135) + 6 * Math.sin(z / 57) + xOffset, 1.5 + hill + y + ramp + bridge, z);
 }
 
 export function sampleTrack(distance) {

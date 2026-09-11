@@ -6,6 +6,7 @@ import { GameScene, makeTruck } from '../src/scene.mjs';
 import { TRUCKS } from '../src/core.mjs';
 import { RaceBuddies } from '../src/buddies.mjs';
 import { RaceWeather } from '../src/weather.mjs';
+import { RoadEncounters } from '../src/encounter-scene.mjs';
 
 function rig(spec = TRUCKS[0]) {
   const scene = new THREE.Scene();
@@ -108,7 +109,7 @@ test('scene reset, menu, and truck replacement clear old flames before teleporti
   const target = rig();
   // Exercise the real lifecycle methods without constructing a WebGL renderer.
   Object.setPrototypeOf(target, GameScene.prototype);
-  Object.assign(target, { stars: [], particles: [], mode: 'race', buddies: new RaceBuddies(target.scene), weather: new RaceWeather(target.scene) });
+  Object.assign(target, { stars: [], particles: [], mode: 'race', buddies: new RaceBuddies(target.scene), weather: new RaceWeather(target.scene), encounters: new RoadEncounters(target.scene) });
   const actions = [() => target.reset(), () => target.menu(), () => target.setTruck(TRUCKS.at(-1))];
   for (const [index, action] of actions.entries()) {
     fillTrail(target);
@@ -126,7 +127,7 @@ test('scene reset, menu, and truck replacement clear old flames before teleporti
       assert.ok(Math.abs(matrices[offset + 12] - destination) < 10, 'only the new truck should have visible flames');
     }
   }
-  target.buddies.dispose();target.weather.dispose();
+  target.buddies.dispose();target.weather.dispose();target.encounters.dispose();
 });
 
 test('exhaust follows larger trucks, guardian body lift, and loop inversion', () => {
@@ -157,4 +158,18 @@ test('exhaust follows larger trucks, guardian body lift, and loop inversion', ()
   const invertedDirection = new THREE.Vector3(0, 0, -1).transformDirection(inverted);
   approximately(invertedPosition.y, -liftedPosition.y);
   approximately(invertedDirection.dot(uprightDirection), -1);
+});
+
+test('turbo extends the actual exhaust and stays frozen while paused', () => {
+  const target = rig();
+  update(target, 1 / 60, 1);
+  const normal = new THREE.Vector3().setFromMatrixScale(firstMatrix(target.flames)).z;
+  update(target, 1 / 60, 1, { race: { phase: 'running', height: 0, turboTime: 2, speed: 40 } });
+  const turbo = new THREE.Vector3().setFromMatrixScale(firstMatrix(target.flames)).z;
+  assert.ok(turbo > normal * 1.5, 'turbo must visibly extend the exhaust');
+  const paused = visibleMatrices(target.flames);
+  for (let frame = 0; frame < 30; frame++) update(target, 0, 1, { race: { phase: 'paused', height: 0, turboTime: 2, speed: 40 } });
+  assert.deepEqual(visibleMatrices(target.flames), paused);
+  update(target, 0, 1, { reducedMotion: true, race: { phase: 'paused', height: 0, turboTime: 2 } });
+  assert.equal(target.flames.mesh.count, 2);
 });

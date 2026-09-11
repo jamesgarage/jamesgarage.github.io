@@ -2,7 +2,7 @@
 
 **[Play Monster Skyway](https://yanivalfasykeelusa.github.io/james-monster-skyway/)** on an iPad, phone, or computer. Open the link in your browser; no game account or download is required.
 
-A cheerful 3D monster truck game for little drivers. Lead two friendly trucks through a colorful toy world, soar over ramps, ride a giant guided loop, transform into a robot guardian, and grow a garage of increasingly enormous wheels.
+A cheerful 3D monster truck game for little drivers. Race with two friendly trucks, squash toy cars, fire up the turbo, soar over ramps, ride a giant guided loop, and grow a garage of increasingly enormous wheels.
 
 Sculpted bodywork, treaded tires, visible suspension, warm sunlight and shadows give the trucks their toy-box feel. The raised orange track visits Bear Woods, the Sky Loop festival, and Gator Bay, with cheering stands, playful landmarks, muddy splashes, and a gentle shower along the way.
 
@@ -14,12 +14,14 @@ This project began with a three-year-old's love of monster trucks, orange stunt 
 
 On iPad, open the game in Safari. Landscape gives the track more room, and portrait works too. To keep a shortcut beside James's other games, use Safari's Share menu, More if shown, then **Add to Home Screen** and **Add**. See [Apple's instructions](https://support.apple.com/guide/ipad/bookmark-a-website-ipadc602b75b/ipados).
 
-Choose **Let's play** to start a roughly 73-second race. The truck accelerates automatically, six ramps launch automatically, and the loop guides the truck through safely. A driver can enjoy and complete a race without steering or pressing jump.
+Choose **Let's play** to start a race of roughly 70 seconds, depending on turbo and jumps. The truck accelerates automatically, six ramps launch automatically, and the loop guides the truck through safely. A driver can enjoy and complete a race without pressing any driving controls.
 
-Sunny and Splash follow behind, jumping and looping with you. They cannot bump your truck, take your stars, or overtake you. A first-place badge shows that you are leading, and your chosen truck takes the spotlight in the finish celebration. Winning does not make the next race harder.
+Sunny and Splash jump and loop with you. They can catch up and briefly pass when a toy-car crush slows you down. The truck recovers automatically, and turbo helps you pull ahead again. Gentle steering assistance keeps close passes clear. The position badge follows the actual race, and your chosen truck takes the spotlight at the finish. Winning does not make the next race harder.
 
-- **Touch:** use the large on-screen controls to jump, steer, or transform when energy is ready.
-- **Keyboard:** use the arrow keys to steer, Space to jump, T to transform, and P or Escape to pause. Menus also support Tab and Enter.
+- **Touch:** use the large on-screen controls to jump, steer, fire the turbo, or transform when energy is ready.
+- **Keyboard:** use the arrow keys to steer, Space to jump, B or Shift for turbo, T to transform, and P or Escape to pause. Menus also support Tab and Enter.
+- **Turbo:** start with a full charge. A tap gives a short flame-powered burst; charge refills as you drive. Colored boost strips also trigger turbo automatically.
+- **Crushing:** drive over the small parked toy cars to flatten them, earn two stars and recharge turbo. Normal contact briefly slows you; turbo crushes straight through, and jumping clears a car.
 - **Transformation:** energy charges as you drive. Use the transformation control when charged; automatic activation helps little drivers enjoy the spectacle too.
 - **Pause and sound:** use the visible controls to pause or mute. Sound starts after a user interaction and remains optional.
 
@@ -46,7 +48,7 @@ These are original models inspired by broad toy and vehicle interests. The game 
 
 ![Rumbler leading two friendly racers past the woodland stands](docs/screenshots/race.png)
 
-Drive past pine trees, friendly bears, a picnic stop, and a windmill in Bear Woods. An observatory and tethered balloons lead toward the Sky Loop. Gator Bay brings sandy islands, palms, alligators, a lighthouse, a surf shack, and sailboats. Starting stands and a trophy garden bookend the race; track seams, edge rails, ramp arrows, and gates keep the route readable.
+Bear Woods climbs a timber bridge beside a giant waterwheel. Rocket Runway adds a launch pad, a tall toy rocket, and a boost toward the next ramp. Gator Falls brings a broad waterfall, reeds, and a waterfront boardwalk to the rainy lagoon. Picnic stops, balloons, friendly bears and alligators, stands, and the finish trophy garden fill out the route.
 
 ![The complete raised-edge toy loop and its stunt festival surroundings](docs/screenshots/loop.png)
 
@@ -56,7 +58,7 @@ Steering turns the front wheels and leans the body. Left and right follow the ch
 
 Shallow mud patches send little flecks from the tires, and a short, gentle shower passes through Gator Bay. Mud and rain are visual effects: they never slow the truck, change steering, or make winning harder.
 
-Twin exhausts shoot bright flames and leave a fiery trail through jumps and loops. Bigger trucks bring bigger flames, and guardian mode turns them up further. **Gentler motion** reduces camera movement, removes the landing ring, moving flame trail, rain, and tire spray, and keeps two small, steady exhaust flames and the mud scenery.
+Twin exhausts shoot bright flames and leave a fiery trail through jumps and loops. Bigger trucks bring bigger flames; guardian mode and turbo turn them up further. **Gentler motion** reduces camera movement, removes the landing ring, moving flame trail, rain, and tire spray, and keeps two small, steady exhaust flames and the mud scenery. Crushed cars show their flattened state immediately with this setting.
 
 ![Mega Titan airborne with twin exhaust flames and a fiery trail](docs/screenshots/flames.png)
 
@@ -122,9 +124,9 @@ The project is published from [yanivalfasykeelusa/james-monster-skyway](https://
 
 ## Next adventures
 
-See [the roadmap](docs/ROADMAP.md) for the friendly racing update, device testing, future play ideas, and a separate construction vehicle adventure.
+See [the roadmap](docs/ROADMAP.md) for turbo racing, device testing, future play ideas, and a separate construction vehicle adventure.
 
-Read the [design notes](docs/DESIGN.md), [friendly racing brief](docs/DESIGN-FRIENDLY-RACING.md), and [asset credits](docs/ASSETS.md) for the decisions behind the game.
+Read the [design notes](docs/DESIGN.md), [turbo adventure brief](docs/DESIGN-TURBO-ADVENTURE.md), and [asset credits](docs/ASSETS.md) for the decisions behind the game.
 
 ## License
 

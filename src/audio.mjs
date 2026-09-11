@@ -3,7 +3,7 @@ const MASTER_LEVEL = 0.38;
 const MAX_VOICES = 24;
 const EVENT_GAPS = Object.freeze({
   jump: 0.11, land: 0.13, star: 0.065, transform: 0.8,
-  loop: 0.7, finish: 1.2, start: 0.5, select: 0.08,
+  loop: 0.7, finish: 1.2, start: 0.5, select: 0.08, turbo: 0.7, crush: 0.25,
 });
 
 export class GameAudio {
@@ -97,6 +97,14 @@ export class GameAudio {
       if (now - previous < EVENT_GAPS[event]) return;
       this.lastEvents.set(event, now);
       switch (event) {
+        case 'turbo':
+          this._tone(110, 0, .42, .09, 'triangle', 440);
+          this._tone(330, .09, .3, .06, 'sine', 880);
+          break;
+        case 'crush':
+          this._tone(145, 0, .17, .13, 'triangle', 52);
+          this._tone(260, .035, .14, .06, 'sine', 98);
+          break;
         case 'jump':
           this._tone(196, 0, 0.23, 0.12, 'sine', 523.25);
           break;

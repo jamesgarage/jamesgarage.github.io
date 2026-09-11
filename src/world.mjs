@@ -3,6 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS } from './core.mjs';
 import { sampleTrack, trackCenter } from './track.mjs';
+import { isAdventureClearing } from './adventure.mjs';
 
 export const DRIVE_HALF_WIDTH = 8.02;
 
@@ -321,6 +322,7 @@ export function createWorld() {
         const seam = box(chunk, 0xe14e12, [f.position.x, f.position.y + .012, f.position.z], [14.4, .015, .065], undefined, false); seam.quaternion.copy(f.quaternion);
         for (const side of [-1, 1]) {
           const offset = side * (17 + noise(d + side) * 13);
+          if (isAdventureClearing(d, offset)) continue;
           const p = f.position.clone().addScaledVector(f.right, offset); p.y = bay ? -1.2 : terrainHeight(p.x, p.z);
           const size = 2.4 + noise(d * 2 + side) * 1.8;
           if (bay) {
@@ -346,10 +348,12 @@ export function createWorld() {
         }
         if ((d + 48) % 96 === 0) {
           const side = Math.floor(d / 96) % 2 ? -1 : 1;
-          const p = f.position.clone().addScaledVector(f.right, side * 15);
-          p.y = bay ? -.75 : terrainHeight(p.x, p.z);
-          if (bay) { ball(chunk, 0xeacc86, [p.x, -2.2, p.z], [7.4, 1.6, 6]); gator(chunk, p, 2.1); }
-          else bear(chunk, p, 2.1, true);
+          if (!isAdventureClearing(d, side * 15)) {
+            const p = f.position.clone().addScaledVector(f.right, side * 15);
+            p.y = bay ? -.75 : terrainHeight(p.x, p.z);
+            if (bay) { ball(chunk, 0xeacc86, [p.x, -2.2, p.z], [7.4, 1.6, 6]); gator(chunk, p, 2.1); }
+            else bear(chunk, p, 2.1, true);
+          }
         }
       }
     }

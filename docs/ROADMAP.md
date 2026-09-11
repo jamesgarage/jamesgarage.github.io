@@ -37,10 +37,23 @@ James's parent reports that he loves the existing game and wants the visual appe
 
 See [the friendly racing brief](DESIGN-FRIENDLY-RACING.md) for scope, primary visual references, and acceptance criteria. Validation and publication evidence belong in the [validation record](VALIDATION.md).
 
+## Turbo adventure and toy-car crushing
+
+James's parent asked for more distinctive scenery, a dynamic road, racers who catch up, turbo, and crushable cars. The earlier permanently trailing field is now a gentle race with actual passing and comeback opportunities.
+
+- Six small parked toy cars squash under the wheels, awarding two stars and turbo charge. Normal crushing briefly slows the player; powered crushing keeps moving.
+- A large Turbo control, B/Shift keyboard binding, eight-second recharge, and five automatic boost strips. Exhaust and engine pitch respond to speed.
+- Stateful Sunny and Splash can briefly overtake, ease their pace for a comeback, and leave the player able to finish first without input. Position is calculated from actual distances.
+- Buddies yield before tight passes; gentle steering assistance maintains room when a driver turns toward a truck already alongside, including the largest guardian.
+- Three authored road moments: a smooth raised timber bridge and waterwheel, a rocket launch area with runway markings, and a waterfall/boardwalk in Gator Bay.
+- Existing unlock thresholds, saved garage, automatic jumps/loop, pause and gentler motion remain compatible.
+
+See [the turbo adventure brief](DESIGN-TURBO-ADVENTURE.md) and [validation record](VALIDATION.md) for the current behavior and measured release evidence.
+
 ## Next: physical device and child observations
 
 1. Play on a real iPad in Safari and a representative phone, in portrait and landscape. Check touch controls, orientation changes, frame pacing, and camera comfort.
-2. Watch James start, recognize that he is leading, notice the other trucks, finish, choose an earned truck, and replay. Revise anything that requires adult explanation.
+2. Watch James squash a toy car, notice a friend catching up, use turbo, finish, choose an earned truck, and replay. Revise anything that requires adult explanation.
 3. Check that the richer scenery and weather feel exciting without hiding the route or making the controls harder to understand.
 4. Tune collectible placement, reward pacing, sound, motion, and rendering cost using those observations.
 

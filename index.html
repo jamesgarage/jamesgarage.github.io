@@ -21,6 +21,7 @@
       <symbol id="icon-arrow-left" viewBox="0 0 24 24"><path d="m13 5-7 7 7 7M6 12h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" /></symbol>
       <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="m11 5 7 7-7 7M18 12H4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" /></symbol>
       <symbol id="icon-jump" viewBox="0 0 24 24"><path d="M12 18V4m-6 6 6-6 6 6M5 20h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" /></symbol>
+      <symbol id="icon-flame" viewBox="0 0 24 24"><path d="M13 2c1 6-4 6-3 10-2-1-3-3-3-5-6 7-4 15 5 15 8 0 11-8 6-14 0 3-2 4-3 5 1-5 0-8-2-11Z" fill="currentColor" /><path d="M12 14c-4 4-2 6 0 6s4-2 0-6Z" fill="#fff4c2" /></symbol>
     </svg>
 
     <main id="app">
@@ -51,7 +52,7 @@
         <div class="adventure-label" aria-hidden="true"><span class="adventure-label-star">6</span><span>MONSTER TRUCKS<br /><strong>ONE MIGHTY CREW</strong></span></div>
         <footer class="menu-footer">
           <div class="route-strip" aria-label="Three places to explore"><span class="route-chip woods-chip"><b aria-hidden="true">♣</b><span><small>01 · EXPLORE</small>BEAR WOODS</span></span><span class="route-chip loop-chip"><b aria-hidden="true">↻</b><span><small>02 · FLY</small>SKY LOOP</span></span><span class="route-chip bay-chip"><b aria-hidden="true">≈</b><span><small>03 · SPLASH</small>GATOR BAY</span></span></div>
-          <p class="keyboard-hint">ARROWS TO STEER <span>·</span> SPACE TO JUMP <span>·</span> T TO TRANSFORM</p>
+          <p class="keyboard-hint">ARROWS TO STEER <span>·</span> SPACE TO JUMP <span>·</span> B TO TURBO</p>
         </footer>
       </section>
 
@@ -66,8 +67,8 @@
 
       <nav id="controls" class="controls" aria-label="Driving controls" hidden>
         <div class="steer-controls"><button id="left-btn" class="drive-button steer-button" type="button" aria-label="Steer left"><svg aria-hidden="true"><use href="#icon-arrow-left" /></svg></button><button id="right-btn" class="drive-button steer-button" type="button" aria-label="Steer right"><svg aria-hidden="true"><use href="#icon-arrow-right" /></svg></button></div>
-        <span class="race-keyboard-hint">← → STEER <span>·</span> SPACE JUMP <span>·</span> T TRANSFORM</span>
-        <div class="action-controls"><button id="transform-btn" class="drive-button transform-button" type="button" aria-label="Transform truck"><svg aria-hidden="true"><use href="#icon-bolt" /></svg><span>TRANSFORM</span><span class="energy-track" aria-hidden="true"><span id="energy-fill"></span></span></button><button id="jump-btn" class="drive-button jump-button" type="button" aria-label="Jump"><svg aria-hidden="true"><use href="#icon-jump" /></svg><span>JUMP!</span></button></div>
+        <span class="race-keyboard-hint">← → STEER <span>·</span> SPACE JUMP <span>·</span> B TURBO <span>·</span> T TRANSFORM</span>
+        <div class="action-controls"><button id="transform-btn" class="drive-button transform-button" type="button" aria-label="Transform truck"><svg aria-hidden="true"><use href="#icon-bolt" /></svg><span>TRANSFORM</span><span class="energy-track" aria-hidden="true"><span id="energy-fill"></span></span></button><button id="turbo-btn" class="drive-button turbo-button" type="button" aria-label="Turbo boost"><svg aria-hidden="true"><use href="#icon-flame" /></svg><span>TURBO!</span><span class="energy-track" aria-hidden="true"><span id="turbo-fill"></span></span></button><button id="jump-btn" class="drive-button jump-button" type="button" aria-label="Jump"><svg aria-hidden="true"><use href="#icon-jump" /></svg><span>JUMP!</span></button></div>
       </nav>
 
       <section id="garage" class="overlay garage-overlay" role="dialog" aria-modal="true" aria-labelledby="garage-title" hidden>
