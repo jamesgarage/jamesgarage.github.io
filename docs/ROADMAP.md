@@ -68,6 +68,12 @@ Four friendly trucks now race with the player. Sunny and Splash are regulars; tw
 
 The chase view includes the larger group while retaining a visible horizon. Position and accessible labels describe all five trucks. The bridge waterwheel and woodland windmill turn gently; pause and gentler motion freeze them. See the [growing crew](DESIGN-GROWING-CREW.md) and [working landmarks](DESIGN-WORKING-LANDMARKS.md) designs.
 
+## Lagoon shores and visible crush rewards
+
+Irregular sandy banks replace the repeated sphere islands. Softer contours and shaded slopes meet the water while keeping palms and gator feet grounded, with fewer total triangles and the same material/mesh counts. Two gold stars rise from an actually crushed toy, making the existing reward visible without reading. The cue uses one fixed instanced batch and suppresses its extra motion in gentler mode. Tablet orientation changes are included in browser regression checks.
+
+See [lagoon shore design](DESIGN-LAGOON-SHORES.md) and [crush-star design](DESIGN-CRUSH-STARS.md). The following performance increment will batch the existing dust/confetti particles to reduce submitted draws; it introduces no new game rules.
+
 ## Next: physical device and child observations
 
 The playful-world increment gives Sunny and Splash independent local decision state: staggered greetings, delayed safe jump imitation, bounded celebrations and different preferences for racing or puddles. Completed races vary reaction timing and incidental world accents. Original material tiles add grass, timber, stone and water detail; small butterflies, moving cattails and ripples add life around the unchanged route. See [the design](DESIGN-PLAYFUL-WORLD.md) and [primary-source engine/game research](RESEARCH-PLAYFUL-WORLD.md).

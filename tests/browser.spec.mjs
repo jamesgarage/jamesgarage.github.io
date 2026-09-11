@@ -114,6 +114,35 @@ test('keyboard and touch jumps, pause, and resume work after a garage visit', as
   expect(await page.evaluate(() => window.__skyway.phase)).toBe('running');
 });
 
+test('turning the tablet keeps the same race and usable touch controls', async ({ page }) => {
+  await openGame(page);
+  await page.getByRole('button', { name: "Let's play", exact: true }).tap();
+  await page.waitForFunction(() => window.__skyway.distance > 20);
+  const first = await page.evaluate(() => window.__skyway);
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await page.waitForFunction(distance => window.__skyway.distance > distance + 4, first.distance);
+  expect(await page.evaluate(() => window.__skyway.crew)).toEqual(first.crew);
+  const right = await page.locator('#right-btn').boundingBox();
+  await page.mouse.move(right.x + right.width / 2, right.y + right.height / 2);
+  await page.mouse.down();
+  await page.waitForFunction(() => window.__skyway.screenLane > .04);
+  await page.mouse.up();
+  await page.getByRole('button', { name: 'Jump', exact: true }).tap();
+  await page.waitForFunction(() => window.__skyway.height > 1);
+  await page.getByRole('button', { name: 'Pause game', exact: true }).tap();
+  const frozen = await page.evaluate(() => window.__skyway);
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.waitForTimeout(180);
+  const turned = await page.evaluate(() => window.__skyway);
+  expect(turned.distance).toBe(frozen.distance);
+  expect(turned.buddies).toEqual(frozen.buddies);
+  expect(turned.landmarks).toEqual(frozen.landmarks);
+  await page.getByRole('button', { name: 'Keep going', exact: true }).tap();
+  await page.waitForFunction(distance => window.__skyway.distance > distance + 4, frozen.distance);
+  await expect(page.locator('#right-btn')).toBeVisible();
+  await expect(page.locator('#jump-btn')).toBeVisible();
+});
+
 test('crushing rewards a speed burst and keyboard turbo wins a friendly challenge', async ({ page }, testInfo) => {
   await openGame(page);
   await page.getByRole('button', { name: "Let's play", exact: true }).tap();
@@ -125,12 +154,14 @@ test('crushing rewards a speed burst and keyboard turbo wins a friendly challeng
   expect(crush.stars).toBeGreaterThanOrEqual(2);
   expect(crush.place).toBe(1);
   await page.waitForFunction(() => window.__skyway.crushedModels.includes('car-110'));
+  await page.waitForFunction(() => window.__skyway.crushReward.count === 2 && window.__skyway.crushReward.age > .3);
   await page.screenshot({ path: testInfo.outputPath('rewarding-crush.png') });
   await page.getByRole('button', { name: 'Pause game', exact: true }).tap();
   const rewardPause = await page.evaluate(() => window.__skyway);
   await page.waitForTimeout(250);
   expect(await page.evaluate(() => window.__skyway.crushBoostTime)).toBe(rewardPause.crushBoostTime);
   expect(await page.evaluate(() => window.__skyway.distance)).toBe(rewardPause.distance);
+  expect(await page.evaluate(() => window.__skyway.crushReward)).toEqual(rewardPause.crushReward);
   await page.getByRole('button', { name: 'Keep going', exact: true }).tap();
 
   // The later challenge comes from a friend's own pace; crushing never brakes.
@@ -138,6 +169,8 @@ test('crushing rewards a speed burst and keyboard turbo wins a friendly challeng
   const challenge = await page.evaluate(() => window.__skyway);
   expect(challenge.speed).toBeGreaterThanOrEqual(26);
   expect(challenge.buddies.some(buddy => buddy.distance > challenge.distance)).toBe(true);
+  expect(challenge.crushReward.count).toBe(0);
+  expect(challenge.crushReward.triggered).toBe(challenge.crushes);
   await expect(page.locator('#race-place')).not.toHaveText('1st');
   await page.keyboard.press('b');
   await page.waitForFunction(() => window.__skyway.turboTime > 0 && window.__skyway.speed > 30);
@@ -215,6 +248,7 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   expect(finish.place).toBe(1);
   expect(finish.crushes).toBeGreaterThanOrEqual(4);
   expect(finish.crushedModels.length).toBe(finish.crushes);
+  expect(finish.crushReward.triggered).toBe(finish.crushes);
   await expect(page.locator('#result-title')).toHaveText('You win!');
   await expect(page.locator('#result-truck')).toHaveAttribute('src', /trucks\/rumbler\.png$/);
   await page.waitForFunction(() => document.querySelector('#result-truck').naturalWidth === 720);
@@ -256,6 +290,7 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   expect(replay.crushes).toBe(0);
   expect(replay.crushBoostTime).toBe(0);
   expect(replay.crushedModels).toEqual([]);
+  expect(replay.crushReward).toEqual({id: '', age: 0, count: 0, triggered: 0});
 });
 
 test('blocked storage and unavailable audio still allow touchscreen play', async ({ page }) => {

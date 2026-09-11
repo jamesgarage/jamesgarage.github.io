@@ -7,6 +7,7 @@ import { sampleTrack, laneOffset } from './track.mjs';
 const PAD_LIFT = .065;
 const CAR_LIFT = .035;
 const SQUASH_SECONDS = .32;
+const REWARD_SECONDS = .8;
 const WHEEL_SIDES = [-1, 1, -1, 1];
 const WHEEL_STATIONS = [-1.04, -1.04, 1.04, 1.04];
 
@@ -135,6 +136,21 @@ function padGeometry(definition) {
   return { base: finish(base), arrows: finish(arrows) };
 }
 
+function rewardStarGeometry() {
+  const outline = new THREE.Shape();
+  for (let point = 0; point < 10; point++) {
+    const angle = Math.PI / 2 + point * Math.PI / 5, radius = point % 2 ? .46 : 1;
+    const x = Math.cos(angle) * radius, y = Math.sin(angle) * radius;
+    if (point) outline.lineTo(x, y); else outline.moveTo(x, y);
+  }
+  outline.closePath();
+  const geometry = new THREE.ExtrudeGeometry(outline, {
+    depth: .18, bevelEnabled: true, bevelThickness: .04, bevelSize: .06, bevelSegments: 1, steps: 1,
+  }).translate(0, 0, -.09);
+  geometry.computeBoundingBox(); geometry.computeBoundingSphere();
+  return geometry;
+}
+
 /** Visual toy encounters. The simulation alone decides contact, rewards and turbo. */
 export class RoadEncounters {
   constructor(scene) {
@@ -182,7 +198,43 @@ export class RoadEncounters {
       group.add(base, arrows); this.group.add(group);
       return { id: definition.id, distance: definition.distance, group, base, arrows };
     });
+    const starGeometry = rewardStarGeometry(); this.geometries.add(starGeometry);
+    this.rewardStars = new THREE.InstancedMesh(starGeometry,
+      ownMaterial({ color: 0xffd45a, roughness: .35, metalness: .16, emissive: 0xffb629, emissiveIntensity: .18 }), 2);
+    this.rewardStars.name = 'crush-reward-stars';
+    this.rewardStars.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    // Both stars remain local to the captured car frame through their full rise.
+    this.rewardStars.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 2.6, 0), 4.3);
+    this.group.add(this.rewardStars);
+    this.rewardPose = new THREE.Object3D(); this.rewardSeen = new Set();
+    this.rewardId = ''; this.rewardAge = 0;
     scene.add(this.group); this.disposed = false; this.reset();
+  }
+
+  get rewardDiagnostics() {
+    return Object.freeze({ id: this.rewardId, age: this.rewardAge,
+      count: this.rewardStars.count, triggered: this.rewardSeen.size });
+  }
+
+  poseRewardStars() {
+    const t = this.rewardAge / REWARD_SECONDS;
+    const appear = Math.min(1, .72 + t * 2.8), fade = t < .65 ? 1 : Math.max(0, (1 - t) / .35);
+    for (let index = 0; index < 2; index++) {
+      const side = index ? 1 : -1;
+      this.rewardPose.position.set(side * (1.35 + t * .85), 1.4 + t * 2.4, -.3);
+      this.rewardPose.rotation.set(0, 0, side * .10);
+      this.rewardPose.scale.setScalar(appear * fade);
+      this.rewardPose.updateMatrix(); this.rewardStars.setMatrixAt(index, this.rewardPose.matrix);
+    }
+    this.rewardStars.instanceMatrix.needsUpdate = true;
+  }
+
+  startReward(car) {
+    this.rewardId = car.id; this.rewardAge = 0;
+    this.rewardStars.position.copy(car.group.position);
+    this.rewardStars.quaternion.copy(car.group.quaternion);
+    this.rewardStars.count = 2;
+    this.poseRewardStars();
   }
 
   pose(car) {
@@ -200,18 +252,38 @@ export class RoadEncounters {
   reset() {
     if (this.disposed) return;
     this.group.visible = false;
+    this.rewardStars.count = 0; this.rewardId = ''; this.rewardAge = 0; this.rewardSeen.clear();
+    this.rewardStars.position.set(0, 0, 0); this.rewardStars.quaternion.identity();
     for (const car of this.cars) { car.crush = 0; this.pose(car); }
   }
 
   update(dt, { race, mode, reducedMotion }) {
     if (this.disposed) return;
-    if (mode !== 'race') { if (this.group.visible) this.reset(); return; }
+    if (mode !== 'race') {
+      if (this.group.visible) {
+        this.group.visible = false; this.rewardStars.count = 0;
+        // A menu transition hides visuals; only a new-race reset clears seen IDs.
+        for (const car of this.cars) { car.crush = 0; this.pose(car); }
+      }
+      return;
+    }
     // Respect pause before flags or accessibility changes can alter a transform.
     if (race.phase !== 'running' || !Number.isFinite(dt) || dt <= 0) return;
     this.group.visible = true;
+    const step = Math.min(dt, .1);
+    if (this.rewardStars.count) {
+      this.rewardAge = reducedMotion ? REWARD_SECONDS : Math.min(REWARD_SECONDS, this.rewardAge + step);
+      if (this.rewardAge >= REWARD_SECONDS) this.rewardStars.count = 0;
+      else this.poseRewardStars();
+    }
     for (const car of this.cars) {
-      if (car.crush >= 1 || !race.crushedCars?.includes(car.id)) continue;
-      car.crush = reducedMotion ? 1 : Math.min(1, car.crush + Math.min(dt, .1) / SQUASH_SECONDS);
+      if (!race.crushedCars?.includes(car.id)) continue;
+      if (!this.rewardSeen.has(car.id)) {
+        this.rewardSeen.add(car.id);
+        if (!reducedMotion) this.startReward(car);
+      }
+      if (car.crush >= 1) continue;
+      car.crush = reducedMotion ? 1 : Math.min(1, car.crush + step / SQUASH_SECONDS);
       this.pose(car);
     }
   }
@@ -222,6 +294,7 @@ export class RoadEncounters {
     for (const geometry of this.geometries) geometry.dispose();
     for (const material of this.materials) material.dispose();
     for (const car of this.cars) car.wheelMesh.dispose();
+    this.rewardStars.dispose(); this.rewardStars.count = 0; this.rewardSeen.clear();
     this.disposed = true;
   }
 }

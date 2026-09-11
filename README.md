@@ -36,7 +36,7 @@ Crushing a toy car gives you a little speed burst; turbo helps you pull ahead ev
 - **Touch:** use the large on-screen controls to jump, steer, fire the turbo, or transform when energy is ready.
 - **Keyboard:** use the arrow keys to steer, Space to jump, B or Shift for turbo, T to transform, and P or Escape to pause. Menus also support Tab and Enter.
 - **Turbo:** start with a full charge. A tap gives a short flame-powered burst; charge refills as you drive. Colored boost strips also trigger turbo automatically.
-- **Crushing:** drive over the small parked toy cars to flatten them, earn two stars, recharge turbo and get a short speed burst. Crushing always helps and never brakes the truck. Jumping clears a car.
+- **Crushing:** drive over the small parked toy cars to flatten them, earn two stars, recharge turbo and get a short speed burst. Two gold stars rise from the flattened toy so the reward is easy to see. Crushing always helps and never brakes the truck. Jumping clears a car.
 - **Transformation:** energy charges as you drive. Use the transformation control when charged; automatic activation helps little drivers enjoy the spectacle too.
 - **Pause and sound:** use the visible controls to pause or mute. Sound starts after a user interaction and remains optional.
 
@@ -65,7 +65,7 @@ These are original models inspired by broad toy and vehicle interests. The game 
 
 Bear Woods climbs a timber bridge beside a giant waterwheel. Rocket Runway adds a launch pad, a tall toy rocket, and a boost toward the next ramp. Gator Falls brings a broad waterfall, reeds, and a waterfront boardwalk to the rainy lagoon. Picnic stops, balloons, friendly bears and alligators, stands, and the finish trophy garden fill out the route.
 
-Wood grain, mottled grass, worn stone and water highlights give those places more texture. The waterwheel turns beside the bridge and the woodland windmill slowly rotates its sails. Small butterflies flutter beside the woods; cattails sway and gentle ripples move through the lagoon. Gentler motion keeps these extra details still.
+Wood grain, mottled grass, worn stone and water highlights give those places more texture. Low sandy banks have uneven waterlines, gently shaded slopes, and rooted palms and alligator feet. The waterwheel turns beside the bridge and the woodland windmill slowly rotates its sails. Small butterflies flutter beside the woods; cattails sway and gentle ripples move through the lagoon. Gentler motion keeps these extra details still.
 
 ![A close race across the raised timber bridge beside its waterwheel](docs/screenshots/bridge.png)
 

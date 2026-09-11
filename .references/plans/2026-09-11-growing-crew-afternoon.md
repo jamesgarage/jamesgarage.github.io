@@ -27,6 +27,8 @@ Preserve guided driving, positive crushing/turbo, truthful rank and no-input fir
 
 ## Ledger
 
-Next bounded increment: natural lagoon banks (docs/DESIGN-LAGOON-SHORES.md) and a nontextual two-star crush reward cue (docs/DESIGN-CRUSH-STARS.md). Independent source ownership: world/shore geometry versus encounter rendering. Root integrates and reviews actual play before publication. Preserve the first afternoon runtime b8f56d4 while developing.
+Second increment: natural lagoon banks (docs/DESIGN-LAGOON-SHORES.md) and a nontextual two-star crush reward cue (docs/DESIGN-CRUSH-STARS.md). Both independently reviewed and visually checked; all141 release units and8 production browser checks in Chrome/WebKit pass. Publication follows. The crew release also completed a controlled public playthrough:54 awarded stars,6 crushed cars,7 landings,1 loop,first place and an earned Bear replay.
+
+Next bounded work at15:31 EDT: batch the existing celebration particles to reduce peak draw calls; separately compare smoother nearby forest crowns before choosing a geometry change. Keep future modules isolated from the shore release until their integration is reviewed.
 
 Start observed at 14:58:44 EDT. Last live runtime fdddcde; source/docs head0237fd2. All113 units and7browserchecks inbothengines passed before this increment. Permission to continue to17:00 comes directly from the parent; no extra approval is needed for the established workflow.

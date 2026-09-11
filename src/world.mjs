@@ -5,6 +5,7 @@ import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS } from './core.mjs';
 import { sampleTrack, trackCenter } from './track.mjs';
 import { isAdventureClearing } from './adventure.mjs';
 import { createSurfaceTexture, surfaceUVs } from './surfaces.mjs';
+import { createShoreBankGeometry } from './shore-banks.mjs';
 
 export const DRIVE_HALF_WIDTH = 8.02;
 
@@ -68,6 +69,7 @@ const geo = {
   box: new THREE.BoxGeometry(1, 1, 1),
   rounded: new RoundedBoxGeometry(1, 1, 1, 1, .12),
   ball: new THREE.SphereGeometry(1, 12, 8),
+  shore: createShoreBankGeometry(),
   rock: organicSphere(10, 6),
   crown: organicSphere(14, 9, true),
   farCrown: organicSphere(8, 6, true),
@@ -89,10 +91,12 @@ function material(color, roughness = .8, vertexColors = false, surface = '') {
 }
 function piece(group, kind, color, position, scale, rotation = [0, 0, 0], shadow = true) {
   const foliage = kind === 'crown' || kind === 'farCrown';
+  const shore = kind === 'shore';
   const surface = kind === 'rock' ? 'stone' : [0x8e5834, 0xbd8c51, 0x927055].includes(color) ? 'wood' : '';
-  const mesh = new THREE.Mesh(geo[kind], material(color, foliage || surface ? .94 : .8, foliage || kind === 'palmTrunk', surface));
+  const mesh = new THREE.Mesh(geo[kind], material(color, foliage || surface || shore ? .94 : .8, foliage || kind === 'palmTrunk' || shore, surface));
   mesh.userData.canopy = foliage;
   mesh.userData.frond = kind === 'frond';
+  mesh.userData.shore = shore;
   mesh.position.set(...position); mesh.scale.set(...scale); mesh.rotation.set(...rotation);
   mesh.castShadow = shadow; mesh.receiveShadow = shadow;
   group.add(mesh); return mesh;
@@ -109,14 +113,14 @@ function batch(source) {
   source.traverse(mesh => {
     if (!mesh.isMesh) return;
     const key = `${mesh.material.uuid}:${mesh.castShadow}:${mesh.receiveShadow}`;
-    if (!buckets.has(key)) buckets.set(key, { material: mesh.material, cast: mesh.castShadow, receive: mesh.receiveShadow, canopy: mesh.userData.canopy === true, frond: mesh.userData.frond === true, parts: [] });
+    if (!buckets.has(key)) buckets.set(key, { material: mesh.material, cast: mesh.castShadow, receive: mesh.receiveShadow, canopy: mesh.userData.canopy === true, frond: mesh.userData.frond === true, shore: mesh.userData.shore === true, parts: [] });
     let geometry = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);
     if (mesh.material.userData.surface) surfaceUVs(geometry, mesh.material.userData.surface);
     if (geometry.index) { const expanded = geometry.toNonIndexed(); geometry.dispose(); geometry = expanded; }
     buckets.get(key).parts.push(geometry);
   });
   const group = new THREE.Group(); group.name = source.name;
-  for (const { material: paint, cast, receive, canopy, frond, parts } of buckets.values()) {
+  for (const { material: paint, cast, receive, canopy, frond, shore, parts } of buckets.values()) {
     const geometry = mergeGeometries(parts);
     parts.forEach(part => part.dispose());
     if (!geometry) continue;
@@ -124,6 +128,7 @@ function batch(source) {
     mesh.castShadow = cast; mesh.receiveShadow = receive;
     mesh.userData.canopy = canopy;
     mesh.userData.frond = frond;
+    mesh.userData.shore = shore;
     group.add(mesh);
   }
   return group;
@@ -215,13 +220,15 @@ function woodlandTree(parent, position, size, distant = false) {
 }
 function palm(parent, position, size) {
   const g = new THREE.Group(); g.position.copy(position); parent.add(g);
-  piece(g, 'palmTrunk', 0xbd8c51, [0, size * 1.5, 0], [size, size, size]);
+  const trunk = piece(g, 'palmTrunk', 0xbd8c51, [0, size * 1.5, 0], [size, size, size]);
+  trunk.userData.shoreContact = true;
   for (let i = 0; i < 7; i++) {
     const a = i / 7 * Math.PI * 2;
     const leaf = new THREE.Group(); leaf.position.set(.4 * size, 2.9 * size, 0); leaf.rotation.y = a; g.add(leaf);
     piece(leaf, 'frond', i % 2 ? 0x269d6b : 0x49bd72, [0, 0, 0], [size, size, size], [0, 0, -.05]);
   }
   for (let i = 0; i < 3; i++) ball(g, 0x815237, [.4 * size + Math.cos(i * 2) * .25 * size, 2.65 * size, Math.sin(i * 2) * .25 * size], [.22 * size, .25 * size, .22 * size]);
+  return g;
 }
 function bear(parent, position, size = 1, wave = false) {
   const g = new THREE.Group(); g.position.copy(position); g.scale.setScalar(size); g.rotation.y = position.x < 0 ? Math.PI / 2 : -Math.PI / 2; parent.add(g);
@@ -251,11 +258,42 @@ function gator(parent, position, size = 1) {
     ball(g, 0x72be59, [side * .48, 1.24, 1.34], [.35, .36, .34]);
     ball(g, 0xfff8e0, [side * .48, 1.34, 1.59], [.23, .22, .13]);
     ball(g, 0x173b39, [side * .48, 1.36, 1.7], [.09, .13, .06]);
-    for (const z of [-.9, .65]) ball(g, 0x359758, [side * 1.05, .22, z], [.43, .25, .56]);
+    for (const z of [-.9, .65]) ball(g, 0x359758, [side * 1.05, .22, z], [.43, .25, .56]).userData.shoreContact = true;
     for (const z of [1.25, 1.9, 2.4]) piece(g, 'cone', 0xfff5c6, [side * .68, .65, z], [.11, .2, .11], [Math.PI, 0, 0]);
   }
   piece(g, 'cone', 0x359758, [0, .48, -2.04], [.72, 2, .43], [-Math.PI / 2, 0, 0]);
   for (let z = -1.5; z < .9; z += .45) piece(g, 'cone', 0x9bd060, [0, 1.23, z], [.21, .4, .23]);
+  return g;
+}
+
+function shoreBank(parent, root, kind, size, distance, side, occupant) {
+  const frame = sampleTrack(distance), turn = Math.atan2(frame.forward.x, frame.forward.z);
+  const minor = 5 + size;
+  const scale = kind === 'palm'
+    ? [minor * (.92 + noise(distance + side * 3) * .025), root.y + .04 + 2.05, minor * (.77 + noise(distance * 2 + side) * .055)]
+    : [4.2, root.y + .04 + 2.05, 5.8];
+  const yaw = kind === 'palm' ? noise(distance * 3 + side) * Math.PI * 2 : turn + (noise(distance + side) - .5) * .24;
+  const bank = piece(parent, 'shore', 0xffffff, [root.x, -2.05, root.z], scale, [0, yaw, 0]);
+  bank.updateWorldMatrix(true, false); occupant.updateWorldMatrix(true, true);
+  // Retain contact samples from actual trunk/foot geometry before chunk batching
+  // removes the original authoring meshes. Tests raycast the real merged banks.
+  const contacts = [], point = new THREE.Vector3();
+  occupant.traverse(mesh => {
+    if (!mesh.userData.shoreContact) return;
+    const positions = mesh.geometry.attributes.position;
+    let lowest = Infinity;
+    for (let i = 0; i < positions.count; i++) lowest = Math.min(lowest, positions.getY(i));
+    const seen = new Set();
+    for (let i = 0; i < positions.count; i++) {
+      if (positions.getY(i) > lowest + .00001) continue;
+      point.fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld);
+      const key = point.toArray().map(value => value.toFixed(6)).join(',');
+      if (!seen.has(key)) { seen.add(key); contacts.push(Object.freeze(point.toArray())); }
+    }
+  });
+  return Object.freeze({ kind, distance, center: Object.freeze(root.toArray()),
+    oldRadius: Object.freeze(kind === 'palm' ? [6 + size, 5 + size] : [7.4, 6]),
+    matrix: Object.freeze(bank.matrixWorld.toArray()), contacts: Object.freeze(contacts) });
 }
 
 function gate(parent, d, accent, label, finish = false) {
@@ -370,6 +408,7 @@ function makeLoopSupport() {
 
 export function createWorld() {
   const world = new THREE.Group(); world.name = 'monster-skyway-world';
+  world.userData.shoreBanks = [];
   world.add(makeTerrain(), makeRoad());
   const waterMap = createSurfaceTexture('water');
   const waterPaint = new THREE.MeshStandardMaterial({ color: 0x32b8bd, roughness: .38, envMapIntensity: .11, map: waterMap, bumpMap: waterMap, bumpScale: .045 });
@@ -400,8 +439,8 @@ export function createWorld() {
           if (isAdventureClearing(d, offset)) continue;
           const p = f.position.clone().addScaledVector(f.right, offset); p.y = bay ? -1.2 : terrainHeight(p.x, p.z);
           if (bay) {
-            ball(chunk, 0xeacc86, [p.x, -2.1, p.z], [6 + size, 1.5, 5 + size]);
-            palm(chunk, p, size);
+            const tree = palm(chunk, p, size);
+            world.userData.shoreBanks.push(shoreBank(chunk, p, 'palm', size, d, side, tree));
             for (let i = 0; i < 3; i++) piece(chunk, 'rock', 0x5bb675, [p.x + 2.2 + i * .6, -.8, p.z + 1.3], [.3, 1.2 + i * .2, .22], [0, 0, -.1 - i * .12]);
           } else {
             const clearOfLoop = d < LOOP_START - 40 || d > LOOP_END + 40;
@@ -426,7 +465,10 @@ export function createWorld() {
           if (!isAdventureClearing(d, side * 15)) {
             const p = f.position.clone().addScaledVector(f.right, side * 15);
             p.y = bay ? -.75 : terrainHeight(p.x, p.z);
-            if (bay) { ball(chunk, 0xeacc86, [p.x, -2.2, p.z], [7.4, 1.6, 6]); gator(chunk, p, 2.1); }
+            if (bay) {
+              const mascot = gator(chunk, p, 2.1);
+              world.userData.shoreBanks.push(shoreBank(chunk, p, 'gator', 1, d, side, mascot));
+            }
             else bear(chunk, p, 2.1, true);
           }
         }
@@ -485,5 +527,6 @@ export function createWorld() {
     }
     world.add(batch(clouds));
   }
+  Object.freeze(world.userData.shoreBanks);
   return world;
 }

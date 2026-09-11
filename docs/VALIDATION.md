@@ -154,6 +154,14 @@ The integrated lifetime probe runs 108 roster resets and 108 player replacements
 
 The [crew and landmarks deployment](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34637830657) successfully publishes runtime commit `b8f56d4`. The public page serves the matching `index-lgrUEwdq.js` / `index-L73CJAqG.css` assets. All **seven public browser tests pass in Chrome (about 1.9 minutes) and WebKit (about 2.4 minutes)**, with no JavaScript, console, failed-request or HTTP errors. The public four-viewport capture repeats the garage, control and overflow checks successfully. README gameplay images are refreshed from this deployment; the labeled crew gallery is rendered directly from the same six companion models.
 
+## Lagoon shores and visible crush rewards: 2026-09-11 afternoon
+
+Low, irregular sand banks replace 76 domed lagoon islands. The shared 32-segment shape retains grounded palms and gators, with visible waterline variation and submerged outer edges. Independent review checks 773 actual trunk/foot contact samples against merged bank triangles, road clearance, finite attributes and resource ownership. Static world cost is 604 meshes / 349,592 triangles / 69 materials / 9 textures, saving 608 triangles without adding batches or textures. Three fresh simulation views and the broader 30-view before/after study were visually inspected without browser errors.
+
+Each newly crushed toy car produces two gold stars that rise briefly from the flattened car. This is a visual cue for the existing two-star reward; it does not change rewards or driving. A fixed two-instance mesh adds one draw and 152 triangles while visible, then hides after 0.8 seconds. Unit and independent review cover one cue per actual contact, pause/invalid-frame freeze, replay, gentler motion, culling and exact-once resource disposal. Forty rendered samples cover two player sizes, forest/bay cars and tablet/phone views; the stars remain readable behind Mega Titan. Twelve independently simulated full races confirm unchanged awards.
+
+All **141 release unit tests pass**. The production build produces `index-DIABTUBB.js` / `index-L73CJAqG.css`, approximately 719 kB minified / 194 kB gzip JavaScript, with the existing Vite size advisory. All **eight production browser checks pass in Chrome (about 2.1 minutes) and WebKit (about 2.6 minutes)**. Added coverage checks visible crush stars and their frozen/expired/reset states, plus rotating the tablet during driving and while paused without losing the race or usable touch controls. Both complete races finish first, save an earned truck and replay successfully; neither engine records browser/network errors.
+
 ## Practical limits
 
 - Chrome and Playwright WebKit on a desktop with emulated touch are not a physical iPad or iPhone. Shipping Safari behavior, actual device frame pacing, battery use, and orientation changes still need a real-device pass.
