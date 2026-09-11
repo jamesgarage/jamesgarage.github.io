@@ -88,11 +88,12 @@ export class GameScene {
   reset() {this.flames.clear();this.buddies.reset();this.weather.reset();this.encounters.reset();this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;this.particles.forEach(p=>{p.life=0;p.mesh.visible=false;});}
   menu() {this.flames.clear();this.weather.reset();this.mode='menu';this.snapCamera=true;}
   resize() {this.width=innerWidth;this.height=innerHeight;this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();this.renderer.setSize(this.width,this.height,false);this.snapCamera=true;}
-  burst(colorful=true,count=20,origin=this.truck.group.position) {
+  burst(colorful=true,count=20,origin=this.truck.group.position,reward=false) {
+    if(this.reducedMotion)return;
     let n=0;for(const p of this.particles) {
       if(p.life>0)continue;
       p.life=p.duration=(colorful?.55:.3)+Math.random()*.5;p.size=colorful?1.5:2.8;
-      p.mesh.visible=true;p.mesh.material=colorful?p.paint:mat(0xdfbb83);
+      p.mesh.visible=true;p.mesh.material=reward?mat(0xffd75e,.25):colorful?p.paint:mat(0xdfbb83);
       p.mesh.position.copy(origin).add(new THREE.Vector3((Math.random()-.5)*(colorful?1:5),colorful?1:.25,(Math.random()-.5)*(colorful?1:4)));
       const spread=colorful?11:5;
       p.v.set((Math.random()-.5)*spread,Math.random()*(colorful?8:2)+2,(Math.random()-.5)*spread);
@@ -100,6 +101,7 @@ export class GameScene {
     }
   }
   land(strength=1) {this.squash=.55+clamp(strength,0,1)*.45;this.burst(false,12);}
+  crush() {this.burst(true,14,this.truck.group.position,true);}
   update(dt,race) {
     this.time+=dt;
     const isMenu=this.mode==='menu';

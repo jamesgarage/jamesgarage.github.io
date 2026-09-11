@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS } from './core.mjs';
 import { sampleTrack, trackCenter } from './track.mjs';
@@ -7,22 +7,86 @@ import { isAdventureClearing } from './adventure.mjs';
 
 export const DRIVE_HALF_WIDTH = 8.02;
 
+// A gently uneven shared silhouette reads as foliage/stone, without assigning
+// hundreds of new sphere subdivisions to every distant tree in the forest.
+function organicSphere(segments, rings, foliage = false) {
+  let geometry = new THREE.SphereGeometry(1, segments, rings);
+  const positions = geometry.attributes.position;
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i);
+    const bulge = 1 + .075 * Math.sin(x * 5.4 + y * 2) * Math.sin(z * 5.7 + 1.3) + .04 * Math.cos(y * 7 - z * 2.4);
+    positions.setXYZ(i, x * bulge, y * (1 + .045 * Math.sin(x * 4 + z * 3)), z * bulge);
+  }
+  geometry.deleteAttribute('uv'); geometry.deleteAttribute('normal');
+  const welded = mergeVertices(geometry); geometry.dispose(); geometry = welded;
+  geometry.computeVertexNormals();
+  // Other cached world primitives retain UVs for compatible material batches.
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(geometry.attributes.position.count * 2), 2));
+  if (foliage) {
+    const colors = [];
+    for (let i = 0; i < geometry.attributes.position.count; i++) {
+      const y = geometry.attributes.position.getY(i);
+      const light = .82 + .18 * (y + 1) / 2;
+      colors.push(light, light, light);
+    }
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  }
+  return geometry;
+}
+
+function palmTrunk() {
+  const geometry = new THREE.CylinderGeometry(.12, .19, 3, 10, 5);
+  const positions = geometry.attributes.position, colors = [];
+  for (let i = 0; i < positions.count; i++) {
+    const t = (positions.getY(i) + 1.5) / 3;
+    positions.setX(i, positions.getX(i) + .4 * t * t);
+    const shade = .83 + .17 * (Math.round(t * 5) % 2);
+    colors.push(shade, shade, shade);
+  }
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geometry.computeVertexNormals(); return geometry;
+}
+
+function palmFrond() {
+  const positions = [], indices = [], segments = 7;
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments, width = Math.sin(Math.PI * t) * .3;
+    for (let side = 0; side < 4; side++) {
+      const a = side / 4 * Math.PI * 2;
+      positions.push(t * 2, .14 * Math.sin(Math.PI * t) - .55 * t * t + Math.sin(a) * width * .16, Math.cos(a) * width);
+      if (i < segments) { const v = i * 4 + side, next = i * 4 + (side + 1) % 4; indices.push(v, v + 4, next, next, v + 4, next + 4); }
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(positions.length / 3 * 2), 2));
+  geometry.setIndex(indices); geometry.computeVertexNormals(); return geometry;
+}
+
 const geo = {
   box: new THREE.BoxGeometry(1, 1, 1),
   rounded: new RoundedBoxGeometry(1, 1, 1, 1, .12),
   ball: new THREE.SphereGeometry(1, 12, 8),
-  rock: new THREE.IcosahedronGeometry(1, 1),
+  rock: organicSphere(10, 6),
+  crown: organicSphere(14, 9, true),
+  farCrown: organicSphere(8, 6, true),
+  hill: organicSphere(14, 8),
+  palmTrunk: palmTrunk(),
+  frond: palmFrond(),
   cone: new THREE.ConeGeometry(1, 1, 9),
   cylinder: new THREE.CylinderGeometry(1, 1, 1, 10),
 };
 const materials = new Map();
-function material(color, roughness = .8) {
-  const key = `${color}:${roughness}`;
-  if (!materials.has(key)) materials.set(key, new THREE.MeshStandardMaterial({ color, roughness }));
+function material(color, roughness = .8, vertexColors = false) {
+  const key = `${color}:${roughness}:${vertexColors}`;
+  if (!materials.has(key)) materials.set(key, new THREE.MeshStandardMaterial({ color, roughness, vertexColors }));
   return materials.get(key);
 }
 function piece(group, kind, color, position, scale, rotation = [0, 0, 0], shadow = true) {
-  const mesh = new THREE.Mesh(geo[kind], material(color));
+  const foliage = kind === 'crown' || kind === 'farCrown';
+  const mesh = new THREE.Mesh(geo[kind], material(color, foliage ? .94 : .8, foliage || kind === 'palmTrunk'));
+  mesh.userData.canopy = foliage;
+  mesh.userData.frond = kind === 'frond';
   mesh.position.set(...position); mesh.scale.set(...scale); mesh.rotation.set(...rotation);
   mesh.castShadow = shadow; mesh.receiveShadow = shadow;
   group.add(mesh); return mesh;
@@ -39,18 +103,20 @@ function batch(source) {
   source.traverse(mesh => {
     if (!mesh.isMesh) return;
     const key = `${mesh.material.uuid}:${mesh.castShadow}:${mesh.receiveShadow}`;
-    if (!buckets.has(key)) buckets.set(key, { material: mesh.material, cast: mesh.castShadow, receive: mesh.receiveShadow, parts: [] });
+    if (!buckets.has(key)) buckets.set(key, { material: mesh.material, cast: mesh.castShadow, receive: mesh.receiveShadow, canopy: mesh.userData.canopy === true, frond: mesh.userData.frond === true, parts: [] });
     let geometry = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);
     if (geometry.index) { const expanded = geometry.toNonIndexed(); geometry.dispose(); geometry = expanded; }
     buckets.get(key).parts.push(geometry);
   });
   const group = new THREE.Group(); group.name = source.name;
-  for (const { material: paint, cast, receive, parts } of buckets.values()) {
+  for (const { material: paint, cast, receive, canopy, frond, parts } of buckets.values()) {
     const geometry = mergeGeometries(parts);
     parts.forEach(part => part.dispose());
     if (!geometry) continue;
     const mesh = new THREE.Mesh(geometry, paint);
     mesh.castShadow = cast; mesh.receiveShadow = receive;
+    mesh.userData.canopy = canopy;
+    mesh.userData.frond = frond;
     group.add(mesh);
   }
   return group;
@@ -123,22 +189,25 @@ function makeTerrain() {
   return mesh;
 }
 
-function pine(parent, position, size) {
+function woodlandTree(parent, position, size, distant = false) {
   const g = new THREE.Group(); g.position.copy(position); parent.add(g);
-  piece(g, 'cylinder', 0x8e5834, [0, size * .7, 0], [.3 * size, size * 1.5, .3 * size]);
-  for (let i = 0; i < 3; i++) {
-    piece(g, 'cone', [0x167862, 0x23966b, 0x4daf76][i], [0, size * (1.1 + i * .54), 0], [size * (1.03 - i * .19), size * 1.45, size * (1.03 - i * .19)]);
+  const lean = (noise(position.z) - .5) * .14;
+  piece(g, 'cylinder', 0x8e5834, [0, size * .78, 0], [.2 * size, size * 1.65, .2 * size], [0, 0, lean]);
+  if (distant) {
+    piece(g, 'farCrown', 0x23966b, [0, size * 1.9, 0], [size * .94, size * 1.05, size * .86], [0, noise(position.x) * 6, .09]);
+  } else {
+    piece(g, 'cylinder', 0x8e5834, [-size * .24, size * 1.27, 0], [.11 * size, size * .85, .11 * size], [0, 0, .55]);
+    piece(g, 'crown', 0x23966b, [-size * .2, size * 1.77, 0], [size * .78, size * .79, size * .81], [0, noise(position.x) * 6, -.18]);
+    piece(g, 'crown', 0x4daf76, [size * .28, size * 2.15, .06 * size], [size * .71, size * .89, size * .74], [0, noise(position.z) * 6, .16]);
   }
 }
 function palm(parent, position, size) {
   const g = new THREE.Group(); g.position.copy(position); parent.add(g);
-  for (let i = 0; i < 5; i++) {
-    piece(g, 'cylinder', i % 2 ? 0xa9703e : 0xbd8c51, [i * .09 * size, size * (.3 + i * .55), 0], [.15 * size, .61 * size, .15 * size], [0, 0, -.12]);
-  }
+  piece(g, 'palmTrunk', 0xbd8c51, [0, size * 1.5, 0], [size, size, size]);
   for (let i = 0; i < 7; i++) {
     const a = i / 7 * Math.PI * 2;
     const leaf = new THREE.Group(); leaf.position.set(.4 * size, 2.9 * size, 0); leaf.rotation.y = a; g.add(leaf);
-    piece(leaf, 'rock', i % 2 ? 0x269d6b : 0x49bd72, [size * .8, -.12 * size, 0], [size * 1.15, .15 * size, .35 * size], [0, 0, -.22]);
+    piece(leaf, 'frond', i % 2 ? 0x269d6b : 0x49bd72, [0, 0, 0], [size, size, size], [0, 0, -.05]);
   }
   for (let i = 0; i < 3; i++) ball(g, 0x815237, [.4 * size + Math.cos(i * 2) * .25 * size, 2.65 * size, Math.sin(i * 2) * .25 * size], [.22 * size, .25 * size, .22 * size]);
 }
@@ -306,8 +375,8 @@ export function createWorld() {
   water.rotation.x = -Math.PI / 2; water.position.set(0, -1.7, 1450); water.receiveShadow = true; water.name = 'gator-lagoon'; world.add(water);
 
   for (let start = -48; start < COURSE_LENGTH + 90; start += 144) {
-    const chunk = new THREE.Group();
-    for (let d = start; d < start + 144; d += 24) {
+    const chunk = new THREE.Group(); chunk.name = `scenery-chunk-${start}`;
+    for (let d = start; d < Math.min(start + 144, COURSE_LENGTH + 90); d += 24) {
       const f = sampleTrack(d);
       const loop = d > LOOP_START - 12 && d < LOOP_END + 15;
       const bay = d > 1110;
@@ -321,16 +390,18 @@ export function createWorld() {
         }
         const seam = box(chunk, 0xe14e12, [f.position.x, f.position.y + .012, f.position.z], [14.4, .015, .065], undefined, false); seam.quaternion.copy(f.quaternion);
         for (const side of [-1, 1]) {
-          const offset = side * (17 + noise(d + side) * 13);
+          const size = 2.4 + noise(d * 2 + side) * 1.8;
+          const baseOffset = 17 + noise(d + side) * 13;
+          const offset = side * (bay ? Math.max(baseOffset, 12.5 + 2.5 * size) : baseOffset);
           if (isAdventureClearing(d, offset)) continue;
           const p = f.position.clone().addScaledVector(f.right, offset); p.y = bay ? -1.2 : terrainHeight(p.x, p.z);
-          const size = 2.4 + noise(d * 2 + side) * 1.8;
           if (bay) {
             ball(chunk, 0xeacc86, [p.x, -2.1, p.z], [6 + size, 1.5, 5 + size]);
             palm(chunk, p, size);
             for (let i = 0; i < 3; i++) piece(chunk, 'rock', 0x5bb675, [p.x + 2.2 + i * .6, -.8, p.z + 1.3], [.3, 1.2 + i * .2, .22], [0, 0, -.1 - i * .12]);
           } else {
-            pine(chunk, p, size);
+            const clearOfLoop = d < LOOP_START - 40 || d > LOOP_END + 40;
+            if (clearOfLoop) woodlandTree(chunk, p, size);
             const flowers = f.position.clone().addScaledVector(f.right, side * (11.8 + noise(d + 3) * 2));
             flowers.y = terrainHeight(flowers.x, flowers.z);
             for (let i = 0; i < 4; i++) {
@@ -343,7 +414,7 @@ export function createWorld() {
               for (let i = 0; i < 3; i++) ball(chunk, [0x448a51, 0x569d53, 0x71ad52][i], [p.x - side * (2 + i), p.y + .55, p.z + i], [1.3, .9, 1.4]);
             }
             const far = p.clone().addScaledVector(f.right, side * 35); far.y = terrainHeight(far.x, far.z);
-            pine(chunk, far, size * 1.5);
+            if (clearOfLoop) woodlandTree(chunk, far, size * 1.5, true);
           }
         }
         if ((d + 48) % 96 === 0) {
@@ -383,23 +454,32 @@ export function createWorld() {
     }
   }
   world.add(makeLoopSupport());
-  const friends = sampleTrack(16);
+  const friends = sampleTrack(16), startingFriends = new THREE.Group(); startingFriends.name = 'starting-friends';
   for (const side of [-1, 1]) {
     const p = friends.position.clone().addScaledVector(friends.right, side * 17); p.y = -1.2;
-    if (side < 0) bear(landmarks, p, 3, true); else gator(landmarks, p, 2.8);
+    if (side < 0) bear(startingFriends, p, 3, true); else gator(startingFriends, p, 2.8);
   }
+  world.add(batch(startingFriends));
   // Large silhouettes at the edge of the horizon supply depth without clutter.
-  for (let i = 0; i < 19; i++) for (const side of [-1, 1]) {
-    const z = i * 102 - 50, x = side * (125 + noise(i + side) * 45);
-    piece(landmarks, 'rock', [0x519884, 0x68a59a, 0x7db2a5][i % 3], [x, 12, z], [27 + noise(i) * 20, 22 + noise(i + 1) * 33, 35], [0, noise(i) * 3, 0], false);
+  for (let start = 0; start < 19; start += 3) {
+    const hills = new THREE.Group(); hills.name = `distant-hills-${start}`;
+    for (let i = start; i < Math.min(start + 3, 19); i++) for (const side of [-1, 1]) {
+      const z = i * 102 - 50, x = side * (125 + noise(i + side) * 45);
+      piece(hills, 'hill', [0x519884, 0x68a59a, 0x7db2a5][i % 3], [x, 5, z], [32 + noise(i) * 20, 20 + noise(i + 1) * 28, 38], [0, noise(i) * 3, 0], false);
+    }
+    world.add(batch(hills));
   }
   world.add(batch(landmarks));
 
-  const clouds = new THREE.Group();
-  for (let i = 0; i < 28; i++) {
-    const x = Math.sin(i * 8.3) * 120, z = i * 72 - 50, y = 70 + noise(i) * 16;
-    for (let j = 0; j < 4; j++) piece(clouds, 'ball', 0xffffff, [x + j * 4.7, y + Math.sin(j * 1.5) * 2, z], [6.4, 3 + noise(j + i), 4.8], undefined, false);
+  // Clouds and horizon hills used to share course-wide batches. Spatial groups
+  // fund nearby organic detail by culling distant geometry behind the camera.
+  for (let start = 0; start < 28; start += 4) {
+    const clouds = new THREE.Group(); clouds.name = `soft-clouds-${start}`;
+    for (let i = start; i < start + 4; i++) {
+      const x = Math.sin(i * 8.3) * 120, z = i * 72 - 50, y = 70 + noise(i) * 16;
+      for (let j = 0; j < 4; j++) piece(clouds, 'ball', 0xffffff, [x + j * 4.7, y + Math.sin(j * 1.5) * 2, z], [6.4, 3 + noise(j + i), 4.8], undefined, false);
+    }
+    world.add(batch(clouds));
   }
-  world.add(batch(clouds));
   return world;
 }

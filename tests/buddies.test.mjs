@@ -29,6 +29,12 @@ function matrices(field) {
   });
 }
 
+function approachRace(spec = TRUCKS[0], guardian = false) {
+  const race = { ...createRace(), phase: 'running', distance: 210, truckScale: spec.scale, transformTime: guardian ? 9 : 0 };
+  race.buddies.forEach((buddy, index) => { buddy.distance = race.distance - 10 - index * 4; buddy.lane = index ? 1.65 : -1.65; });
+  return race;
+}
+
 test('distance-only previews remain deterministic, behind, separated and independent of player actions', () => {
   for (let distance = 0; distance <= COURSE_LENGTH; distance += .5) {
     const race = Object.freeze({ distance, lane: Math.sin(distance), height: 99, transformTime: 9, stars: 17 });
@@ -106,14 +112,16 @@ test('stateful buddies take every ramp using elapsed gravity during changing spe
 
 test('the rendered field uses simulated poses without changing them', () => {
   const scene = new THREE.Scene(), field = new RaceBuddies(scene);
-  const race = { ...createRace(), phase: 'running' };
+  const race = approachRace();
+  let passed = false;
   try {
     for (let frame = 0; frame < 300; frame++) {
       stepRace(race, 1 / 60);
       field.update(1 / 60, race);
+      if (field.poses[0].distance > race.distance) passed = true;
     }
     assert.deepEqual(field.poses, race.buddies);
-    assert.ok(field.poses[0].distance > race.distance, 'Sunny really passed the slowing player');
+    assert.ok(passed, 'The renderer showed Sunny actually passing during the approach');
     const frozen = structuredClone(race);
     field.update(.05, race);
     assert.deepEqual(race, frozen);
@@ -124,10 +132,10 @@ test('the rendered field uses simulated poses without changing them', () => {
 
 test('late steering yields safely, preserves steering intent and resumes once a pass clears', () => {
   for (const spec of TRUCKS) for (const steer of [-1, 1]) for (const triggerGap of [7.9, 2, -.1]) {
-    const race = { ...createRace(), phase: 'running', truckScale: spec.scale };
+    const race = approachRace(spec);
     let steering = false, guarded = false, resumed = false;
     for (let frame = 0; frame < 650; frame++) {
-      if (race.crushes && race.distance - race.buddies[0].distance < triggerGap) steering = true;
+      if (race.distance - race.buddies[0].distance < triggerGap) steering = true;
       const previous = structuredClone(race);
       stepRace(race, 1 / 60, { steer: steering ? steer : 0 });
       if (steering && Math.abs(race.targetLane) > .95 && Math.abs(race.lane) < .9) guarded = true;
@@ -152,11 +160,11 @@ test('actual normal and guardian tires never intersect during a late merge', () 
   let closeFrames = 0;
   for (const spec of TRUCKS) for (const guardian of [false, true]) for (const steer of [-1, 1]) {
     const player = makeTruck(spec), field = new RaceBuddies(new THREE.Scene());
-    const race = { ...createRace(), phase: 'running', truckScale: spec.scale, transformTime: guardian ? 9 : 0 };
+    const race = approachRace(spec, guardian);
     let steering = false, transform = 0, lean = 0;
     try {
       for (let frame = 0; frame < 650; frame++) {
-        if (race.crushes && race.distance - race.buddies[0].distance < (guardian ? 10 : 2)) steering = true;
+        if (race.distance - race.buddies[0].distance < (guardian ? 10 : 2)) steering = true;
         stepRace(race, 1 / 60, { steer: steering ? steer : 0 });
         // Match scene articulation, including the tire yaw that broadens the
         // footprint when actual lane is briefly held clear of an opponent.

@@ -48,16 +48,24 @@ for (const spec of TRUCKS) test(`${spec.name} preserves animation and exhaust co
     let detailVertices = 0, meshes = 0, vertices = 0;
     character.traverse(object => { if (object.isMesh) detailVertices += object.geometry.attributes.position.count; });
     assert.ok(detailVertices > 100, 'Character features contain actual sculpted geometry');
+    const materials = new Map();
     truck.group.updateMatrixWorld(true);
     truck.group.traverse(object => {
       assert.ok(object.matrixWorld.elements.every(Number.isFinite));
       if (!object.isMesh) return;
       meshes++;
       vertices += object.geometry.attributes.position.count;
+      for (const material of [].concat(object.material)) materials.set(material.name.split('-').at(-1), material);
       for (const attribute of Object.values(object.geometry.attributes)) assert.ok(attribute.array.every(Number.isFinite));
       object.geometry.computeBoundingSphere();
       assert.ok(Number.isFinite(object.geometry.boundingSphere.radius));
     });
+    assert.ok(materials.get('paint').isMeshPhysicalMaterial, 'Paint owns a clear-coated physical surface');
+    assert.ok(materials.get('chrome').isMeshPhysicalMaterial, 'Chrome owns a reflective physical surface');
+    assert.ok(materials.get('glass').isMeshPhysicalMaterial, 'Glass owns a separately tuned physical surface');
+    assert.equal(materials.get('glass').metalness, 0, 'Tinted glazing does not read as painted metal');
+    assert.ok(materials.get('rubber').roughness - materials.get('glass').roughness > .8, 'Rubber stays visibly rough beside glass');
+    assert.ok(materials.get('chrome').metalness > materials.get('paint').metalness, 'Chrome stays more metallic than body paint');
     assert.ok(meshes < 85, `Animated parent/material batching budget exceeded: ${meshes}`);
     assert.ok(vertices < 230_000, `Truck geometry budget exceeded: ${vertices}`);
     const bounds = new THREE.Box3().setFromObject(truck.group);

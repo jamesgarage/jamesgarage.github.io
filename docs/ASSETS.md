@@ -4,6 +4,8 @@ The six truck designs, sculpted bodies, treaded tires, wheel hubs, suspension, r
 
 There are no downloaded character models, branded vehicle logos, texture packs, stock photographs, or third-party audio recordings. All runtime assets are served with the game.
 
+`src/flames.mjs` renders original procedural exhaust: a shader generates the soft density and hot-core color of attached jets and a short cooling trail. The effect uses owned geometry, shader material and reused instance buffers rather than downloaded flame images. Rounded tree crowns and terrain use locally generated geometry and vertex shading.
+
 ## Garage portraits
 
 `public/trucks/` contains transparent 720×480 PNG portraits of all six original trucks. These are rendered from the same `makeTruck()` models used in play. The lobby displays the live selected model; garage cards use the PNGs so each card does not need its own WebGL renderer.

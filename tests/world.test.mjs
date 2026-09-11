@@ -40,6 +40,44 @@ test('the complete world builds finite geometry within its static scene budget',
   assert.ok(vertices < 1_200_000, `Static vertex budget exceeded: ${vertices}`);
 });
 
+test('rounded forest crowns have continuous shading and leave the real road clear', () => {
+  const world = createWorld(), centers = [];
+  for (let distance = -70; distance <= 2080; distance += .5) centers.push(sampleTrack(distance).position);
+  let crowns = 0, checked = 0;
+  world.traverse(mesh => {
+    if (!mesh.isMesh || !(mesh.userData.canopy || mesh.userData.frond)) return;
+    crowns++;
+    if (mesh.userData.canopy) assert.ok(mesh.material.vertexColors, 'Canopies retain softer underside shading after batching');
+    const { position, normal, color } = mesh.geometry.attributes;
+    if (color) assert.equal(position.count, color.count);
+    mesh.geometry.computeBoundingBox();
+    const bounds = mesh.geometry.boundingBox;
+    const nearby = centers.filter(point => point.z > bounds.min.z - 15 && point.z < bounds.max.z + 15);
+    for (let i = 0; i < position.count; i++) {
+      const x = position.getX(i), z = position.getZ(i);
+      const nearest = Math.min(...nearby.map(point => Math.hypot(x - point.x, z - point.z)));
+      assert.ok(nearest >= 12, `Organic crown enters the driving corridor at ${x}, ${z}: ${nearest}`);
+      assert.ok(Math.abs(Math.hypot(normal.getX(i), normal.getY(i), normal.getZ(i)) - 1) < .0001, 'Welded crown normals remain unit length');
+      if (color) assert.ok(color.getX(i) >= .81 && color.getX(i) <= 1.01);
+      checked++;
+    }
+  });
+  assert.ok(crowns > 10 && checked > 15000, 'Near and distant forest crowns are checked after batching');
+});
+
+test('clouds and horizon details remain spatially cullable instead of course-wide batches', () => {
+  const world = createWorld();
+  const clouds = world.children.filter(child => child.name.startsWith('soft-clouds-'));
+  const hills = world.children.filter(child => child.name.startsWith('distant-hills-'));
+  assert.equal(clouds.length, 7); assert.equal(hills.length, 7);
+  for (const group of [...clouds, ...hills]) {
+    const bounds = new THREE.Box3().setFromObject(group);
+    assert.ok(bounds.max.z - bounds.min.z < 310, `${group.name} can be culled independently of the full course`);
+    group.traverse(mesh => { if (mesh.isMesh) assert.ok(mesh.frustumCulled); });
+  }
+  assert.ok(world.getObjectByName('starting-friends'), 'Large starting mascots no longer force submission from every venue');
+});
+
 // Inspect the actual batched vertices, so misplaced trim, braces or labels cannot
 // pass by leaving a clearance constant unchanged.
 function geometryBounds(object, transform = new THREE.Matrix4()) {

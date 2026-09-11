@@ -15,15 +15,15 @@ export function makeTruck(spec) {
   const wheels = [], arms = [], struts = [];
   const metal = spec.id === 'chrome-guardian';
   const palette = {
-    paint: new THREE.MeshPhysicalMaterial({ color: spec.color, metalness: metal ? .72 : .18, roughness: metal ? .22 : .3, clearcoat: 1, clearcoatRoughness: .16 }),
-    accent: new THREE.MeshPhysicalMaterial({ color: spec.accent, metalness: .24, roughness: .3, clearcoat: .8 }),
-    rubber: new THREE.MeshStandardMaterial({ color: 0x162634, roughness: .92 }),
-    tread: new THREE.MeshStandardMaterial({ color: 0x263c48, roughness: .86 }),
-    chrome: new THREE.MeshStandardMaterial({ color: 0xcbdce1, metalness: .74, roughness: .24 }),
-    dark: new THREE.MeshStandardMaterial({ color: 0x243e4c, metalness: .45, roughness: .42 }),
-    glass: new THREE.MeshPhysicalMaterial({ color: 0x123c57, metalness: .24, roughness: .12, clearcoat: 1 }),
-    light: new THREE.MeshStandardMaterial({ color: 0xfff2be, emissive: 0xffdf7c, emissiveIntensity: .3, roughness: .27 }),
-    glow: new THREE.MeshStandardMaterial({ color: 0x9ffff4, emissive: 0x4de0dc, emissiveIntensity: .35, roughness: .25 }),
+    paint: new THREE.MeshPhysicalMaterial({ color: spec.color, metalness: metal ? .76 : .05, roughness: metal ? .2 : .28, clearcoat: 1, clearcoatRoughness: .12 }),
+    accent: new THREE.MeshPhysicalMaterial({ color: spec.accent, metalness: metal ? .45 : .08, roughness: .34, clearcoat: .72, clearcoatRoughness: .18 }),
+    rubber: new THREE.MeshStandardMaterial({ color: 0x101b23, roughness: .96 }),
+    tread: new THREE.MeshStandardMaterial({ color: 0x263a46, roughness: .88 }),
+    chrome: new THREE.MeshPhysicalMaterial({ color: 0xd7e5e8, metalness: .88, roughness: .17, clearcoat: .35, clearcoatRoughness: .1 }),
+    dark: new THREE.MeshStandardMaterial({ color: 0x1b303c, metalness: .32, roughness: .5 }),
+    glass: new THREE.MeshPhysicalMaterial({ color: 0x0d4a6a, metalness: 0, roughness: .08, clearcoat: 1, clearcoatRoughness: .04 }),
+    light: new THREE.MeshPhysicalMaterial({ color: 0xfff5cf, emissive: 0xffdf7c, emissiveIntensity: .34, roughness: .2, clearcoat: .65 }),
+    glow: new THREE.MeshPhysicalMaterial({ color: 0xa9fff7, emissive: 0x4de0dc, emissiveIntensity: .38, roughness: .18, clearcoat: .7 }),
   };
   for (const [name, material] of Object.entries(palette)) material.name = `${spec.id}-${name}`;
 
@@ -37,8 +37,8 @@ export function makeTruck(spec) {
     if (!batches.has(material)) batches.set(material, []);
     batches.get(material).push(geometry);
   }
-  function box(parent, material, position, size, radius = .08, rotation = [0, 0, 0]) {
-    part(parent, new RoundedBoxGeometry(...size, 1, Math.min(radius, ...size.map(v => v * .45))), material, position, rotation);
+  function box(parent, material, position, size, radius = .08, rotation = [0, 0, 0], segments = 1) {
+    part(parent, new RoundedBoxGeometry(...size, segments, Math.min(radius, ...size.map(v => v * .45))), material, position, rotation);
   }
   function ball(parent, material, position, size) {
     part(parent, new THREE.SphereGeometry(1, 16, 10), material, position, [0, 0, 0], size);
@@ -52,7 +52,7 @@ export function makeTruck(spec) {
   function prism(parent, material, outline, width, position = [0, 0, 0], bevel = .08) {
     const shape = new THREE.Shape();
     outline.forEach(([z, y], i) => i ? shape.lineTo(-z, y) : shape.moveTo(-z, y)); shape.closePath();
-    const geometry = new THREE.ExtrudeGeometry(shape, { depth: width, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, steps: 1, curveSegments: 8 });
+    const geometry = new THREE.ExtrudeGeometry(shape, { depth: width, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 3, steps: 1, curveSegments: 8 });
     geometry.translate(0, 0, -width / 2); geometry.rotateY(Math.PI / 2);
     part(parent, geometry, material, position);
   }
@@ -64,17 +64,19 @@ export function makeTruck(spec) {
   const gator = spec.id === 'gator-claw';
   const night = spec.id === 'night-stomper';
   const width = titan ? 2.85 : 2.58;
-  box(body, p.dark, [0, 1.48, 0], [2.45, .32, 4.35], .12);
-  box(body, p.paint, [0, 2.0, -.05], [width, .92, 4.15], .22);
-  box(body, p.paint, [0, 2.42, 1.47], [width - .08, .34, gator ? 1.72 : 1.35], .16);
+  box(body, p.dark, [0, 1.48, 0], [2.45, .32, 4.35], .12, [0, 0, 0], 2);
+  box(body, p.paint, [0, 2.0, -.05], [width, .92, 4.15], .28, [0, 0, 0], 2);
+  // A separate softly crowned hood catches a broad highlight instead of reading
+  // as one tall slab. It stays inside the original body envelope.
+  box(body, p.paint, [0, 2.43, 1.43], [width - .1, .35, gator ? 1.78 : 1.42], .17, [0, 0, 0], 2);
   // The cab is a sloped, beveled shell rather than stacked cubes.
   const roofY = night ? 3.24 : titan ? 3.5 : 3.4;
   const cabWidth = titan ? 2.4 : 2.16, cabBevel = metal ? .06 : .13;
   prism(body, p.paint, [[-1.22, 2.34], [-1.07, roofY - .08], [-.65, roofY], [.28, roofY], [.95, 2.46]], cabWidth, [0, 0, 0], cabBevel);
-  box(body, p.accent, [0, roofY + .07, -.39], [titan ? 2.65 : 2.29, .14, 1.46], .065);
+  box(body, p.accent, [0, roofY + .07, -.39], [titan ? 2.65 : 2.29, .14, 1.46], .065, [0, 0, 0], 2);
   // Dark inset glass with a bright pair of friendly eyes on the windshield.
-  box(body, p.dark, [0, roofY - .38, .68], [2.04, .77, .11], .09, [-.58, 0, 0]);
-  box(body, p.glass, [0, roofY - .38, .744], [1.83, .59, .075], .085, [-.58, 0, 0]);
+  box(body, p.dark, [0, roofY - .38, .68], [2.04, .77, .11], .09, [-.58, 0, 0], 2);
+  box(body, p.glass, [0, roofY - .38, .744], [1.83, .59, .075], .075, [-.58, 0, 0], 2);
   box(body, p.dark, [0, roofY - .37, -1.3], [1.88, .57, .095], .07, [.15, 0, 0]);
   box(body, p.glass, [0, roofY - .37, -1.36], [1.66, .4, .035], .05, [.15, 0, 0]);
   box(body, p.chrome, [0, roofY - .38, -1.39], [.055, .37, .025], .01, [.15, 0, 0]);
@@ -85,14 +87,16 @@ export function makeTruck(spec) {
     box(body, p.dark, [side * 1.36, 2.76, .43], [.35, .16, .24], .07);
     box(body, p.paint, [side * 1.46, 2.79, .49], [.26, .27, .4], .09);
     box(body, p.glass, [side * 1.47, 2.8, .3], [.19, .19, .04], .03);
+    box(body, p.chrome, [side * (cabWidth / 2 + cabBevel + .032), 2.83, -.64], [.035, .055, .31], .018);
+    part(body, new THREE.TorusGeometry(.13, .026, 8, 20), p.dark, [side * (width / 2 + .035), 2.13, -.82], [0, Math.PI / 2, 0]);
     box(body, p.accent, [side * (width / 2 + .025), 2.03, -.18], [.06, .18, 1.2], .04);
     box(body, p.dark, [side * 1.38, 1.48, -.12], [.48, .12, 1.13], .05);
     for (let j = 0; j < 4; j++) box(body, p.chrome, [side * 1.4, 1.56, -.52 + j * .27], [.35, .035, .08], .012);
     // Thick molded arches cover the tire tops without filling the wheel wells.
     for (const z of [-1.5, 1.5]) {
-      const arch = new THREE.TorusGeometry(1.02, .13, 6, 18, Math.PI);
+      const arch = new THREE.TorusGeometry(1.02, .13, 8, 24, Math.PI);
       part(body, arch, p.paint, [side * 1.32, 1.1, z], [0, Math.PI / 2, 0]);
-      const lip = new THREE.TorusGeometry(1.08, .065, 6, 18, Math.PI);
+      const lip = new THREE.TorusGeometry(1.08, .065, 6, 24, Math.PI);
       part(body, lip, p.dark, [side * 1.49, 1.1, z], [0, Math.PI / 2, 0]);
     }
     box(body, p.light, [side * .94, 2.25, 2.123], [.46, .32, .1], .1);
@@ -102,7 +106,8 @@ export function makeTruck(spec) {
     anchor(`exhaust-outlet-${side}`, [side * 1.05, 3.09, -2.16]);
   }
   box(body, p.dark, [0, 1.83, 2.2], [2.92, .35, .43], .14);
-  box(body, p.chrome, [0, 1.87, 2.43], [2.28, .17, .12], .07);
+  box(body, p.chrome, [0, 1.87, 2.43], [2.28, .17, .12], .07, [0, 0, 0], 2);
+  for (const side of [-1, 1]) cylinder(body, p.chrome, [side * 1.35, 1.83, 2.2], .175, .18, [0, 0, 0]);
   box(body, p.dark, [0, 2.2, 2.14], [1.15, .4, .12], .08);
   for (let j = -2; j <= 2; j++) box(body, p.chrome, [j * .2, 2.2, 2.217], [.075, .27, .035], .015);
   box(body, p.dark, [0, 1.79, -2.26], [2.78, .29, .32], .1);
@@ -115,7 +120,7 @@ export function makeTruck(spec) {
   }
 
   // Real tire cross section: recessed bead, rounded sidewall, broad crown.
-  const profile = [[.46, -.36], [.61, -.44], [.83, -.44], [.99, -.34], [1.055, -.18], [1.07, 0], [1.055, .18], [.99, .34], [.83, .44], [.61, .44], [.46, .36], [.46, -.36]];
+  const profile = [[.46, -.36], [.54, -.415], [.67, -.447], [.82, -.445], [.94, -.385], [1.025, -.275], [1.067, -.13], [1.075, 0], [1.067, .13], [1.025, .275], [.94, .385], [.82, .445], [.67, .447], [.54, .415], [.46, .36], [.46, -.36]];
   for (const z of [-1.5, 1.5]) {
     cylinder(group, p.chrome, [0, 1.05, z], .1, 3.35);
     ball(group, p.dark, [0, 1.05, z], [.4, .27, .29]);
@@ -128,6 +133,7 @@ export function makeTruck(spec) {
         box(wheel, p.tread, [row * .215, Math.cos(angle) * 1.055, Math.sin(angle) * 1.055], [.43, .16, .29], .045, [angle, row * .42, 0]);
       }
       cylinder(wheel, p.dark, [side * .403, 0, 0], .625, .07);
+      part(wheel, new THREE.TorusGeometry(.79, .025, 6, 28), p.tread, [side * .446, 0, 0], [0, Math.PI / 2, 0]);
       part(wheel, new THREE.TorusGeometry(.55, .065, 8, 24), p.chrome, [side * .46, 0, 0], [0, Math.PI / 2, 0]);
       cylinder(wheel, p.accent, [side * .467, 0, 0], .45, .065);
       for (let j = 0; j < 6; j++) {
@@ -162,7 +168,7 @@ export function makeTruck(spec) {
     box(strut, p.accent, [0, -.24, .4], [.49, .31, .16], .05);
   }
   const head = new THREE.Group(); head.name = 'guardian-head'; head.position.set(0, 3.4, -.3); head.visible = false; body.add(head);
-  box(head, p.paint, [0, .48, 0], [1.16, 1.01, .95], .22);
+  box(head, p.paint, [0, .48, 0], [1.16, 1.01, .95], .22, [0, 0, 0], 2);
   box(head, p.dark, [0, .55, .47], [.91, .35, .1], .07);
   box(head, p.glow, [0, .57, .532], [.75, .15, .055], .045);
   box(head, p.chrome, [0, .15, .48], [.61, .26, .12], .075);

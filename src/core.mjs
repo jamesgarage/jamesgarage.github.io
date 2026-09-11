@@ -26,7 +26,8 @@ const AUTO_TRANSFORM_GATE = 730;
 const MAX_SAVE_NUMBER = 1_000_000_000;
 const TURBO_DURATION = 2.4;
 const TURBO_MULTIPLIER = 1.55;
-const CRUSH_SLOW_DURATION = .65;
+const CRUSH_BOOST_DURATION = 1;
+const CRUSH_BOOST_MULTIPLIER = 1.18;
 const PASSING_GAP = 8.5;
 const BUDDY_FOLLOWING_GAP = 4;
 const BUDDY_GRID = Object.freeze([
@@ -104,7 +105,7 @@ export function createRace() {
     turboTime: 0,
     turboHeld: false,
     usedTurboPads: [],
-    bumpTime: 0,
+    crushBoostTime: 0,
     crushes: 0,
     crushedCars: [],
     buddies: BUDDY_GRID.map(buddy => ({ ...buddy, height: 0, velocityY: 0 })),
@@ -115,12 +116,16 @@ function activateTurbo(state, events, source) {
   if (state.turboTime > 0) return;
   state.turboTime = TURBO_DURATION;
   state.turboEnergy = 0;
-  state.bumpTime = 0;
   events.push({ type: 'turbo', source });
 }
 
 function travelSpeed(state) {
-  return RACE_SPEED * (state.turboTime > 0 ? TURBO_MULTIPLIER : state.bumpTime > 0 ? .15 : 1);
+  return RACE_SPEED * (state.turboTime > 0 ? TURBO_MULTIPLIER : state.crushBoostTime > 0 ? CRUSH_BOOST_MULTIPLIER : 1);
+}
+
+function approachStrength(distance, start, end) {
+  const t = clamp(Math.min((distance - start) / 45, (end - distance) / 35), 0, 1);
+  return t * t * (3 - 2 * t);
 }
 
 /** Intersect the swept truck center with an expanded toy-car box. Testing the
@@ -149,8 +154,8 @@ function touchesCar(state, previous, car) {
 }
 
 /** Friendly opponents have their own continuous progress and jump velocity.
- * They catch a slowing player, ease off when ahead, and close a large turbo gap
- * gradually. Nothing teleports them or assigns their finishing position. */
+ * They approach during two authored stretches, ease off when ahead, and close
+ * a large turbo gap gradually. Nothing assigns their finishing position. */
 function passingWidth(state) {
   // Full wheel envelopes, plus room for lean and the different road frames of
   // nearby actors. This clears even the transformed Titan's broad silhouette.
@@ -176,7 +181,10 @@ function stepBuddies(state, step, steering) {
   for (const [index, buddy] of state.buddies.entries()) {
     const previousDistance = buddy.distance;
     const gap = state.distance - buddy.distance;
-    const desiredGap = -BUDDY_GRID[index].distance;
+    const approach = Math.max(approachStrength(state.distance, 175, 335), approachStrength(state.distance, 1020, 1200));
+    // Sunny offers a brief lead challenge; Splash stays close behind so the
+    // smallest drivers never fall to last place during ordinary cruising.
+    const desiredGap = -BUDDY_GRID[index].distance - (index === 0 ? 17 : 11) * approach;
     let speed = RACE_SPEED + clamp((gap - desiredGap) * .5, -3.5, 4.5);
 
     // Read steering intent before a pass; once alongside, hold the outer lane
@@ -228,7 +236,7 @@ export function stepRace(state, dt, inputs = {}) {
   const previous = { distance: previousDistance, lane: state.lane, height: state.height };
   state.truckScale = Number.isFinite(state.truckScale) ? clamp(state.truckScale, 1, 1.5) : 1;
   state.turboTime = Math.max(0, state.turboTime - step);
-  state.bumpTime = Math.max(0, state.bumpTime - step);
+  state.crushBoostTime = Math.max(0, state.crushBoostTime - step);
   state.turboEnergy = Math.min(100, state.turboEnergy + step * 100 / 8);
   const turboPressed = Boolean(inputs.turbo);
   if (turboPressed && !state.turboHeld && state.turboEnergy >= 100) activateTurbo(state, events, 'manual');
@@ -301,7 +309,7 @@ export function stepRace(state, dt, inputs = {}) {
       state.crushes += 1;
       state.stars += 2;
       state.turboEnergy = Math.min(100, state.turboEnergy + 35);
-      if (!powered) state.bumpTime = CRUSH_SLOW_DURATION;
+      state.crushBoostTime = CRUSH_BOOST_DURATION;
       events.push({ type: 'crush', id: car.id, powered });
     }
   }

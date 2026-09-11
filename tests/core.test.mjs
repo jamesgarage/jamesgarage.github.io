@@ -20,7 +20,7 @@ test('a no-input run finishes with every ramp, a loop, and an automatic transfor
   }
   assert.equal(state.phase, 'finished');
   assert.equal(state.distance, COURSE_LENGTH);
-  assert.ok(state.elapsed > 55 && state.elapsed < 78, 'Boosts shorten the drive while crushes recover automatically');
+  assert.ok(state.elapsed > 55 && state.elapsed < 78, 'Crush and turbo bursts keep the short race moving');
   assert.equal(events.filter(event => event.type === 'jump' && event.auto).length, RAMPS.length);
   assert.equal(state.landings, RAMPS.length);
   assert.equal(state.loops, 1);
@@ -155,17 +155,21 @@ test('shared encounter definitions are immutable, distinct, and outside ramps an
   assert.equal(new Set([...CRUSH_CARS, ...TURBO_PADS].map(row => row.id)).size, 11);
 });
 
-test('a swept toy-car contact rewards one squash, briefly slows, then recovers without input', () => {
+test('a swept toy-car contact rewards one squash and a forward burst without any slowdown', () => {
   const car = CRUSH_CARS[0], state = { ...runningRace(), distance: car.distance - 5, turboEnergy: 0 };
   const events = stepRace(state, .05);
   assert.deepEqual(events.filter(event => event.type === 'crush'), [{ type: 'crush', id: car.id, powered: false }]);
   assert.deepEqual(state.crushedCars, [car.id]);
   assert.equal(state.crushes, 1);
   assert.equal(state.stars, 2);
-  assert.ok(state.speed > 0 && state.speed < 10);
+  assert.ok(state.speed > 26, 'Crushing a parked car should feel powerful, never like braking');
+  assert.equal(state.crushBoostTime, 1);
   assert.ok(state.turboEnergy >= 35 && state.turboEnergy <= 36);
-  for (let i = 0; i < 60; i++) events.push(...stepRace(state, 1 / 60));
-  assert.equal(state.bumpTime, 0);
+  for (let i = 0; i < 65; i++) {
+    events.push(...stepRace(state, 1 / 60));
+    assert.ok(state.speed >= 26, 'Burst expiry never drops below normal cruise');
+  }
+  assert.equal(state.crushBoostTime, 0);
   assert.equal(state.speed, 26);
   assert.equal(events.filter(event => event.type === 'crush').length, 1);
 });
@@ -183,17 +187,41 @@ test('jumping and separated lanes clear toy cars; larger trucks use their actual
   assert.equal(apart.crushes, 0, 'Even the largest truck can leave a car in the opposite lane');
 });
 
-test('turbo crushes without slowdown and can rescue an already slowed truck', () => {
+test('crushing earns progress and pulls farther ahead than driving around the same car', () => {
+  const crushed = { ...runningRace(), distance: 105, turboEnergy: 0 };
+  const avoided = { ...runningRace(), distance: 105, lane: 1, targetLane: 1, turboEnergy: 0 };
+  for (let frame = 0; frame < 75; frame++) {
+    stepRace(crushed, 1 / 60);
+    stepRace(avoided, 1 / 60);
+  }
+  assert.equal(crushed.crushes, 1);
+  assert.equal(avoided.crushes, 0);
+  assert.equal(crushed.stars - avoided.stars, 2);
+  assert.ok(crushed.turboEnergy - avoided.turboEnergy > 34.9);
+  assert.ok(crushed.distance > avoided.distance + 4, 'The reward advances the truck, rather than costing race progress');
+  assert.ok(crushed.distance - crushed.buddies[0].distance > avoided.distance - avoided.buddies[0].distance);
+});
+
+test('turbo remains stronger than a crush burst without multiplying power or losing duration', () => {
   const powered = { ...runningRace(), distance: 105 };
   const events = stepRace(powered, .05, { turbo: true });
   assert.ok(events.some(event => event.type === 'turbo' && event.source === 'manual'));
   assert.ok(events.some(event => event.type === 'crush' && event.powered));
-  assert.equal(powered.bumpTime, 0);
+  assert.equal(powered.crushBoostTime, 1);
+  assert.equal(powered.turboTime, 2.4);
   assert.ok(powered.speed > 39 && powered.speed < 41);
-  const rescue = { ...runningRace(), bumpTime: .5, turboEnergy: 100 };
-  stepRace(rescue, .016, { turbo: true });
-  assert.equal(rescue.bumpTime, 0);
-  assert.ok(rescue.speed > 39);
+  const boosted = { ...runningRace(), crushBoostTime: .5, turboEnergy: 100 };
+  stepRace(boosted, .016, { turbo: true });
+  assert.equal(boosted.crushBoostTime, .484);
+  assert.equal(boosted.speed, 26 * 1.55);
+  const expiring = { ...runningRace(), distance: 105, turboTime: .15 };
+  stepRace(expiring, .05);
+  assert.ok(expiring.turboTime < .11 && expiring.turboTime > .09, 'Crushing does not reset the stronger turbo timer');
+  for (let frame = 0; frame < 70; frame++) {
+    stepRace(expiring, 1 / 60);
+    assert.ok(expiring.speed >= 26 && expiring.speed <= 26 * 1.55);
+  }
+  assert.equal(expiring.speed, 26);
 });
 
 test('manual turbo has a bounded burst, recharges, and held input cannot restart it', () => {
@@ -227,15 +255,17 @@ test('full-width pads boost without charge, trigger once, and do not extend an a
   assert.ok(active.turboTime < 1, 'Pad cannot stack or refresh an existing turbo');
 });
 
-test('a normal crush permits a real pass and a no-input comeback', () => {
+test('friendly approach stretches allow a real pass and a no-input comeback without slowing the player', () => {
   const state = runningRace();
   let passed = false, recovered = false;
   for (let i = 0; i < 1200; i++) {
     stepRace(state, 1 / 60);
+    assert.ok(state.speed >= 26);
+    assert.ok(racePlace(state) <= 2, 'A friendly approach never drops an untouched run to last place');
     if (racePlace(state) > 1) passed = true;
     if (passed && racePlace(state) === 1) recovered = true;
   }
-  assert.ok(passed, 'A buddy should actually move ahead after the first centered crush');
+  assert.ok(passed, 'A buddy can briefly pull alongside and ahead during an approach stretch');
   assert.ok(recovered, 'Cruising speed restores the lead without a precision input');
 });
 
@@ -246,9 +276,10 @@ test('all truck sizes finish first with no input, held controls, and repeated al
     const state = { ...runningRace(), truckScale: truck.scale }, events = [];
     for (let frame = 0; frame < 5000 && !state.finished; frame++) {
       events.push(...stepRace(state, 1 / 60, pattern(frame)));
-      for (const value of [state.distance, state.height, state.speed, state.turboEnergy, state.turboTime, state.bumpTime]) assert.ok(Number.isFinite(value));
+      for (const value of [state.distance, state.height, state.speed, state.turboEnergy, state.turboTime, state.crushBoostTime]) assert.ok(Number.isFinite(value));
       assert.ok(state.turboEnergy >= 0 && state.turboEnergy <= 100);
-      assert.ok(state.bumpTime >= 0 && state.bumpTime <= .65);
+      assert.ok(state.crushBoostTime >= 0 && state.crushBoostTime <= 1);
+      assert.ok(state.speed >= 26 && state.speed <= 26 * 1.55);
       for (const buddy of state.buddies) {
         assert.ok(Math.abs(buddy.lane) <= 1.65 && buddy.height >= 0);
         assert.ok([buddy.distance, buddy.lane, buddy.height, buddy.velocityY].every(Number.isFinite));
@@ -275,6 +306,7 @@ test('pause freezes turbo, crushes and stateful opponents; replay starts with ne
   const replay = createRace();
   assert.equal(replay.turboEnergy, 100);
   assert.equal(replay.crushes, 0);
+  assert.equal(replay.crushBoostTime, 0);
   assert.deepEqual(replay.crushedCars, []);
   assert.notEqual(replay.buddies, state.buddies);
   assert.ok(replay.buddies.every(buddy => buddy.distance < 0));

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { sampleTrack } from './track.mjs';
 
 // These deliberate clearings make the large landmarks readable from the moving
@@ -16,16 +17,30 @@ const COLORS = {
   water: 0x55cdd5, foam: 0xdaf9ed, rock: 0x698e82, green: 0x40966e,
 };
 
+function wornStone() {
+  const source = new THREE.SphereGeometry(1, 14, 8), positions = source.attributes.position;
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i);
+    const width = 1 + .075 * Math.sin(y * 6 + x * 4) * Math.cos(z * 5);
+    positions.setXYZ(i, x * width, y * (.96 + .04 * Math.cos(x * 4 - z * 5)), z * width);
+  }
+  source.deleteAttribute('uv'); source.deleteAttribute('normal');
+  const geometry = mergeVertices(source); source.dispose(); geometry.computeVertexNormals(); return geometry;
+}
+
 /** Three original destinations, with independently owned, static GPU resources. */
 export function createAdventureScenery() {
   const root = new THREE.Group(); root.name = 'adventure-scenery';
   const paints = Object.fromEntries(Object.entries(COLORS).map(([name, color]) => [name,
-    new THREE.MeshStandardMaterial({ color, roughness: ['water', 'teal', 'gold'].includes(name) ? .45 : .8,
+    new THREE.MeshStandardMaterial({ color, roughness: name === 'water' ? .24 : ['teal', 'gold'].includes(name) ? .4 : .84,
+      metalness: name === 'gold' ? .24 : 0, vertexColors: name === 'water' || name === 'foam',
       side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })]));
   const shapes = {
     box: new THREE.BoxGeometry(1, 1, 1), ball: new THREE.SphereGeometry(1, 10, 6),
     cylinder: new THREE.CylinderGeometry(1, 1, 1, 12), cone: new THREE.ConeGeometry(1, 1, 12),
-    rock: new THREE.IcosahedronGeometry(1, 1), ring: new THREE.TorusGeometry(1, .1, 6, 20),
+    hull: new THREE.CylinderGeometry(1, 1, 1, 24), nose: new THREE.SphereGeometry(1, 24, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+    rounded: new RoundedBoxGeometry(1, 1, 1, 1, .075),
+    rock: wornStone(), ring: new THREE.TorusGeometry(1, .1, 8, 32),
   };
   const matrix = new THREE.Matrix4(), world = new THREE.Matrix4(), rotation = new THREE.Quaternion();
   const euler = new THREE.Euler(), position = new THREE.Vector3(), scale = new THREE.Vector3();
@@ -41,6 +56,9 @@ export function createAdventureScenery() {
       if (geometry.index) { const expanded = geometry.toNonIndexed(); geometry.dispose(); geometry = expanded; }
       // Shapes and sampled surfaces share the same attributes before merging.
       geometry.deleteAttribute('uv');
+      if (paints[paint].vertexColors && !geometry.hasAttribute('color')) {
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(geometry.attributes.position.count * 3).fill(1), 3));
+      }
       buckets.get(key).geometries.push(geometry);
     }
     function part(kind, paint, p, s, r = [0, 0, 0], shadow = true, transform = base) {
@@ -66,8 +84,31 @@ export function createAdventureScenery() {
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
       geometry.setIndex(indices); geometry.computeVertexNormals(); addGeometry(geometry, paint, false, true);
     }
+    function curtain(x, width, lower, upper, paint, front = 0) {
+      const positions = [], colors = [], indices = [], rows = 18, columns = 4;
+      for (let row = 0; row <= rows; row++) {
+        const v = row / rows;
+        for (let column = 0; column <= columns; column++) {
+          const u = column / columns;
+          const ripple = Math.sin(u * 9 + v * 17) * .07;
+          const z = -.95 + v * 1.45 + 1.35 * v ** 8 + ripple - front;
+          positions.push(x + (u - .5) * width * (.94 + .06 * Math.sin(v * 8)), lower + (upper - lower) * v, z);
+          const shade = .84 + .16 * Math.sin(u * Math.PI) * (.6 + .4 * v);
+          colors.push(shade, shade, shade);
+          if (row < rows && column < columns) {
+            const a = row * (columns + 1) + column;
+            indices.push(a, a + columns + 1, a + 1, a + 1, a + columns + 1, a + columns + 2);
+          }
+        }
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+      geometry.setIndex(indices); geometry.computeVertexNormals(); geometry.applyMatrix4(base);
+      addGeometry(geometry, paint, false);
+    }
     try {
-      build({ part, atTrack, surface });
+      build({ part, atTrack, surface, curtain });
       for (const { paint, shadow, roadSurface, geometries } of buckets.values()) {
         const geometry = mergeGeometries(geometries);
         if (!geometry) throw new Error(`Could not batch ${name} ${paint}`);
@@ -110,8 +151,14 @@ export function createAdventureScenery() {
       }
       // A substantial front-facing mill wheel is readable during the approach.
       const x = 30, y = 3.1, z = 1;
-      part('box', 'rock', [x, -3.4, z + 3], [16, 3, 19]);
-      part('box', 'lightwood', [x, 2.8, z + 4], [10, 8, 8]);
+      part('rounded', 'rock', [x, -3.4, z + 3], [16, 3, 19]);
+      part('rounded', 'lightwood', [x, 2.8, z + 4], [10, 8, 8]);
+      for (let i = -4; i <= 4; i++) part('box', 'wood', [x + i, 2.8, z - .02], [.05, 7.7, .055]);
+      for (const side of [-1, 1]) {
+        part('box', 'darkwood', [x + side * 3.2, 4.4, z - .09], [1.4, 1.9, .13]);
+        part('box', 'cream', [x + side * 3.2, 4.4, z - .17], [.09, 1.95, .05]);
+        part('box', 'cream', [x + side * 3.2, 4.4, z - .17], [1.45, .09, .05]);
+      }
       for (const side of [-1, 1]) part('box', 'coral', [x + side * 2.7, 7.9, z + 4], [6.4, .65, 11], [0, 0, -side * .4]);
       part('box', 'cream', [x, 9.2, z + 4], [.65, .7, 11.1]);
       part('box', 'ink', [x, 4.4, z - .08], [2, 2.6, .12]);
@@ -146,16 +193,16 @@ export function createAdventureScenery() {
         }
       }
       const x = -27;
-      part('cylinder', 'ink', [x, -.45, 0], [10.5, 1.8, 10.5]);
-      part('cylinder', 'cream', [x, .55, 0], [9.9, .25, 9.9]);
+      part('hull', 'ink', [x, -.45, 0], [10.5, 1.8, 10.5]);
+      part('hull', 'cream', [x, .55, 0], [9.9, .25, 9.9]);
       part('ring', 'gold', [x, .75, 0], [8.5, 8.5, 8.5], [Math.PI / 2, 0, 0]);
       for (const side of [-1, 1]) {
         part('cylinder', 'darkwood', [x + side * 6.8, -4, -5.5], [.65, 7, .65]);
         part('cylinder', 'darkwood', [x + side * 6.8, -4, 5.5], [.65, 7, .65]);
       }
-      part('cylinder', 'cream', [x, 10.6, 0], [3.3, 15.5, 3.3]);
-      part('cone', 'coral', [x, 21, 0], [3.3, 6, 3.3]);
-      for (const y of [5.6, 16.3]) part('cylinder', 'coral', [x, y, 0], [3.35, 1.1, 3.35]);
+      part('hull', 'cream', [x, 10.6, 0], [3.3, 15.5, 3.3]);
+      part('nose', 'coral', [x, 18.35, 0], [3.3, 5.65, 3.3]);
+      for (const y of [5.6, 16.3]) part('hull', 'coral', [x, y, 0], [3.35, 1.1, 3.35]);
       part('cylinder', 'ink', [x, 2.7, 0], [2.4, 1.3, 2.4]);
       part('cylinder', 'gold', [x, 2.05, 0], [2.7, .35, 2.7]);
       for (let i = 0; i < 4; i++) {
@@ -182,7 +229,7 @@ export function createAdventureScenery() {
       flag(part, -19, 9.5, -14, 'coral'); flag(part, -44, 13, 10, 'teal');
     });
 
-    venue('gator-falls', 1383, ({ part, atTrack, surface }) => {
+    venue('gator-falls', 1383, ({ part, atTrack, surface, curtain }) => {
       for (const side of [-1, 1]) for (let d = 1330, i = 0; d < 1440; d += 4, i++) {
         surface(d, Math.min(d + 3.5, 1440), side * 6.45 - .72, side * 6.45 + .72, i % 3 ? 'lightwood' : 'wood');
       }
@@ -192,8 +239,8 @@ export function createAdventureScenery() {
         atTrack(d, 'ball', 'cream', [-14.6, 2.55, 0], [.8, .4, .8]);
       }
       const x = -29, waterY = -1.7 - sampleTrack(1383).position.y;
-      // Layered low-poly rock shapes create a broad silhouette rather than a
-      // thin curtain. All water is opaque geometry, keeping overdraw bounded.
+      // Worn rounded rock, curved falling sheets and a rolling crest. Water is
+      // opaque geometry with soft vertex shading, keeping overdraw bounded.
       for (let row = 0; row < 4; row++) for (let column = 0; column < 3; column++) {
         part('rock', 'rock', [x + (column - 1) * 6.5, -1 + row * 5.3, 6 + row * .7],
           [5.7 - row * .4, 5.2, 5.6], [0, .35 * (row + column), .09 * (column - 1)]);
@@ -201,9 +248,9 @@ export function createAdventureScenery() {
       part('rock', 'green', [x - 1, 18.2, 7.2], [10.6, 1.7, 6.8]);
       for (let stream = 0; stream < 3; stream++) {
         const sx = x + (stream - 1) * 3.3;
-        part('box', stream === 1 ? 'foam' : 'water', [sx, (18.4 + waterY) / 2, .5], [3.3, 18.4 - waterY, .35], [-.075, 0, 0], false);
-        part('box', 'water', [sx, 18.65, 2.5], [3.3, .22, 4.9], [0, 0, 0], false);
-        for (let i = 0; i < 4; i++) part('box', 'foam', [sx + .8, 2 + i * 4.2, -.12 - i * .3], [.14, 2.3, .08], [-.075, 0, 0], false);
+        curtain(sx, 3.45, waterY, 18.4, 'water');
+        part('ball', 'water', [sx, 18.38, 2.15], [1.8, .38, 2.8], [0, 0, 0], false);
+        for (const offset of [-.7, .65]) curtain(sx + offset, .09 + .02 * stream, waterY + .1, 18.34, 'foam', .09);
       }
       for (let i = 0; i < 16; i++) {
         const a = i / 16 * Math.PI * 2;

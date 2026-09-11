@@ -147,7 +147,7 @@ try {
       while(accumulator>=1/60){
         input.steer=(held.has('right')?1:0)-(held.has('left')?1:0);
         const events=stepRace(race,1/60,input);input.jump=false;input.transform=false;input.turbo=false;accumulator-=1/60;
-        for(const event of events){if(event.type==='crush'){world.land(.6);say('CRUNCH! +2 ★',1.2,2);}if(event.type==='turbo')say('TURBO!',1.1,2);}
+        for(const event of events){if(event.type==='crush'){world.crush();say('MONSTER POWER! +2 ★',1.25,2);}if(event.type==='turbo')say('TURBO!',1.1,2);}
         for(const event of events){audio.play(event.type);if(event.type==='jump'&&event.auto)say('BIG AIR!',1.25);if(event.type==='land'){world.land(event.strength);if(event.strength>.7)say('Nailed it!',1.15);}if(event.type==='transform'){say('GUARDIAN MODE!',2.3,3);world.burst(true,25);}if(event.type==='loop')say('LOOP LEGEND!',2.3,3);if(event.type==='finish')finish();}
       }
     }
@@ -169,7 +169,7 @@ try {
     const frame=sampleTrack(race.distance);
     const center=frame.position.addScaledVector(frame.up,race.height).project(world.camera);
     const screenLane=world.truck.group.position.clone().project(world.camera).x-center.x;
-    return Object.freeze({phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,place:racePlace(race),buddies:world.buddies.poses.map(p=>({...p})),screenLane,speed:race.speed,turboTime:race.turboTime,turboEnergy:race.turboEnergy,bumpTime:race.bumpTime,crushes:race.crushes,crushedCars:race.crushedCars?.slice(),crushedModels:world.encounters.cars.filter(car=>car.crush>.95).map(car=>car.id),rain:world.weather.rain.visible&&world.weather.group.visible,mudSpray:world.weather.spray.count,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles,flames:world.flames.mesh.count});
+    return Object.freeze({phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,place:racePlace(race),buddies:world.buddies.poses.map(p=>({...p})),screenLane,speed:race.speed,turboTime:race.turboTime,turboEnergy:race.turboEnergy,crushBoostTime:race.crushBoostTime,crushes:race.crushes,crushedCars:race.crushedCars?.slice(),crushedModels:world.encounters.cars.filter(car=>car.crush>.95).map(car=>car.id),rain:world.weather.rain.visible&&world.weather.group.visible,mudSpray:world.weather.spray.count,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles,flames:world.flames.mesh.count});
   }});
 } catch(error) {
   $('loading').hidden=true;$('error').hidden=false;$('error').textContent='This adventure needs a browser with 3D graphics (WebGL 2). Try an updated Safari, Chrome, or Edge with graphics acceleration enabled.';

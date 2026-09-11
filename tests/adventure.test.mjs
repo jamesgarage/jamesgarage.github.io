@@ -113,3 +113,19 @@ test('construction releases scratch geometries without disposing live buffers', 
     assert.ok(disposed.size > meshes * 2, 'temporary primitives and transformed parts are released');
   } finally { dispose(adventure); }
 });
+
+test('waterfall surfaces are curved and smoothly shaded without transparent overdraw', () => {
+  const adventure = createAdventureScenery(), falls = adventure.getObjectByName('gator-falls');
+  try {
+    const water = falls.children.find(mesh => mesh.name === 'gator-falls-water-detail');
+    assert.ok(water && water.material.vertexColors);
+    assert.equal(water.material.transparent, false);
+    assert.ok(water.material.roughness < .3, 'Water highlights remain distinct from the rough rock');
+    const { normal, color } = water.geometry.attributes;
+    assert.ok(color.array.some(value => value < .95), 'Water has subtle surface shading variation');
+    const orientations = new Set();
+    for (let i = 0; i < normal.count; i++) orientations.add([normal.getX(i), normal.getY(i), normal.getZ(i)].map(value => Math.round(value * 20)).join(','));
+    assert.ok(orientations.size > 60, 'The visible falling sheets and rolling crest have continuously changing normals');
+    assert.ok(water.geometry.attributes.position.count < 6500, 'Curved water keeps a bounded geometry cost');
+  } finally { dispose(adventure); }
+});

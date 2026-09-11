@@ -50,10 +50,22 @@ James's parent asked for more distinctive scenery, a dynamic road, racers who ca
 
 See [the turbo adventure brief](DESIGN-TURBO-ADVENTURE.md) and [validation record](VALIDATION.md) for the current behavior and measured release evidence.
 
+## Smoother world and rewarding crushing
+
+James's parent asked for less pointy graphics, more realism and detail, more natural flames, and crushing that feels entirely beneficial. This supersedes the preceding release's crush slowdown.
+
+- Rounded woodland crowns, branching trunks, softer terrain silhouettes and curved palm fronds replace prominent angular foliage.
+- Refined truck body and wheel silhouettes, glossier paint/glass, contrasting rubber and metal, and small mechanical details retain the six original identities.
+- Procedural soft-edged exhaust with a pale hot core and flowing amber/cooling edges replaces the geometric flame beads. The fixed pool, pause and gentler-motion behavior remain bounded.
+- Crushing now awards two stars, turbo charge and a one-second speed burst. It never reduces forward speed; stronger turbo takes priority without stacking multipliers.
+- Friends approach through their own continuous pace during selected stretches. Sunny can briefly lead; Splash stays behind during ordinary cruising. Gentle steering assistance and no-input first-place completion remain.
+
+See [the smoother world brief](DESIGN-SMOOTHER-WORLD.md) for scope and [validation](VALIDATION.md) for measured results. Continue checking the actual chase view, not only model close-ups.
+
 ## Next: physical device and child observations
 
 1. Play on a real iPad in Safari and a representative phone, in portrait and landscape. Check touch controls, orientation changes, frame pacing, and camera comfort.
-2. Watch James squash a toy car, notice a friend catching up, use turbo, finish, choose an earned truck, and replay. Revise anything that requires adult explanation.
+2. Watch James squash a toy car, recognize the reward and speed burst, use turbo, finish, choose an earned truck, and replay. Revise anything that requires adult explanation.
 3. Check that the richer scenery and weather feel exciting without hiding the route or making the controls harder to understand.
 4. Tune collectible placement, reward pacing, sound, motion, and rendering cost using those observations.
 

@@ -102,8 +102,9 @@ export class GameAudio {
           this._tone(330, .09, .3, .06, 'sine', 880);
           break;
         case 'crush':
-          this._tone(145, 0, .17, .13, 'triangle', 52);
-          this._tone(260, .035, .14, .06, 'sine', 98);
+          this._tone(145, 0, .13, .09, 'triangle', 68);
+          this._tone(659.25, .055, .17, .085);
+          this._tone(987.77, .14, .23, .065);
           break;
         case 'jump':
           this._tone(196, 0, 0.23, 0.12, 'sine', 523.25);

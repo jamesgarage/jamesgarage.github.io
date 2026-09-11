@@ -173,3 +173,83 @@ test('turbo extends the actual exhaust and stays frozen while paused', () => {
   update(target, 0, 1, { reducedMotion: true, race: { phase: 'paused', height: 0, turboTime: 2 } });
   assert.equal(target.flames.mesh.count, 2);
 });
+
+test('pause freezes shader time, instance metadata, emitters and particles even with advancing caller time', () => {
+  const target = rig();
+  fillTrail(target);
+  const { flames } = target;
+  const snapshot = () => ({
+    matrices: visibleMatrices(flames), data: Array.from(flames.flameData.array),
+    time: flames.mesh.material.uniforms.time.value,
+    matrixVersion: flames.mesh.instanceMatrix.version, dataVersion: flames.flameData.version,
+    particles: flames.particles.map(p => ({ life: p.life, position: p.position.toArray(), velocity: p.velocity.toArray(), quaternion: p.quaternion.toArray() })),
+    previous: flames.previous.map(p => p.toArray()), cursor: flames.cursor, emission: flames.emission,
+  });
+  const before = snapshot();
+  for (let frame = 0; frame < 30; frame++) update(target, .08, frame + 2, { race: { phase: 'paused', height: 1, turboTime: 2 }, transform: 1 });
+  assert.deepEqual(snapshot(), before);
+  update(target, .08, 40, { reducedMotion: true, race: { phase: 'paused' } });
+  assert.equal(flames.mesh.count, 2);
+  assert.equal(flames.mesh.material.uniforms.time.value, 0);
+  const steady = snapshot();
+  update(target, .08, 50, { reducedMotion: true, race: { phase: 'paused' } });
+  assert.deepEqual(snapshot(), steady);
+});
+
+test('exhaust direction follows articulated body rotation and existing wake stays in world space', () => {
+  const target = rig();
+  fillTrail(target);
+  const particle = target.flames.particles.find(p => p.life > .05);
+  const before = particle.position.clone();
+  target.truck.group.position.set(100, 30, 80);
+  target.truck.group.rotation.set(.3, 1.2, Math.PI);
+  target.truck.body.rotation.set(.1, .15, .2);
+  update(target, 0, 2);
+  assert.deepEqual(particle.position.toArray(), before.toArray());
+  const orientation = target.truck.body.getWorldQuaternion(new THREE.Quaternion());
+  orientation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), .12));
+  const expected = new THREE.Vector3(0, 0, -1).applyQuaternion(orientation);
+  const actual = new THREE.Vector3(0, 0, -1).transformDirection(firstMatrix(target.flames));
+  approximately(expected.dot(actual), 1);
+  const expectedOutlet = new THREE.Vector3(-1.05, 3.09, -2.16).applyMatrix4(target.truck.body.matrixWorld);
+  assert.ok(expectedOutlet.distanceTo(new THREE.Vector3().setFromMatrixPosition(firstMatrix(target.flames))) < .00001);
+});
+
+test('one translucent instanced volume draw owns and disposes every GPU resource exactly once', () => {
+  const target = rig();
+  const { flames } = target;
+  const disposed = { geometry: 0, material: 0, instances: 0 };
+  flames.mesh.geometry.addEventListener('dispose', () => disposed.geometry++);
+  flames.mesh.material.addEventListener('dispose', () => disposed.material++);
+  flames.mesh.addEventListener('dispose', () => disposed.instances++);
+  assert.equal(flames.mesh.material.transparent, true);
+  assert.equal(flames.mesh.material.depthWrite, false);
+  assert.equal(flames.mesh.geometry.index.count / 3, 12);
+  assert.equal(flames.mesh.instanceMatrix.count, 66);
+  fillTrail(target);
+  const data = flames.flameData;
+  for (let i = 0; i < 120; i++) update(target, .1, i, { transform: 1, race: { phase: 'running', turboTime: 2, speed: 40 } });
+  assert.equal(flames.flameData, data);
+  assert.ok(Array.from(data.array).every(Number.isFinite));
+  assert.ok(flames.mesh.count <= 66);
+  flames.dispose();
+  flames.dispose();
+  update(target, .1, 100);
+  assert.deepEqual(disposed, { geometry: 1, material: 1, instances: 1 });
+  assert.equal(flames.mesh.parent, null);
+  assert.equal(flames.mesh.visible, false);
+  assert.equal(flames.mesh.count, 0);
+  assert.ok(flames.particles.every(p => p.life === 0));
+});
+
+test('crush-speed exhaust grows modestly while turbo and guardian remain stronger', () => {
+  const target = rig();
+  const lengthAt = (speed, turboTime = 0, transform = 0) => {
+    update(target, 0, 1, { race: { phase: 'running', speed, turboTime }, transform });
+    return new THREE.Vector3().setFromMatrixScale(firstMatrix(target.flames)).z;
+  };
+  const cruise = lengthAt(26), crush = lengthAt(26 * 1.18), turbo = lengthAt(26 * 1.55, 2), guardian = lengthAt(26, 0, 1);
+  assert.ok(crush > cruise && crush < cruise * 1.1);
+  assert.ok(turbo > crush * 1.5);
+  assert.ok(guardian > crush * 1.5);
+});
