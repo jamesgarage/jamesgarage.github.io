@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#132c46" />
+    <meta name="description" content="A little driver's big adventure. Jump, transform, and collect a garage of mighty monster trucks in a friendly 3D racing playground." />
+    <title>Monster Skyway — James' Garage</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="icon-play" viewBox="0 0 24 24"><path d="m8 4 13 8L8 20Z" fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-width="2" /></symbol>
+      <symbol id="icon-sound" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4Z" fill="currentColor" /><path d="M17 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" /></symbol>
+      <symbol id="icon-settings" viewBox="0 0 24 24"><path d="m10 3-.5 2a8 8 0 0 0-2 1L5.5 5l-2 3 1.5 1.5a8 8 0 0 0 0 3L3.5 14l2 3 2-1a8 8 0 0 0 2 1l.5 2h4l.5-2a8 8 0 0 0 2-1l2 1 2-3-1.5-1.5a8 8 0 0 0 0-3L20.5 8l-2-3-2 1a8 8 0 0 0-2-1L14 3Z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.8" /><circle cx="12" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.8" /></symbol>
+      <symbol id="icon-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2 2 9.3l6.9-1Z" fill="currentColor" stroke="currentColor" stroke-linejoin="round" /></symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="3" /></symbol>
+      <symbol id="icon-bolt" viewBox="0 0 24 24"><path d="M14 2 4 14h7l-1 8 10-12h-7Z" fill="currentColor" stroke="currentColor" stroke-linejoin="round" /></symbol>
+      <symbol id="icon-garage" viewBox="0 0 24 24"><path d="M3 20V8l9-5 9 5v12M7 20V10h10v10M7 14h10M7 18h10" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></symbol>
+      <symbol id="icon-arrow-left" viewBox="0 0 24 24"><path d="m13 5-7 7 7 7M6 12h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" /></symbol>
+      <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="m11 5 7 7-7 7M18 12H4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" /></symbol>
+      <symbol id="icon-jump" viewBox="0 0 24 24"><path d="M12 18V4m-6 6 6-6 6 6M5 20h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" /></symbol>
+    </svg>
+
+    <main id="app">
+      <canvas id="game-canvas" aria-label="Monster Skyway: a 3D monster truck racing playground"></canvas>
+
+      <div class="global-tools" aria-label="Game options">
+        <button id="sound-btn" class="icon-button glass-button" type="button" aria-label="Turn sound off" title="Sound" aria-pressed="true"><svg aria-hidden="true"><use href="#icon-sound" /></svg></button>
+        <button id="settings-btn" class="icon-button glass-button" type="button" aria-label="Grown-up settings" title="Grown-up settings"><svg aria-hidden="true"><use href="#icon-settings" /></svg></button>
+      </div>
+
+      <section id="menu" aria-label="Welcome to Monster Skyway">
+        <div class="menu-shade"></div>
+        <header class="wordmark">
+          <span class="brand-eyebrow"><span class="brand-spark">✦</span> JAMES' GARAGE</span>
+          <span class="brand-name">MONSTER<span>SKYWAY<span class="brand-dot">.</span></span></span>
+        </header>
+        <div class="menu-copy">
+          <p class="eyebrow menu-eyebrow"><span class="live-dot"></span> SMALL DRIVER. MONSTER POSSIBILITIES.</p>
+          <h1>Little driver.<br /><span>BIG ADVENTURE.</span></h1>
+          <p class="menu-description">Big jumps. Friendly faces.<br class="desktop-break" /> The next truck is yours.</p>
+          <div class="menu-actions">
+            <button id="play-btn" class="button button-primary play-button" type="button"><svg aria-hidden="true"><use href="#icon-play" /></svg><span>Let's play</span><span class="button-arrow" aria-hidden="true">↗</span></button>
+            <button id="garage-btn" class="button button-secondary garage-button" type="button"><svg aria-hidden="true"><use href="#icon-garage" /></svg><span>Your garage</span></button>
+          </div>
+          <p id="menu-next" class="menu-next">A whole garage of bigger adventures awaits.</p>
+        </div>
+        <div class="adventure-label" aria-hidden="true"><span class="adventure-label-star">✦</span><span>BUILT FOR<br /><strong>BIG IMAGINATIONS</strong></span></div>
+        <footer class="menu-footer">
+          <div class="route-strip" aria-label="Three places to explore"><span><b>01</b> BEAR WOODS</span><i aria-hidden="true">·</i><span><b>02</b> SKY LOOP</span><i aria-hidden="true">·</i><span><b>03</b> GATOR BAY</span></div>
+          <p class="keyboard-hint">ARROWS TO STEER <span>·</span> SPACE TO JUMP <span>·</span> T TO TRANSFORM</p>
+        </footer>
+      </section>
+
+      <section id="hud" class="hud" aria-label="Race information" hidden>
+        <div class="star-counter"><svg aria-hidden="true"><use href="#icon-star" /></svg><span id="race-stars">0</span><span class="sr-only">stars collected</span></div>
+        <div class="race-route"><div class="race-route-label"><span>YOUR BIG ADVENTURE</span><span id="race-distance">0%</span></div><progress id="race-progress" max="100" value="0" aria-label="Race progress"></progress></div>
+        <button id="pause-btn" class="icon-button glass-button pause-button" type="button" aria-label="Pause game"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="5" /></svg></button>
+      </section>
+
+      <div id="callout" class="callout" role="status" aria-live="polite" aria-atomic="true"></div>
+
+      <nav id="controls" class="controls" aria-label="Driving controls" hidden>
+        <div class="steer-controls"><button id="left-btn" class="drive-button steer-button" type="button" aria-label="Steer left"><svg aria-hidden="true"><use href="#icon-arrow-left" /></svg></button><button id="right-btn" class="drive-button steer-button" type="button" aria-label="Steer right"><svg aria-hidden="true"><use href="#icon-arrow-right" /></svg></button></div>
+        <span class="race-keyboard-hint">← → STEER <span>·</span> SPACE JUMP <span>·</span> T TRANSFORM</span>
+        <div class="action-controls"><button id="transform-btn" class="drive-button transform-button" type="button" aria-label="Transform truck"><svg aria-hidden="true"><use href="#icon-bolt" /></svg><span>TRANSFORM</span><span class="energy-track" aria-hidden="true"><span id="energy-fill"></span></span></button><button id="jump-btn" class="drive-button jump-button" type="button" aria-label="Jump"><svg aria-hidden="true"><use href="#icon-jump" /></svg><span>JUMP!</span></button></div>
+      </nav>
+
+      <section id="garage" class="overlay garage-overlay" role="dialog" aria-modal="true" aria-labelledby="garage-title" hidden>
+        <div class="garage-panel">
+          <header class="garage-header"><div><p class="eyebrow">LITTLE TRUCK. LEGENDARY FUTURE.</p><h2 id="garage-title">Your monster crew<span class="accent-dot">.</span></h2></div><button id="garage-close" class="icon-button close-button" type="button" aria-label="Close garage"><svg aria-hidden="true"><use href="#icon-close" /></svg></button></header>
+          <div class="garage-intro"><p>Every adventure brings your next monster closer.</p><div class="garage-wallet"><svg aria-hidden="true"><use href="#icon-star" /></svg><span id="garage-stars">0</span><span>stars</span></div></div>
+          <div id="truck-list" class="truck-list" aria-label="Your trucks"></div>
+          <p id="garage-progress" class="garage-progress">Collect stars. Grow your crew. Go big.</p>
+          <div class="garage-bottom-mark" aria-hidden="true">DREAM BIG. DRIVE BIGGER.</div>
+        </div>
+      </section>
+
+      <section id="pause-overlay" class="overlay modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pause-title" hidden>
+        <div class="modal-card pause-card"><span class="modal-emblem" aria-hidden="true">Ⅱ</span><p class="eyebrow">A LITTLE PIT STOP</p><h2 id="pause-title">Take your time.</h2><p>Your adventure will be right here.</p><div class="modal-actions"><button id="resume-btn" class="button button-primary" type="button"><svg aria-hidden="true"><use href="#icon-play" /></svg>Keep going</button><button id="quit-btn" class="button button-quiet" type="button">Back to the garage</button></div></div>
+      </section>
+
+      <section id="results" class="overlay modal-overlay" role="dialog" aria-modal="true" aria-labelledby="result-title" hidden>
+        <div class="modal-card result-card"><div class="victory-stars" aria-hidden="true"><svg><use href="#icon-star" /></svg><svg><use href="#icon-star" /></svg><svg><use href="#icon-star" /></svg></div><p class="eyebrow">THAT'S OUR LITTLE LEGEND</p><h2 id="result-title">Monster moves!</h2><div class="result-score"><svg aria-hidden="true"><use href="#icon-star" /></svg><span id="result-stars">0</span><span>stars collected</span></div><p id="result-unlock" class="result-unlock">Your next big adventure is waiting.</p><div class="modal-actions"><button id="race-again-btn" class="button button-primary" type="button"><svg aria-hidden="true"><use href="#icon-play" /></svg>Go again!</button><button id="result-garage-btn" class="button button-secondary" type="button"><svg aria-hidden="true"><use href="#icon-garage" /></svg>Your garage</button></div></div>
+      </section>
+
+      <section id="settings" class="overlay modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+        <div class="modal-card settings-card"><button id="settings-close" class="icon-button close-button" type="button" aria-label="Close settings"><svg aria-hidden="true"><use href="#icon-close" /></svg></button><p class="eyebrow">FOR THE GROWN-UPS</p><h2 id="settings-title">Make it comfy.</h2><label class="setting-row" for="motion-toggle"><span><strong>Gentler motion</strong><small>Less camera movement and screen effects.</small></span><input id="motion-toggle" type="checkbox" role="switch" /></label><p class="settings-note">Progress saves on this device. No accounts, no purchases — just play.</p><button id="reset-btn" class="button button-quiet reset-button" type="button">Reset garage progress</button><div id="reset-confirm" class="reset-confirm" hidden><p><strong>Start the garage over?</strong><br />This clears the stars and trucks saved on this device.</p><div class="confirm-actions"><button id="reset-no" class="button button-secondary" type="button">Keep my trucks</button><button id="reset-yes" class="button button-danger" type="button">Reset progress</button></div></div></div>
+      </section>
+
+      <div id="loading" class="loading-screen" role="status"><div class="loading-wheel" aria-hidden="true"><span></span></div><p>Warming up the wheels<span class="loading-dots">…</span></p><span class="loading-subtitle">BIG ADVENTURES AHEAD</span></div>
+      <div id="error" class="error-message" role="alert" hidden></div>
+    </main>
+    <script type="module" src="./src/main.mjs"></script>
+  </body>
+</html>
