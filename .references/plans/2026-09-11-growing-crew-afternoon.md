@@ -17,7 +17,7 @@ Preserve guided driving, positive crushing/turbo, truthful rank and no-input fir
 - [x] Build six recognizable efficient companion models with bounded geometry/resources. Own buddy-models and model tests; inspect all six views.
 - [x] Root integrates dynamic roster rendering, replacement/reset/disposal, signals, rank UI/audio and camera framing. Extend meaningful renderer/browser tests.
 - [x] Independently review simulation, models and integration; fix material findings. Run units/build, controlled play, full Chrome/WebKit, layout, render-budget and lifetime checks.
-- [ ] Publish verified crew increment, check public runtime/both browsers and update source/docs/screenshots.
+- [x] Publish verified crew increment, check public runtime/both browsers and update source/docs/screenshots. b8f56d4 / Pages run34637830657; 133 unit tests and all7 browser checks in both engines locally/publicly pass.
 
 ## Remaining afternoon
 
@@ -26,5 +26,7 @@ Preserve guided driving, positive crushing/turbo, truthful rank and no-input fir
 - [ ] Reserve the final portion before 17:00 for accepted release checks and finish with the playable URL, source record and remaining physical-device observations.
 
 ## Ledger
+
+Next bounded increment: natural lagoon banks (docs/DESIGN-LAGOON-SHORES.md) and a nontextual two-star crush reward cue (docs/DESIGN-CRUSH-STARS.md). Independent source ownership: world/shore geometry versus encounter rendering. Root integrates and reviews actual play before publication. Preserve the first afternoon runtime b8f56d4 while developing.
 
 Start observed at 14:58:44 EDT. Last live runtime fdddcde; source/docs head0237fd2. All113 units and7browserchecks inbothengines passed before this increment. Permission to continue to17:00 comes directly from the parent; no extra approval is needed for the established workflow.
