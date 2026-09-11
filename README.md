@@ -46,15 +46,19 @@ These are original models inspired by broad toy and vehicle interests. The game 
 
 ## Around the skyway
 
-![Rumbler leading two friendly racers past the woodland stands](docs/screenshots/race.png)
+![Rumbler using turbo to regain the lead after crushing a toy car](docs/screenshots/race.png)
 
 Bear Woods climbs a timber bridge beside a giant waterwheel. Rocket Runway adds a launch pad, a tall toy rocket, and a boost toward the next ramp. Gator Falls brings a broad waterfall, reeds, and a waterfront boardwalk to the rainy lagoon. Picnic stops, balloons, friendly bears and alligators, stands, and the finish trophy garden fill out the route.
+
+![A close race across the raised timber bridge beside its waterwheel](docs/screenshots/bridge.png)
+
+![Automatic turbo fires along the toy rocket's runway](docs/screenshots/rocket.png)
 
 ![The complete raised-edge toy loop and its stunt festival surroundings](docs/screenshots/loop.png)
 
 Steering turns the front wheels and leans the body. Left and right follow the chase camera's view for both touch and keyboard controls. Landings compress the suspension and kick up a brief dust burst and ring. The chase camera frames your truck and its two followers, then pulls aside for an upright view of the loop.
 
-![The orange skyway crossing the water and islands of Gator Bay](docs/screenshots/bay.png)
+![The rainy skyway passing Gator Falls and its waterfront boardwalk](docs/screenshots/bay.png)
 
 Shallow mud patches send little flecks from the tires, and a short, gentle shower passes through Gator Bay. Mud and rain are visual effects: they never slow the truck, change steering, or make winning harder.
 

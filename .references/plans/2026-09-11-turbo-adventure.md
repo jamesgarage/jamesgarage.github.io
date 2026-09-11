@@ -50,6 +50,8 @@ Files: src/main.mjs, src/scene.mjs, src/flames.mjs, src/audio.mjs, index.html, s
 
 ## 5. Publish and document
 
-- [ ] Update README/roadmap and validation with actual outcomes and the new user feedback. Commit and push the tested runtime on main.
-- [ ] Dispatch the existing Pages workflow, verify published hashes, run both public browser suites and inspect refreshed screenshots.
-- [ ] Record release evidence, complete this checklist, push documentation and report the playable result and remaining real-device observations.
+- [x] Update README/roadmap and validation with actual outcomes and the new user feedback. Commit and push the tested runtime on main.
+- [x] Dispatch the existing Pages workflow, verify published hashes, run both public browser suites and inspect refreshed screenshots.
+- [x] Record release evidence, complete this checklist, push documentation and report the playable result and remaining real-device observations.
+
+Released runtime `3ed7e76` through Pages run `34626570687`. Final verification: 81 unit tests; all six browser tests in Chrome and WebKit locally and on the public URL; independent code/visual review; five touch layouts; bounded resources and paused effects. Physical iPad testing and James's feedback on the new crush/turbo rhythm are the next observations.
