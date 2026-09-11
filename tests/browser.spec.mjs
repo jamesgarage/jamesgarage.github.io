@@ -22,7 +22,7 @@ test.afterEach(async ({ page }) => {
 });
 
 async function openGame(page) {
-  await page.goto('/', { waitUntil: 'networkidle' });
+  await page.goto('./', { waitUntil: 'networkidle' });
   await page.waitForFunction(() => Boolean(window.__skyway));
   await expect(page.locator('#loading')).toBeHidden();
   await expect(page.locator('#error')).toBeHidden();

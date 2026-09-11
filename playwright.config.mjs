@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
-const baseURL = 'http://127.0.0.1:4180';
+const externalURL = process.env.PLAYWRIGHT_BASE_URL;
+const baseURL = externalURL || 'http://127.0.0.1:4180';
 
 export default defineConfig({
   testDir: './tests',
@@ -29,7 +30,7 @@ export default defineConfig({
       args: ['--enable-unsafe-swiftshader'],
     },
   },
-  webServer: {
+  webServer: externalURL ? undefined : {
     command: 'npm run dev -- --port 4180 --strictPort',
     url: baseURL,
     reuseExistingServer: !process.env.CI,

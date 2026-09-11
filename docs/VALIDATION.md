@@ -14,10 +14,16 @@ Additional browser interactions covered the garage before the first race, keyboa
 
 The portable `npm run test:browser` suite passed all three tests in approximately 1.5 minutes: input/pause/resume after a garage visit, a complete race with no driving input followed by unlock/save/replay, and touchscreen play when storage and audio are unavailable. An additional rendering pass started a race with each of the six trucks without browser errors.
 
+## Public deployment
+
+The game was published on 2026-09-11 to [GitHub Pages](https://yanivalfasykeelusa.github.io/james-monster-skyway/) from [its standalone repository](https://github.com/yanivalfasykeelusa/james-monster-skyway). The [initial deployment workflow](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34564169134) completed both build and deployment successfully.
+
+All three portable browser tests then passed against that exact public URL in approximately 1.4 minutes. This verified the repository subpath and bundled assets, keyboard/touch controls, a complete unattended race with the giant loop, earned truck selection, saved progress after reload, replay, and play without storage/audio. The public loop screenshot was inspected. These were headless Chrome tests with emulated touch, not a physical iPad test.
+
 ## Practical limits
 
 - A desktop browser with emulated touch is not a physical iPad or iPhone. Safari behavior, actual device frame pacing, battery use, and orientation changes still need a real-device pass.
 - The initial course and unlock pacing need observation with a young player.
 - Local saves belong to a browser and site origin; moving between preview and public URLs creates separate garages.
 - Storage is not cloud-synced. Private browsing and storage clearing can remove progress.
-- GitHub publication and its final URL must be verified separately after a repository is connected.
+- GitHub Pages publication has been verified; future deployments should repeat the public URL regression suite.

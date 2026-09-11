@@ -1,5 +1,7 @@
 # Monster Skyway
 
+**[Play Monster Skyway](https://yanivalfasykeelusa.github.io/james-monster-skyway/)** on an iPad, phone, or computer. Open the link in your browser; no game account or download is required.
+
 A cheerful 3D monster truck game for little drivers. Race along a bright toy track, soar over ramps, ride a guided loop, transform into a robot guardian, and grow a garage of increasingly enormous trucks.
 
 This project began with a three-year-old's love of monster trucks, orange stunt tracks, angular silver vehicles, and transforming robots. It explores what a family can create with AI as a development collaborator. The vehicles, characters, sounds, and scenery are original creations.
@@ -7,6 +9,8 @@ This project began with a three-year-old's love of monster trucks, orange stunt 
 ![The Monster Skyway garage and an original 3D monster truck](docs/screenshots/menu.png)
 
 ## Play
+
+On iPad, open the game in Safari. Landscape gives the track more room, and portrait works too. To keep a shortcut beside James's other games, use Safari's Share menu, More if shown, then **Add to Home Screen** and **Add**. See [Apple's instructions](https://support.apple.com/guide/ipad/bookmark-a-website-ipadc602b75b/ipados).
 
 Choose **Play** to start a short race. The truck accelerates automatically, ramps launch automatically, and the loop guides the truck through safely. A driver can enjoy and complete a race without steering or pressing jump.
 
@@ -57,6 +61,8 @@ npm run test:browser
 
 The suite includes a complete real-time race, so allow about two minutes. `PLAYWRIGHT_CHROME_PATH` can point to an existing Chrome executable instead of downloading Chromium.
 
+Set `PLAYWRIGHT_BASE_URL` to a deployed site's full URL (including its trailing slash) to run the same regression suite against that deployment. Without it, the test runner starts a local development server.
+
 ## Browser and audio requirements
 
 The game needs a browser and device with WebGL 2 enabled. Rendering uses bundled code and procedural 3D models. Music-like effects and the quiet engine are synthesized with the Web Audio API; the game remains playable when audio is unavailable.
@@ -73,7 +79,7 @@ Chrome browser checks have exercised a complete race with emulated touch input, 
 
 The included workflow runs only when started manually with **Run workflow**. After choosing a repository, enable GitHub Pages with **GitHub Actions** as its source, then run **Deploy Monster Skyway** from the Actions tab. It installs dependencies, runs tests, builds the game, and publishes the `dist/` artifact to Pages.
 
-No repository or public deployment is configured by these source files.
+The project is published from [yanivalfasykeelusa/james-monster-skyway](https://github.com/yanivalfasykeelusa/james-monster-skyway), with the playable site at [Monster Skyway](https://yanivalfasykeelusa.github.io/james-monster-skyway/). Its Pages source is GitHub Actions. Source changes remain separate from the live site until the deployment workflow is run.
 
 ## Next adventures
 
