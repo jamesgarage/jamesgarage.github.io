@@ -182,6 +182,8 @@ All **ten production browser checks pass in Chrome (about 2.4 minutes) and WebKi
 
 A separate three-race production playthrough starts with an empty save and earns 54, 108 and 162 total stars. Rumbler, Rescue Roarer and Shark Surge each finish first, crush six cars and complete the loop. Rescue Roarer completes the entire race without driving input; Shark Surge runs at 768×1024 portrait. Earned selections survive reload, and the final garage allows the earned Mega Titan selection. Pause/resume and both new trucks' course views were exercised with zero browser, console or HTTP errors.
 
+The [distinct-trucks deployment](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34643522801) successfully publishes runtime commit `80aeecb`; the public page serves the matching `index-DNvN4krW.js` / `index-BDydzDdE.css` assets. All **ten public browser checks pass in Chrome (about 2.6 minutes) and WebKit (about 3.5 minutes)**. The public four-viewport capture loads all eight portraits with no garage overflow or overlapping/offscreen essential controls. No browser/network errors were recorded. Independent source review found no additional controls, save, progression or documentation issue. README gameplay screenshots are refreshed from this deployment.
+
 ## Practical limits
 
 - Chrome and Playwright WebKit on a desktop with emulated touch are not a physical iPad or iPhone. Shipping Safari behavior, actual device frame pacing, battery use, and orientation changes still need a real-device pass.

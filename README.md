@@ -114,7 +114,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-The suite includes a complete real-time race, so allow about two minutes. `PLAYWRIGHT_CHROME_PATH` can point to an existing Chrome executable instead of downloading Chromium.
+The suite includes a complete real-time race, so allow about three to four minutes per browser. `PLAYWRIGHT_CHROME_PATH` can point to an existing Chrome executable instead of downloading Chromium.
 
 To exercise Playwright's WebKit engine, install it once and select `PLAYWRIGHT_BROWSER=webkit`:
 
