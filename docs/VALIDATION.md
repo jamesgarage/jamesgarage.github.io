@@ -48,10 +48,28 @@ All three tests also passed against that same public URL in Playwright WebKit in
 
 A separate public-site capture checked the four desktop/tablet/phone layouts, all six garage portraits, and jumping Mega Titan. It found no JavaScript/console errors, horizontal garage overflow, or overlapping/offscreen essential controls. The five README screenshots were refreshed from that public build; the collection capture uses a prepared local browser save to show all six trucks.
 
+## Friendly racing and steering correction: 2026-09-11
+
+This increment adds two trailing racers, position and selected-truck victory displays, trackside festival venues, shallow mud and gentle bay rain. The race rules, automatic driving/jumps/loop, rewards and saved garage remain compatible. The parent reported reversed controls during development; the keyboard Right regression reproduced screen-left movement before the fix. A shared lane-to-world mapping now keeps steering, collectible positions, shadows, follower lanes and mud contact consistent.
+
+The final unit suite passed **52 tests**. New coverage includes six follower tests, three festival geometry/ownership tests, eight weather tests and a chase-camera projection regression through the ordinary course in both tablet orientations. Weather checks include clearance above actual road triangles, contact across all six truck sizes, bounded buffers, pause, reset and gentler motion. The build succeeded; Vite emits an advisory because the approximately 657 kB minified application bundle (173 kB gzip) slightly exceeds its configured 650 kB warning threshold.
+
+The local production Chrome suite passed all five browser tests in about 1.6 minutes. It verifies keyboard and held on-screen steering in both tablet orientations, touch jumping, pause/resume, a full unattended first-place race, follower ordering, automatic transformation and loop, mud spray/rain, selected-truck victory portrait, earned trucks, persistent save/reload/replay, and blocked-storage/unavailable-audio play. The finish awarded 42 stars. Following the full run, visual review reduced the follower scales to keep the player's truck more prominent; additional production touch and layout checks exercised that adjustment.
+
+A separate Chrome probe sent emulated touch-start/touch-end events through both steering buttons at 1440×900, 1024×768, 768×1024, 390×844 and 844×390. Left and right matched the visible road in all five layouts. Position/status and essential controls stayed inside the viewport without overlap. Prepared finish content verified the long multi-truck unlock message and both actions fit all five layouts; real finish logic and portrait loading are covered by the full race test. No JavaScript or console errors occurred.
+
+All five tests also passed on the final local production build in Playwright WebKit in about 1.8 minutes, including the full first-place race, corrected steering, rainy pause/resume and saved replay. Neither browser suite recorded JavaScript, console, failed-request or HTTP errors.
+
+An integrated resource probe switched all six trucks through seven cycles (42 replacements). The fixed bay view retained identical per-truck geometry counts across cycles, seven textures and 13 shader programs. Scene/camera/flame/weather buffers and follower poses stayed unchanged through 30 paused frames. Gentler motion retained two steady exhaust flames and hid moving rain, mud spray and the landing ring. These establish bounded resources and lifecycle behavior, not iPad frame rates.
+
+Independent review checked module behavior and the complete integration. Its visual finding about oversized trailing trucks was addressed by reducing their scales while retaining the safe following gaps. Trackside venues, six player designs, weather and loop views were inspected; the full-field rendering target is fewer than 700 draw calls and 550,000 triangles in tested views.
+
+The review's 13 captures using a moving camera approach recorded no browser errors and a maximum of 530 draw calls and 467,260 triangles. The reviewer closed the player-prominence finding after inspecting all six truck designs and tablet landscape/portrait views.
+
 ## Practical limits
 
 - Chrome and Playwright WebKit on a desktop with emulated touch are not a physical iPad or iPhone. Shipping Safari behavior, actual device frame pacing, battery use, and orientation changes still need a real-device pass.
-- The initial course and unlock pacing need observation with a young player.
+- James's parent has shared enthusiastic feedback; the updated controls, course and unlock pacing still need focused observation on his actual play device.
 - Local saves belong to a browser and site origin; moving between preview and public URLs creates separate garages.
 - Storage is not cloud-synced. Private browsing and storage clearing can remove progress.
 - GitHub Pages publication has been verified; future deployments should repeat the public URL regression suite.

@@ -3,6 +3,10 @@ import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS } from './core.mjs';
 const TAU = Math.PI * 2;
 const UP = new THREE.Vector3(0, 1, 0);
 const clamp = THREE.MathUtils.clamp;
+// Models face local +Z; viewed from behind, local +X is screen-left.
+// Logical lanes follow the controls: negative left, positive right.
+export function laneOffset(lane) { return -lane * 3.4; }
+
 export function trackCenter(distance) {
   const d = clamp(distance, -80, COURSE_LENGTH + 160);
   const loopLength = LOOP_END - LOOP_START;

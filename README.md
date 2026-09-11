@@ -2,9 +2,9 @@
 
 **[Play Monster Skyway](https://yanivalfasykeelusa.github.io/james-monster-skyway/)** on an iPad, phone, or computer. Open the link in your browser; no game account or download is required.
 
-A cheerful 3D monster truck game for little drivers. Pick one of six sculpted toy trucks, soar over ramps, ride a giant guided loop, transform into a robot guardian, and grow a garage of increasingly enormous wheels.
+A cheerful 3D monster truck game for little drivers. Lead two friendly trucks through a colorful toy world, soar over ramps, ride a giant guided loop, transform into a robot guardian, and grow a garage of increasingly enormous wheels.
 
-The quality pass adds rounded bodywork, treaded tires, visible suspension, warm sunlight and shadows, and an orange track with real thickness and raised edges. Bear Woods, the Sky Loop stunt festival, and Gator Bay give the short race three distinct destinations.
+Sculpted bodywork, treaded tires, visible suspension, warm sunlight and shadows give the trucks their toy-box feel. The raised orange track visits Bear Woods, the Sky Loop festival, and Gator Bay, with cheering stands, playful landmarks, muddy splashes, and a gentle shower along the way.
 
 ![The live Monster Skyway lobby with its featured 3D truck](docs/screenshots/menu.png)
 
@@ -15,6 +15,8 @@ This project began with a three-year-old's love of monster trucks, orange stunt 
 On iPad, open the game in Safari. Landscape gives the track more room, and portrait works too. To keep a shortcut beside James's other games, use Safari's Share menu, More if shown, then **Add to Home Screen** and **Add**. See [Apple's instructions](https://support.apple.com/guide/ipad/bookmark-a-website-ipadc602b75b/ipados).
 
 Choose **Let's play** to start a roughly 73-second race. The truck accelerates automatically, six ramps launch automatically, and the loop guides the truck through safely. A driver can enjoy and complete a race without steering or pressing jump.
+
+Sunny and Splash follow behind, jumping and looping with you. They cannot bump your truck, take your stars, or overtake you. A first-place badge shows that you are leading, and your chosen truck takes the spotlight in the finish celebration. Winning does not make the next race harder.
 
 - **Touch:** use the large on-screen controls to jump, steer, or transform when energy is ready.
 - **Keyboard:** use the arrow keys to steer, Space to jump, T to transform, and P or Escape to pause. Menus also support Tab and Enter.
@@ -40,15 +42,17 @@ These are original models inspired by broad toy and vehicle interests. The game 
 
 ## Around the skyway
 
-Drive past pine trees and friendly bears in Bear Woods, through pennants and turquoise supports at the Sky Loop, and over the water beside Gator Bay's sandy islands, palms, and alligators. Track seams, edge rails, ramp arrows, and gates help make the route readable.
+Drive past pine trees, friendly bears, a picnic stop, and a windmill in Bear Woods. An observatory and tethered balloons lead toward the Sky Loop. Gator Bay brings sandy islands, palms, alligators, a lighthouse, a surf shack, and sailboats. Starting stands and a trophy garden bookend the race; track seams, edge rails, ramp arrows, and gates keep the route readable.
 
 ![The complete raised-edge toy loop and its stunt festival surroundings](docs/screenshots/loop.png)
 
-Steering turns the front wheels and leans the body. Landings compress the suspension and kick up a brief dust burst and ring. The close chase camera leaves room to see the next jump, then pulls aside for an upright view of the loop.
+Steering turns the front wheels and leans the body. Left and right follow the chase camera's view for both touch and keyboard controls. Landings compress the suspension and kick up a brief dust burst and ring. The chase camera frames your truck and its two followers, then pulls aside for an upright view of the loop.
 
 ![The orange skyway crossing the water and islands of Gator Bay](docs/screenshots/bay.png)
 
-Twin exhausts shoot bright flames and leave a fiery trail through jumps and loops. Bigger trucks bring bigger flames, and guardian mode turns them up further. **Gentler motion** reduces camera movement, removes the landing ring and moving flame trail, and keeps two small, steady exhaust flames.
+Shallow mud patches send little flecks from the tires, and a short, gentle shower passes through Gator Bay. Mud and rain are visual effects: they never slow the truck, change steering, or make winning harder.
+
+Twin exhausts shoot bright flames and leave a fiery trail through jumps and loops. Bigger trucks bring bigger flames, and guardian mode turns them up further. **Gentler motion** reduces camera movement, removes the landing ring, moving flame trail, rain, and tire spray, and keeps two small, steady exhaust flames and the mud scenery.
 
 ![Mega Titan airborne with twin exhaust flames and a fiery trail](docs/screenshots/flames.png)
 
@@ -102,9 +106,9 @@ The running game does not fetch third-party assets, call external services, or r
 
 ## Validation
 
-The unit suite passed 34 tests during the quality pass. It checks race rules, progression and save recovery, audio and flame lifecycles, truck resources, track geometry, and world construction. Run `npm test` to repeat it.
+Run `npm test` for race rules, progression and save recovery, truck and effect lifecycles, friendly racer behavior, and world geometry. The browser suite also checks steering against the visible road and completes a full race.
 
-See [the validation record](docs/VALIDATION.md) for current Chrome/WebKit browser results, screenshot inspection, and public deployment evidence. Real iPad/Safari testing and a child playtest remain pending.
+See [the validation record](docs/VALIDATION.md) for recorded test results, screenshot inspection, and public deployment evidence. James's parent reports that he is delighted with the existing game; his play device is unconfirmed. Physical iPad/Safari checks and observations of this update remain follow-up work.
 
 ## Publish with GitHub Pages
 
@@ -114,9 +118,9 @@ The project is published from [yanivalfasykeelusa/james-monster-skyway](https://
 
 ## Next adventures
 
-See [the roadmap](docs/ROADMAP.md) for shipped features, device testing, an eventual free-driving playground, and a separate construction vehicle adventure.
+See [the roadmap](docs/ROADMAP.md) for the friendly racing update, device testing, future play ideas, and a separate construction vehicle adventure.
 
-Read the [design notes](docs/DESIGN.md) and [asset credits](docs/ASSETS.md) for the decisions behind the game.
+Read the [design notes](docs/DESIGN.md), [friendly racing brief](docs/DESIGN-FRIENDLY-RACING.md), and [asset credits](docs/ASSETS.md) for the decisions behind the game.
 
 ## License
 

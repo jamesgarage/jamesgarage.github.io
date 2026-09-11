@@ -29,6 +29,32 @@ async function openGame(page) {
   await expect(page.getByRole('button', { name: "Let's play", exact: true })).toBeVisible();
 }
 
+for (const viewport of [{ width: 1024, height: 768 }, { width: 768, height: 1024 }]) {
+test(`keyboard and on-screen steering move in the direction shown by the arrows (${viewport.width})`, async ({ page }) => {
+  await page.setViewportSize(viewport);
+  await openGame(page);
+  await page.getByRole('button', { name: "Let's play", exact: true }).tap();
+  await page.waitForFunction(() => window.__skyway.distance > 10);
+  await page.keyboard.down('ArrowRight');
+  await page.waitForFunction(() => Math.abs(window.__skyway.screenLane) > .04);
+  await page.keyboard.up('ArrowRight');
+  expect(await page.evaluate(() => window.__skyway.screenLane), 'Right must move right relative to the visible road').toBeGreaterThan(.04);
+  await page.keyboard.down('ArrowLeft');
+  await page.waitForFunction(() => window.__skyway.screenLane < -.04);
+  await page.keyboard.up('ArrowLeft');
+
+  // Hold the real on-screen pointer controls; these share the touch event path.
+  for (const [id, sign] of [['right-btn', 1], ['left-btn', -1]]) {
+    const box = await page.locator(`#${id}`).boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForFunction(direction => window.__skyway.screenLane * direction > .04, sign);
+    await page.mouse.up();
+    expect(await page.evaluate(() => window.__skyway.screenLane) * sign).toBeGreaterThan(.04);
+  }
+});
+}
+
 test('keyboard and touch jumps, pause, and resume work after a garage visit', async ({ page }) => {
   await openGame(page);
   await page.getByRole('button', { name: 'Your garage', exact: true }).click();
@@ -59,6 +85,7 @@ test('keyboard and touch jumps, pause, and resume work after a garage visit', as
   expect(await page.evaluate(() => window.__skyway.distance)).toBe(paused.distance);
   expect(await page.evaluate(() => window.__skyway.height)).toBe(paused.height);
   expect(await page.evaluate(() => window.__skyway.flames)).toBe(paused.flames);
+  expect(await page.evaluate(() => window.__skyway.buddies)).toEqual(paused.buddies);
   await page.getByRole('button', { name: 'Keep going', exact: true }).tap();
   await page.waitForFunction(distance => window.__skyway.distance > distance + 3, paused.distance);
   await expect(page.locator('#pause-overlay')).toBeHidden();
@@ -69,6 +96,12 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   test.setTimeout(150_000);
   await openGame(page);
   await page.getByRole('button', { name: "Let's play", exact: true }).tap();
+
+  await expect(page.locator('#race-place')).toHaveText('1st');
+  await page.waitForFunction(() => window.__skyway.distance > 20);
+  const field = await page.evaluate(() => window.__skyway);
+  expect(field.buddies).toHaveLength(2);
+  expect(field.buddies.every(buddy => buddy.distance < field.distance)).toBe(true);
 
   // Run the real game clock with no driving input: little children can finish unaided.
   await page.waitForFunction(() => window.__skyway.distance >= 750, null, { timeout: 90_000 });
@@ -83,17 +116,31 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   expect(loop.drawCalls).toBeGreaterThan(0);
   expect(loop.triangles).toBeGreaterThan(0);
   expect(loop.flames).toBeGreaterThan(6);
-  expect(loop.drawCalls).toBeLessThan(600);
-  expect(loop.triangles).toBeLessThan(400_000);
+  expect(loop.drawCalls).toBeLessThan(700);
+  expect(loop.triangles).toBeLessThan(550_000);
+  expect(loop.place).toBe(1);
+  expect(loop.buddies.every(buddy => buddy.distance < loop.distance)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath('guided-loop.png') });
 
-  await page.waitForFunction(() => window.__skyway.distance >= 1260, null, { timeout: 90_000 });
+  await page.waitForFunction(() => window.__skyway.distance >= 1290 && window.__skyway.mudSpray > 0, null, { timeout: 90_000 });
   await expect(page.locator('#race-stage')).toHaveText('03 · GATOR BAY');
+  expect(await page.evaluate(() => window.__skyway.rain)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath('gator-bay.png') });
+  await page.getByRole('button', { name: 'Pause game', exact: true }).tap();
+  const rainyPause = await page.evaluate(() => window.__skyway);
+  await page.waitForTimeout(250);
+  expect(await page.evaluate(() => window.__skyway.mudSpray)).toBe(rainyPause.mudSpray);
+  expect(await page.evaluate(() => window.__skyway.buddies)).toEqual(rainyPause.buddies);
+  await page.getByRole('button', { name: 'Keep going', exact: true }).tap();
 
   await expect(page.locator('#results')).toBeVisible({ timeout: 90_000 });
   const finish = await page.evaluate(() => ({ ...window.__skyway }));
   expect(finish.phase).toBe('finished');
+  expect(finish.place).toBe(1);
+  await expect(page.locator('#result-title')).toHaveText('You win!');
+  await expect(page.locator('#result-truck')).toHaveAttribute('src', /trucks\/rumbler\.png$/);
+  await page.waitForFunction(() => document.querySelector('#result-truck').naturalWidth === 720);
+  await page.screenshot({ path: testInfo.outputPath('first-place.png') });
   expect(finish.landings).toBeGreaterThanOrEqual(6);
   expect(finish.loops).toBe(1);
   expect(finish.races).toBe(1);
@@ -120,6 +167,9 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   expect(replay.loops).toBe(0);
   expect(replay.totalStars).toBe(finish.totalStars);
   expect(replay.races).toBe(1);
+  expect(replay.buddies.every(buddy => buddy.distance < replay.distance)).toBe(true);
+  expect(replay.rain).toBe(false);
+  expect(replay.mudSpray).toBe(0);
 });
 
 test('blocked storage and unavailable audio still allow touchscreen play', async ({ page }) => {

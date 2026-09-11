@@ -3,8 +3,11 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { COURSE_LENGTH, LOOP_START, LOOP_END } from './core.mjs';
 import { ExhaustFlames } from './flames.mjs';
 import { makeTruck, disposeTruck } from './models.mjs';
-import { sampleTrack, trackCenter } from './track.mjs';
+import { sampleTrack, trackCenter, laneOffset } from './track.mjs';
 import { createWorld } from './world.mjs';
+import { RaceBuddies } from './buddies.mjs';
+import { createRaceFestival } from './festival.mjs';
+import { RaceWeather } from './weather.mjs';
 export { makeTruck } from './models.mjs';
 export { sampleTrack } from './track.mjs';
 
@@ -47,8 +50,10 @@ export class GameScene {
       vertexShader:'varying vec3 direction; void main(){direction=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
       fragmentShader:'uniform vec3 top; uniform vec3 bottom; varying vec3 direction; void main(){float h=pow(max(normalize(direction).y,0.0),0.55);gl_FragColor=vec4(mix(bottom,top,h),1.0);\n#include <colorspace_fragment>\n}'
     }));this.sky.renderOrder=-100;this.scene.add(this.sky);
-    this.world=createWorld();this.scene.add(this.world);
+    this.world=createWorld();this.world.add(createRaceFestival());this.scene.add(this.world);
     this.truck=makeTruck(spec);this.scene.add(this.truck.group);
+    this.buddies=new RaceBuddies(this.scene);
+    this.weather=new RaceWeather(this.scene);
     const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=128;
     const shadowContext=shadowCanvas.getContext('2d');const gradient=shadowContext.createRadialGradient(64,64,8,64,64,64);
     gradient.addColorStop(0,'rgba(25,32,35,.75)');gradient.addColorStop(.5,'rgba(25,32,35,.38)');gradient.addColorStop(1,'rgba(25,32,35,0)');
@@ -68,17 +73,17 @@ export class GameScene {
     for(let d=40,i=0;d<COURSE_LENGTH-25;d+=32,i++) {
       const f=sampleTrack(d);const lane=i%3===0?0:i%3===1?-1:1;
       const m=new THREE.Mesh(this.starGeometry,mat(0xffd750,.25));
-      m.position.copy(f.position).addScaledVector(f.right,lane*3.4).addScaledVector(f.up,2.9);m.rotation.y=.3;
+      m.position.copy(f.position).addScaledVector(f.right,laneOffset(lane)).addScaledVector(f.up,2.9);m.rotation.y=.3;
       this.scene.add(m);this.stars.push({mesh:m,distance:d,lane,collected:false,base:m.position.clone()});
     }
   }
   setTruck(spec) {
-    this.flames.clear();
+    this.flames.clear();this.weather.reset();
     disposeTruck(this.truck);
     this.scene.remove(this.truck.group);this.truck=makeTruck(spec);this.scene.add(this.truck.group);this.transform=0;
   }
-  reset() {this.flames.clear();this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.squash=0;this.steerLean=0;this.particles.forEach(p=>{p.life=0;p.mesh.visible=false;});}
-  menu() {this.flames.clear();this.mode='menu';this.snapCamera=true;}
+  reset() {this.flames.clear();this.buddies.reset();this.weather.reset();this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.squash=0;this.steerLean=0;this.particles.forEach(p=>{p.life=0;p.mesh.visible=false;});}
+  menu() {this.flames.clear();this.weather.reset();this.mode='menu';this.snapCamera=true;}
   resize() {this.width=innerWidth;this.height=innerHeight;this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();this.renderer.setSize(this.width,this.height,false);this.snapCamera=true;}
   burst(colorful=true,count=20,origin=this.truck.group.position) {
     let n=0;for(const p of this.particles) {
@@ -98,13 +103,13 @@ export class GameScene {
     const d=isMenu?14:race.distance;
     const f=sampleTrack(d);const g=this.truck.group;
     g.scale.setScalar(this.truck.spec.scale*(isMenu?(this.width<this.height?1.72:2.1):1));
-    g.position.copy(f.position).addScaledVector(f.right,(isMenu?0:race.lane)*3.4).addScaledVector(f.up,isMenu?0:race.height);
+    g.position.copy(f.position).addScaledVector(f.right,laneOffset(isMenu?0:race.lane)).addScaledVector(f.up,isMenu?0:race.height);
     g.quaternion.copy(f.quaternion);
     if(isMenu)g.rotateY(-.15+Math.sin(this.time*.32)*.1);
     else if(race.height>0)g.rotateX(clamp(-race.velocityY*.025,-.28,.35));
     this.transform=lerp(this.transform,!isMenu&&race.transformTime>0?1:0,1-Math.exp(-dt*5));
     this.squash=Math.max(0,this.squash-dt*3.5);
-    this.steerLean=lerp(this.steerLean,isMenu?0:(race.targetLane-race.lane)*.16,1-Math.exp(-dt*7));
+    this.steerLean=lerp(this.steerLean,isMenu?0:-(race.targetLane-race.lane)*.16,1-Math.exp(-dt*7));
     this.truck.body.position.y=this.transform*1.8-this.squash*.2+(isMenu?.035*Math.sin(this.time*2):Math.sin(this.time*16)*.025);
     this.truck.body.rotation.z=-this.steerLean;
     this.truck.head.visible=this.transform>.06;this.truck.head.scale.setScalar(Math.max(.01,this.transform));
@@ -112,12 +117,12 @@ export class GameScene {
     this.truck.struts.forEach(leg=>{leg.visible=this.transform>.06;leg.scale.y=1.2+this.transform*1.9;leg.position.y=1.7+this.transform*.8;});
     this.truck.wheels.forEach((wheel,i)=>{wheel.position.x=(i%2===0?-1:1)*(1.65+this.transform*.7);wheel.rotation.order='YXZ';wheel.rotation.y=i>1?this.steerLean*1.4:0;if(!isMenu&&race.phase==='running')wheel.rotation.x+=dt*19;});
     this.flames.update(dt,{truck:this.truck,time:this.time,mode:this.mode,race,transform:this.transform,reducedMotion:this.reducedMotion});
-    this.contactShadow.position.copy(f.position).addScaledVector(f.right,(isMenu?0:race.lane)*3.4).addScaledVector(f.up,.042);
+    this.contactShadow.position.copy(f.position).addScaledVector(f.right,laneOffset(isMenu?0:race.lane)).addScaledVector(f.up,.042);
     this.contactShadow.quaternion.copy(f.quaternion);this.contactShadow.rotateX(-Math.PI/2);
     const shadowScale=g.scale.x*(1+(isMenu?0:race.height)*.06);
     this.contactShadow.scale.set(7.6*shadowScale,6.8*shadowScale,1);this.contactShadow.material.opacity=.65/(1+(isMenu?0:race.height)*.17);
     this.landingRing.visible=!isMenu&&!this.reducedMotion&&this.squash>0;
-    this.landingRing.position.copy(f.position).addScaledVector(f.right,(isMenu?0:race.lane)*3.4).addScaledVector(f.up,.065);
+    this.landingRing.position.copy(f.position).addScaledVector(f.right,laneOffset(isMenu?0:race.lane)).addScaledVector(f.up,.065);
     this.landingRing.quaternion.copy(f.quaternion);this.landingRing.rotateX(-Math.PI/2);
     this.landingRing.scale.setScalar((2+(1-this.squash)*5)*this.truck.spec.scale);this.landingRing.material.opacity=this.squash*.55;
     this.sky.position.copy(g.position);
@@ -134,9 +139,9 @@ export class GameScene {
       this.targetLook.copy(base).add(new THREE.Vector3(6,29,0));this.camera.fov=54;
     } else {
       const horizontal=f.forward.clone();horizontal.y=0;horizontal.normalize();
-      const distance=(this.width<this.height?16:12.5)+(this.truck.spec.scale-1)*5;
-      this.targetCamera.copy(g.position).addScaledVector(horizontal,-distance).add(new THREE.Vector3(0,6.8+race.height*.12+(this.truck.spec.scale-1)*2.5,0));
-      this.targetLook.copy(f.position).addScaledVector(horizontal,12).add(new THREE.Vector3(0,2.2+race.height*.55,0));
+      const distance=(this.width<this.height?34:26)+(this.truck.spec.scale-1)*4;
+      this.targetCamera.copy(g.position).addScaledVector(horizontal,-distance).add(new THREE.Vector3(0,13.5+race.height*.1+(this.truck.spec.scale-1)*2.5,0));
+      this.targetLook.copy(f.position).addScaledVector(horizontal,3).add(new THREE.Vector3(0,2.4+race.height*.4,0));
       this.camera.fov=55+(this.reducedMotion?0:this.transform*3);
       if(!this.reducedMotion)this.targetCamera.y-=this.squash*.32;
     }
@@ -156,6 +161,8 @@ export class GameScene {
       if(p.life<=0)continue;p.life-=dt;p.mesh.visible=p.life>0;p.v.y-=dt*12;p.mesh.position.addScaledVector(p.v,dt);p.mesh.rotation.x+=dt*4;p.mesh.rotation.z+=dt*3;p.mesh.scale.setScalar(p.size*Math.max(0,p.life/p.duration));
     }
     if(this.transform>.5&&Math.random()<dt*20&&!this.reducedMotion)this.burst(true,1);
+    this.buddies.update(dt,race,!isMenu);
+    this.weather.update(dt,{race,truck:this.truck,mode:this.mode,reducedMotion:this.reducedMotion});
     this.renderer.render(this.scene,this.camera);
     return collected;
   }

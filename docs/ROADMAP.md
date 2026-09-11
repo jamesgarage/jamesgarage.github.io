@@ -22,19 +22,44 @@ The first playable release is published at [Monster Skyway](https://yanivalfasyk
 - Steering lean and front-wheel movement, suspension bob, landing compression and effects, and a closer chase camera with an upright loop overview.
 - Separate model, track, and world modules; geometry batching, resource cleanup, and bounded effects.
 
-The established race rules, rewards, saved progress, and exhaust behavior remain compatible. The unit suite now passes 34 tests. See [the validation record](VALIDATION.md) for current browser-engine, layout, build, and deployment results.
+The established race rules, rewards, saved progress, and exhaust behavior remain compatible. See [the validation record](VALIDATION.md) for recorded test, layout, build, and deployment results.
+
+## Friendly racing update
+
+James's parent reports that he loves the existing game and wants the visual appeal of games such as Crash Drive and Hot Wheels with easy driving and rewarding wins. Crash Drive is a visual reference, not a game James has played or a request for its difficulty.
+
+- Two smaller trucks, Sunny and Splash, follow behind through the ramps and loop. They never collide with the player, take stars, or affect race rewards.
+- A readable first-place badge and a finish celebration featuring the selected truck's actual portrait.
+- Starting and finish stands, a woodland picnic stop and windmill, an observatory and balloons, and seaside landmarks around Gator Bay.
+- Shallow mud with tire spray and a short, gentle rain zone. These are cosmetic: traction, speed, controls, and win conditions stay the same. Gentler motion suppresses moving rain and spray.
+- Corrected left/right steering relative to the chase camera, shared by touch and keyboard controls and collectible placement.
+- The same guided course, automatic acceleration, no-input completion, positive rewards, saved garage, and replay behavior. Wins do not increase difficulty.
+
+See [the friendly racing brief](DESIGN-FRIENDLY-RACING.md) for scope, primary visual references, and acceptance criteria. Validation and publication evidence belong in the [validation record](VALIDATION.md).
 
 ## Next: physical device and child observations
 
 1. Play on a real iPad in Safari and a representative phone, in portrait and landscape. Check touch controls, orientation changes, frame pacing, and camera comfort.
-2. Watch a young player start, finish, choose an earned truck, and replay. Revise anything that requires adult explanation.
-3. Tune collectible placement, reward pacing, sound, motion, and rendering cost using those observations.
+2. Watch James start, recognize that he is leading, notice the other trucks, finish, choose an earned truck, and replay. Revise anything that requires adult explanation.
+3. Check that the richer scenery and weather feel exciting without hiding the route or making the controls harder to understand.
+4. Tune collectible placement, reward pacing, sound, motion, and rendering cost using those observations.
 
-Physical iPad/Safari testing and a child playtest remain pending. Playwright's Chromium and WebKit engines with emulated touch are useful engineering checks, but do not replace those observations.
+The parent has shared enthusiastic feedback from James, but his play device is unconfirmed. Physical iPad/Safari testing and focused observations of this update remain follow-up work. Playwright's Chromium and WebKit engines with emulated touch are useful engineering checks, but do not replace those observations.
+
+## Engine direction
+
+Continue with Three.js for the guided racer. This update's needs are visual presentation, accessible controls, and scenery; a language change alone would not deliver them. Reconsider Unity or Godot if measured device limits, scene-authoring needs, or richer physical interactions justify a migration. Swift/RealityKit remains an Apple-focused option.
+
+Before a rewrite, compare one truck, one ramp, and one landing on a real target device. Keep the current playable game available while evaluating that small prototype. The [friendly racing brief](DESIGN-FRIENDLY-RACING.md) records the decision and references.
+
+## Deferred: playful racing additions
+
+- An optional toy popper for James's interest in “pew pew,” keeping the course easy to complete and rewards positive.
+- Further flame polish using the family's Snake Chrome extension as a visual reference when it is available from the other computer. It is not required for this update.
 
 ## Deferred: free-driving playground
 
-The current game follows a guided course. A true free-driving toy playground needs its own vehicle movement, camera, boundaries, ramps, and recovery behavior. Build and evaluate it as a separate mode, preserving easy recovery from any position.
+The current priority is a guided race that looks exciting and is easy to win. A true free-driving toy playground needs its own vehicle movement, camera, boundaries, ramps, and recovery behavior. Evaluate it later as a separate mode only if play feedback supports it.
 
 A later Snake-inspired mode could grow a colorful flame tail as the driver collects stars, with roomy turns and gentle recovery when trails cross.
 
@@ -42,7 +67,7 @@ A later Snake-inspired mode could grow a colorful flame tail as the driver colle
 
 A separate touch-first construction playground could offer excavators, dump trucks, loaders, diggable piles, and simple delivery activities. Large gestures could scoop material, fill a truck, drive to a marked area, and tip the load.
 
-Begin with one satisfying excavator-and-dump-truck activity and expand after observing real play. Its different controls and physics should remain separate from the guided monster truck race.
+Begin with one satisfying excavator-and-dump-truck activity and expand after observing real play. Save possible Lego-like building, matching, memory, and simple delivery puzzles for this adventure. Its different controls and physics should remain separate from the guided monster truck race.
 
 ## Deferred: offline installation and more destinations
 

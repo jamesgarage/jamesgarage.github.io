@@ -1,5 +1,6 @@
-import { GameScene } from './scene.mjs';
+import { GameScene, sampleTrack } from './scene.mjs';
 import { GameAudio } from './audio.mjs';
+import { racePlace } from './buddies.mjs';
 import { TRUCKS, COURSE_LENGTH, createProgress, createRace, stepRace, selectTruck, unlockedTrucks, awardRace } from './core.mjs';
 
 const $ = id => document.getElementById(id);
@@ -9,7 +10,7 @@ let progress, storageWorks=true;
 try { progress=createProgress(JSON.parse(localStorage.getItem(SAVE_KEY))); } catch { progress=createProgress(); storageWorks=false; }
 if(!localStorageAvailable())storageWorks=false;
 function localStorageAvailable(){try{const k='monster-skyway.probe';localStorage.setItem(k,'1');localStorage.removeItem(k);return true;}catch{return false;}}
-let race=createRace(), world, previous=0, accumulator=0, calloutRemaining=0, calloutPriority=0, lastFocus, pausedBySettings=false;
+let race=createRace(), world, previous=0, accumulator=0, calloutRemaining=0, calloutPriority=0, lastFocus, pausedBySettings=false, shownPlace=0;
 const held=new Set();
 const input={jump:false,steer:0,transform:false};
 const audio=new GameAudio();
@@ -45,6 +46,12 @@ function updateStage(){
   const stage=race.distance>=1160?['bay','03 · GATOR BAY']:race.distance>=565?['loop','02 · SKY LOOP']:['woods','01 · BEAR WOODS'];
   $('race-stage').textContent=stage[1];$('race-stage').closest('.race-route').dataset.stage=stage[0];
 }
+function updatePosition(){
+  const place=racePlace(race);
+  if(place===shownPlace)return;
+  shownPlace=place;$('race-place').textContent=['','1st','2nd','3rd'][place];
+  $('race-position').setAttribute('aria-label',`${['','First','Second','Third'][place]} place out of three trucks`);
+}
 function renderGarage(){
   $('crew-count').textContent=`${unlockedTrucks(progress).length} / ${TRUCKS.length} COLLECTED`;$('garage-stars').textContent=progress.stars;$('garage-progress').textContent=nextReward();
   $('truck-list').replaceChildren(...TRUCKS.map((spec,i)=>{
@@ -65,7 +72,7 @@ function menu(){clearInput();race.phase='ready';audio.setDriving(false);audio.pa
 async function start(){
   clearInput();hideModals();race=createRace();race.phase='running';world.reset();world.setTruck(selected());
   $('menu').hidden=true;$('hud').hidden=false;$('controls').hidden=false;document.body.classList.add('playing');
-  previous=performance.now();accumulator=0;await audio.start();await audio.resume();audio.setMuted(progress.muted);audio.setDriving(true);audio.play('start');updateStage();say('Let’s roll!',1.6,2);$('jump-btn').focus();
+  previous=performance.now();accumulator=0;await audio.start();await audio.resume();audio.setMuted(progress.muted);audio.setDriving(true);audio.play('start');updateStage();updatePosition();say('Let’s race!',1.6,2);$('jump-btn').focus();
 }
 function pause(){if(race.phase!=='running')return;race.phase='paused';clearInput();audio.pause();showModal('pause-overlay');clearCallout();}
 async function resume(){if(race.phase!=='paused')return;hideModals();race.phase='running';previous=performance.now();accumulator=0;await audio.resume();audio.setDriving(true);}
@@ -73,7 +80,9 @@ function finish(){
   if(race.rewardGranted)return;race.rewardGranted=true;clearInput();audio.setDriving(false);audio.play('finish');world.burst(true,70);
   const before=unlockedTrucks(progress).length;progress=awardRace(progress,race.stars);save();
   const unlocked=unlockedTrucks(progress).slice(before);
-  $('result-title').textContent=unlocked.length?'New truck day!':'Monster moves!';
+  $('result-title').textContent='You win!';
+  $('result-truck').src=`${import.meta.env.BASE_URL}trucks/${selected().id}.png`;
+  $('result-truck').alt=`${selected().name}, your winning truck`;
   $('result-stars').textContent=`+${12+Math.min(50,race.stars)}`;
   $('result-unlock').textContent=unlocked.length?`${unlocked.map(t=>t.name).join(' & ')} joined your crew! Choose your new ride in the garage.`:`12 finish stars + ${Math.min(50,race.stars)} bonus stars. ${nextReward()}`;
   clearCallout();$('controls').hidden=true;showModal('results');refreshMenu();
@@ -138,10 +147,15 @@ try {
     const stars=world.update(visualDt,race);if(stars){race.stars+=stars;audio.play('star');}
     audio.update(1,race.height>0,race.transformTime>0);
     hudTick+=dt;
-    if(hudTick>.08){hudTick=0;updateStage();$('race-stars').textContent=race.stars;const percent=race.distance/COURSE_LENGTH*100;$('race-progress').value=percent;$('race-distance').textContent=`${Math.floor(percent)}%`;$('energy-fill').style.width=`${race.transformTime>0?race.transformTime/9*100:race.energy}%`;$('transform-btn').disabled=race.energy<100;$('transform-btn').setAttribute('aria-label',race.transformTime>0?'Guardian mode active':race.energy<100?'Transformation charging':'Transform truck');}
+    if(hudTick>.08){hudTick=0;updateStage();updatePosition();$('race-stars').textContent=race.stars;const percent=race.distance/COURSE_LENGTH*100;$('race-progress').value=percent;$('race-distance').textContent=`${Math.floor(percent)}%`;$('energy-fill').style.width=`${race.transformTime>0?race.transformTime/9*100:race.energy}%`;$('transform-btn').disabled=race.energy<100;$('transform-btn').setAttribute('aria-label',race.transformTime>0?'Guardian mode active':race.energy<100?'Transformation charging':'Transform truck');}
   });
   // Read-only diagnostics for local browser smoke tests and frame-budget checks.
-  Object.defineProperty(window,'__skyway',{get:()=>Object.freeze({phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles,flames:world.flames.mesh.count})});
+  Object.defineProperty(window,'__skyway',{get:()=>{
+    const frame=sampleTrack(race.distance);
+    const center=frame.position.addScaledVector(frame.up,race.height).project(world.camera);
+    const screenLane=world.truck.group.position.clone().project(world.camera).x-center.x;
+    return Object.freeze({phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,place:racePlace(race),buddies:world.buddies.poses.map(p=>({...p})),screenLane,rain:world.weather.rain.visible&&world.weather.group.visible,mudSpray:world.weather.spray.count,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles,flames:world.flames.mesh.count});
+  }});
 } catch(error) {
   $('loading').hidden=true;$('error').hidden=false;$('error').textContent='This adventure needs a browser with 3D graphics (WebGL 2). Try an updated Safari, Chrome, or Edge with graphics acceleration enabled.';
   $('play-btn').disabled=true;$('garage-btn').disabled=true;console.error('Unable to start Monster Skyway:',error);
