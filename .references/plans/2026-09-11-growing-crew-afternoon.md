@@ -23,7 +23,7 @@ Preserve guided driving, positive crushing/turbo, truthful rank and no-input fir
 
 - [x] Identify and deliver the next bounded scenery/trackside-life improvement with a concrete design and independent review. Working waterwheel/windmill accepted with the crew; docs/DESIGN-WORKING-LANDMARKS.md records scope.
 - [x] Use remaining time for observed visual/gameplay refinements, not speculative rewrites. Re-check the clock at milestones. Accepted distinct truck bodies, smoother trees/hills, working Titan rear coils and batched celebration effects. Retained camera, road-texture and water-motion studies as research where they did not meet release criteria.
-- [ ] Reserve the final portion before 17:00 for accepted release checks and finish with the playable URL, source record and remaining physical-device observations.
+- [x] Reserve the final portion before 17:00 for accepted release checks and finish with the playable URL, source record and remaining physical-device observations. Final runtime `c5b6528` is published and verified; `4e51d18` records the complete public regression, reviewed validation, and refreshed screenshots. All accepted implementation work is complete. Physical iPad testing and James's next play session are the remaining observations.
 
 ## Ledger
 
