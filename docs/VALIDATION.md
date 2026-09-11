@@ -26,6 +26,8 @@ The exhaust-flame update was visually checked locally in Chrome at desktop 1440Ã
 
 All three browser regressions also passed locally with the new flames. The suite now checks active trails, frozen particle counts during pause, automatic guardian flames, exhaust during the loop, and two steady exhaust flames with reduced motion. The captured guardian and inverted-loop frames were visually inspected.
 
+The [flame deployment](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34564806748) successfully published runtime commit `fd489a6` on 2026-09-11. The public site served the expected `index-D09DpkM3.js` bundle, and all three browser regressions passed against its public URL in approximately 1.4 minutes. This included the new flame checks, a complete unattended race, an earned truck, saved-progress reload, and replay. The public inverted-loop screenshot was inspected with the flame trail following the truck.
+
 ## Practical limits
 
 - A desktop browser with emulated touch is not a physical iPad or iPhone. Safari behavior, actual device frame pacing, battery use, and orientation changes still need a real-device pass.
