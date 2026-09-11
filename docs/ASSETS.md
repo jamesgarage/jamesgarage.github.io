@@ -1,6 +1,6 @@
 # Assets and credits
 
-The six truck designs, sculpted bodies, treaded tires, wheel hubs, suspension, robot parts, bears, alligators, trees, terrain, clouds, and dimensional track are built from original project code. `src/models.mjs` constructs the trucks; `src/world.mjs` builds the destinations and road using the shared course in `src/track.mjs`. Icons, water marks, and the soft contact-shadow texture are also generated locally. Sound effects and engine tones are synthesized by `src/audio.mjs`. The game uses system fonts.
+The eight truck designs, sculpted bodies, treaded tires, wheel hubs, suspension, robot parts, bears, alligators, trees, terrain, clouds, and dimensional track are built from original project code. `src/models.mjs` constructs the trucks, including the fire engine and shark body; `src/world.mjs` builds the destinations and road using the shared course in `src/track.mjs`. Icons, water marks, and the soft contact-shadow texture are also generated locally. Sound effects and engine tones are synthesized by `src/audio.mjs`. The game uses system fonts.
 
 There are no downloaded character models, branded vehicle logos, texture packs, stock photographs, or third-party audio recordings. All runtime assets are served with the game.
 
@@ -10,11 +10,13 @@ There are no downloaded character models, branded vehicle logos, texture packs, 
 
 ## Garage portraits
 
-`src/buddy-models.mjs` constructs six separate original companion designs for the friendly racing crew. These smaller models have rounded tire profiles, material-batched body details, and distinct colors and shapes. They are independent of the six collectible player trucks. `docs/screenshots/crew.png` is a labeled browser rendering of those actual companion models.
+`src/buddy-models.mjs` constructs six separate original companion designs for the friendly racing crew. These smaller models have rounded tire profiles, material-batched body details, and distinct colors and shapes. They are independent of the eight collectible player trucks. `docs/screenshots/crew.png` is a labeled browser rendering of those actual companion models.
 
 `src/shore-banks.mjs` supplies the original shared sandy-bank geometry, with smooth normals and locally generated wet/dry vertex colors. `src/encounter-scene.mjs` creates the two extruded reward stars that rise from each crushed toy. Both additions use project-generated geometry and reuse their resources.
 
-`public/trucks/` contains transparent 720×480 PNG portraits of all six original trucks. These are rendered from the same `makeTruck()` models used in play. The lobby displays the live selected model; garage cards use the PNGs so each card does not need its own WebGL renderer.
+`public/trucks/` contains transparent 720×480 PNG portraits of all eight original trucks. These are rendered from the same `makeTruck()` models used in play. The lobby displays the live selected model; garage cards use the PNGs so each card does not need its own WebGL renderer.
+
+`docs/screenshots/special-trucks.png` is a comparison render of the actual Rescue Roarer, Shark Surge and Mega Titan models. No reference-game image is used as an asset or portrait.
 
 After changing a truck model, install Chromium for Playwright if needed and start Vite at the local origin root:
 
@@ -29,7 +31,7 @@ Leave that server running. In another terminal at the project root, regenerate t
 node scripts/render-trucks.mjs http://127.0.0.1:5173
 ```
 
-The generator reuses one temporary renderer and disposes each truck after capture. It writes the six PNGs to `public/trucks/`; review them and rebuild the game before publishing. `PLAYWRIGHT_CHROME_PATH` may select an existing Chrome executable. The generator imports development modules from `/src/` and `/node_modules/`, so it needs the origin-root Vite server, not a production build or the GitHub Pages URL.
+The generator reuses one temporary renderer and disposes each truck after capture. It writes each PNG to `public/trucks/`; review them and rebuild the game before publishing. `PLAYWRIGHT_CHROME_PATH` may select an existing Chrome executable. The generator imports development modules from `/src/` and `/node_modules/`, so it needs the origin-root Vite server, not a production build or the GitHub Pages URL.
 
 ## Screenshots and licenses
 

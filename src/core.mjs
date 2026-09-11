@@ -16,6 +16,8 @@ export const TRUCKS = Object.freeze([
   Object.freeze({ id: 'bear-crusher', name: 'Bear Crusher', color: 0x9257e5, accent: 0xffc45c, scale: 1.12, threshold: 12, tagline: 'Big paws. Bigger wheels.' }),
   Object.freeze({ id: 'night-stomper', name: 'Night Stomper', color: 0x172735, accent: 0x8bff4e, scale: 1.2, threshold: 24, tagline: 'Neon green. Monster-sized dreams.' }),
   Object.freeze({ id: 'gator-claw', name: 'Gator Claw', color: 0x64cd69, accent: 0xeaff78, scale: 1.23, threshold: 32, tagline: 'Ready to roar over every ramp.' }),
+  Object.freeze({ id: 'rescue-roarer', name: 'Rescue Roarer', color: 0xe63832, accent: 0xffe5a2, scale: 1.25, threshold: 40, tagline: 'Big red rescue. Ready to roll.' }),
+  Object.freeze({ id: 'shark-surge', name: 'Shark Surge', color: 0x269fc7, accent: 0xe9f7f3, scale: 1.3, threshold: 48, tagline: 'Fins up. Wheels down. Chomp!' }),
   Object.freeze({ id: 'chrome-guardian', name: 'Chrome Guardian', color: 0xb9c7cc, accent: 0x71ecdf, scale: 1.35, threshold: 60, tagline: 'A shining hero of the skyway.' }),
   Object.freeze({ id: 'mega-titan', name: 'Mega Titan', color: 0xf4c346, accent: 0xff655d, scale: 1.5, threshold: 100, tagline: 'The biggest wheels in the sky.' }),
 ]);

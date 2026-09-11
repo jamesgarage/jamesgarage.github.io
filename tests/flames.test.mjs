@@ -9,6 +9,7 @@ import { WorldLife } from '../src/world-life.mjs';
 import { LandmarkMotion } from '../src/landmark-motion.mjs';
 import { RaceWeather } from '../src/weather.mjs';
 import { RoadEncounters } from '../src/encounter-scene.mjs';
+import { BurstParticles } from '../src/burst-particles.mjs';
 
 function rig(spec = TRUCKS[0]) {
   const scene = new THREE.Scene();
@@ -107,15 +108,19 @@ test('sustained driving keeps flame storage and scene resources bounded', () => 
   assert.deepEqual(target.scene.children, sceneObjects);
 });
 
-test('scene reset, menu, and truck replacement clear old flames before teleporting', () => {
+test('scene reset, menu, and truck replacement clear old flames and confetti before teleporting', () => {
   const target = rig();
   // Exercise the real lifecycle methods without constructing a WebGL renderer.
   Object.setPrototypeOf(target, GameScene.prototype);
-  Object.assign(target, { stars: [], particles: [], mode: 'race', buddies: new RaceBuddies(target.scene), weather: new RaceWeather(target.scene), encounters: new RoadEncounters(target.scene), life: new WorldLife(target.scene), landmarks: new LandmarkMotion() });
+  Object.assign(target, { stars: [], bursts: new BurstParticles(target.scene), mode: 'race', buddies: new RaceBuddies(target.scene), weather: new RaceWeather(target.scene), encounters: new RoadEncounters(target.scene), life: new WorldLife(target.scene), landmarks: new LandmarkMotion() });
   const actions = [() => target.reset(), () => target.menu(), () => target.setTruck(TRUCKS.at(-1))];
   for (const [index, action] of actions.entries()) {
     fillTrail(target);
+    target.bursts.burst({count:70,origin:target.truck.group.position});
+    assert.equal(target.bursts.diagnostics.count,70);
     action();
+    assert.equal(target.bursts.diagnostics.count,0);
+    assert.ok(target.bursts.particles.every(p=>p.life===0&&!p.mesh.visible));
     assert.equal(target.flames.mesh.count, 0);
     assert.equal(target.flames.mesh.visible, false);
     assert.ok(target.flames.particles.every(particle => particle.life === 0));
@@ -129,7 +134,7 @@ test('scene reset, menu, and truck replacement clear old flames before teleporti
       assert.ok(Math.abs(matrices[offset + 12] - destination) < 10, 'only the new truck should have visible flames');
     }
   }
-  target.buddies.dispose();target.weather.dispose();target.encounters.dispose();target.life.dispose();target.landmarks.dispose();
+  target.buddies.dispose();target.weather.dispose();target.encounters.dispose();target.life.dispose();target.landmarks.dispose();target.bursts.dispose();
 });
 
 test('exhaust follows larger trucks, guardian body lift, and loop inversion', () => {

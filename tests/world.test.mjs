@@ -194,5 +194,5 @@ test('rear loop gantry does not obscure truck landmarks from either overview cam
     }
     disposeTruck(truck);
   }
-  assert.equal(checked, 91584, 'all six trucks, three lanes, both cameras and six landmarks are covered');
+  assert.equal(checked, TRUCKS.length * 15264, 'every truck, three lanes, both cameras and six landmarks are covered');
 });

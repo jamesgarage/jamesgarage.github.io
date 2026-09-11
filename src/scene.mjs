@@ -12,6 +12,7 @@ import { RoadEncounters } from './encounter-scene.mjs';
 import { createAdventureScenery } from './adventure.mjs';
 import { WorldLife } from './world-life.mjs';
 import { LandmarkMotion } from './landmark-motion.mjs';
+import { BurstParticles } from './burst-particles.mjs';
 export { makeTruck } from './models.mjs';
 export { sampleTrack } from './track.mjs';
 
@@ -73,8 +74,7 @@ export class GameScene {
     this.landingRing.visible=false;this.scene.add(this.landingRing);
     this.flames=new ExhaustFlames(this.scene);
     this.starGeometry=makeStarGeometry();this.stars=[];this.buildStars();
-    this.particles=[];this.particleGeometry=new THREE.IcosahedronGeometry(.16,0);
-    for(let i=0;i<80;i++){const paint=mat([0xffd75e,0xff805a,0x79e5d9,0xf9f0ca][i%4]);const m=new THREE.Mesh(this.particleGeometry,paint);m.visible=false;this.scene.add(m);this.particles.push({mesh:m,paint,life:0,duration:1,size:1,v:new THREE.Vector3()});}
+    this.bursts=new BurstParticles(this.scene);this.particles=this.bursts.particles;
     this.targetCamera=new THREE.Vector3();this.targetLook=new THREE.Vector3();this.look=new THREE.Vector3();
     this.resize();this.update(0,{distance:0,height:0,lane:0,transformTime:0,phase:'ready'});this.snapCamera=true;
   }
@@ -87,24 +87,16 @@ export class GameScene {
     }
   }
   setTruck(spec) {
-    this.flames.clear();this.weather.reset();
+    this.flames.clear();this.weather.reset();this.bursts.clear();
     disposeTruck(this.truck);
     this.scene.remove(this.truck.group);this.truck=makeTruck(spec);this.scene.add(this.truck.group);this.transform=0;this.boost=0;
   }
-  reset(variant=0) {this.flames.clear();this.buddies.reset(variant);this.weather.reset();this.encounters.reset();this.life.reset(variant);this.landmarks.reset(variant);this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;this.particles.forEach(p=>{p.life=0;p.mesh.visible=false;});}
-  menu() {this.flames.clear();this.weather.reset();this.mode='menu';this.snapCamera=true;}
+  reset(variant=0) {this.flames.clear();this.buddies.reset(variant);this.weather.reset();this.encounters.reset();this.life.reset(variant);this.landmarks.reset(variant);this.bursts.clear();this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;}
+  menu() {this.flames.clear();this.weather.reset();this.bursts.clear();this.mode='menu';this.snapCamera=true;}
   resize() {this.width=innerWidth;this.height=innerHeight;this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();this.renderer.setSize(this.width,this.height,false);this.snapCamera=true;}
   burst(colorful=true,count=20,origin=this.truck.group.position,reward=false) {
-    if(this.reducedMotion)return;
-    let n=0;for(const p of this.particles) {
-      if(p.life>0)continue;
-      p.life=p.duration=(colorful?.55:.3)+Math.random()*.5;p.size=colorful?1.5:2.8;
-      p.mesh.visible=true;p.mesh.material=reward?mat(0xffd75e,.25):colorful?p.paint:mat(0xdfbb83);
-      p.mesh.position.copy(origin).add(new THREE.Vector3((Math.random()-.5)*(colorful?1:5),colorful?1:.25,(Math.random()-.5)*(colorful?1:4)));
-      const spread=colorful?11:5;
-      p.v.set((Math.random()-.5)*spread,Math.random()*(colorful?8:2)+2,(Math.random()-.5)*spread);
-      p.mesh.scale.setScalar(p.size);if(++n>=count)break;
-    }
+    if(this.reducedMotion||this.mode!=='race')return 0;
+    return this.bursts.burst({kind:reward?'reward':colorful?'celebrate':'dust',count,origin,enabled:true});
   }
   land(strength=1) {this.squash=.55+clamp(strength,0,1)*.45;this.burst(false,12);}
   crush() {this.burst(true,14,this.truck.group.position,true);}
@@ -171,10 +163,8 @@ export class GameScene {
       s.mesh.rotation.y=this.time*1.7;s.mesh.position.y=s.base.y+Math.sin(this.time*2+s.distance)*.2;
       if(!isMenu&&race.phase==='running'&&Math.abs(s.distance-d)<2.2&&(this.transform>.3||Math.abs(race.lane-s.lane)<.65)) {s.collected=true;s.mesh.visible=false;if(!this.reducedMotion)this.burst(true,4,s.mesh.position);collected++;}
     }
-    for(const p of this.particles) {
-      if(p.life<=0)continue;p.life-=dt;p.mesh.visible=p.life>0;p.v.y-=dt*12;p.mesh.position.addScaledVector(p.v,dt);p.mesh.rotation.x+=dt*4;p.mesh.rotation.z+=dt*3;p.mesh.scale.setScalar(p.size*Math.max(0,p.life/p.duration));
-    }
-    if(this.transform>.5&&Math.random()<dt*20&&!this.reducedMotion)this.burst(true,1);
+    this.bursts.update(dt,{phase:race.phase,mode:this.mode,reducedMotion:this.reducedMotion});
+    if(race.phase==='running'&&Number.isFinite(dt)&&dt>0&&this.transform>.5&&Math.random()<dt*20&&!this.reducedMotion)this.burst(true,1);
     this.buddies.update(dt,race,!isMenu,{camera:this.camera,reducedMotion:this.reducedMotion});
     this.weather.update(dt,{race,truck:this.truck,mode:this.mode,reducedMotion:this.reducedMotion});
     this.encounters.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});

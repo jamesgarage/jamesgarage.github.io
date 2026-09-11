@@ -80,8 +80,8 @@ test('friends greet and imitate a touch jump with visible reactions that pause',
 test('keyboard and touch jumps, pause, and resume work after a garage visit', async ({ page }) => {
   await openGame(page);
   await page.getByRole('button', { name: 'Your garage', exact: true }).click();
-  await expect(page.locator('#truck-list .truck-card')).toHaveCount(6);
-  await expect(page.locator('#truck-list .truck-preview img')).toHaveCount(6);
+  await expect(page.locator('#truck-list .truck-card')).toHaveCount(8);
+  await expect(page.locator('#truck-list .truck-preview img')).toHaveCount(8);
   await page.waitForFunction(() => [...document.querySelectorAll('#truck-list img')].every(image => image.complete && image.naturalWidth > 0));
   await page.getByRole('button', { name: 'Close garage', exact: true }).click();
   await page.getByRole('button', { name: "Let's play", exact: true }).click();
@@ -292,6 +292,30 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   expect(replay.crushedModels).toEqual([]);
   expect(replay.crushReward).toEqual({id: '', age: 0, count: 0, triggered: 0});
 });
+
+for (const [id,name,stars] of [['rescue-roarer','Rescue Roarer',40],['shark-surge','Shark Surge',48]]) {
+test(`${name} is earned, selectable, saved and playable with touch`, async ({ page },testInfo) => {
+  await page.addInitScript(balance=>{if(!localStorage.getItem('monster-skyway.progress.v1'))localStorage.setItem('monster-skyway.progress.v1',JSON.stringify({version:1,stars:balance,races:1,selected:'rumbler',muted:true,reducedMotion:false}));},stars);
+  await openGame(page);
+  await page.getByRole('button',{name:'Your garage',exact:true}).tap();
+  await page.getByRole('button',{name:`${name}, ready to drive`,exact:true}).tap();
+  await expect(page.getByRole('button',{name:`${name}, selected`,exact:true})).toHaveAttribute('aria-pressed','true');
+  // The initializer only fills empty storage; a reload must retain this choice.
+  await page.getByRole('button',{name:'Close garage',exact:true}).tap();
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('monster-skyway.progress.v1')).selected)).toBe(id);
+  await page.reload({waitUntil:'networkidle'});
+  await page.waitForFunction(selected=>window.__skyway?.selected===selected,id);
+  await expect(page.locator('#showcase-name')).toHaveText(name);
+  await page.getByRole('button',{name:"Let's play",exact:true}).tap();
+  await page.waitForFunction(()=>window.__skyway.distance>20);
+  expect(await page.evaluate(()=>window.__skyway.selected)).toBe(id);
+  await page.getByRole('button',{name:'Jump',exact:true}).tap();
+  await page.waitForFunction(()=>window.__skyway.height>1);
+  await page.screenshot({path:testInfo.outputPath(`${id}-jump.png`)});
+  await page.waitForFunction(()=>window.__skyway.crushes>=1);
+  expect(await page.evaluate(()=>window.__skyway.place)).toBe(1);
+});
+}
 
 test('blocked storage and unavailable audio still allow touchscreen play', async ({ page }) => {
   await page.addInitScript(() => {

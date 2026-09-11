@@ -71,7 +71,7 @@ const geo = {
   ball: new THREE.SphereGeometry(1, 12, 8),
   shore: createShoreBankGeometry(),
   rock: organicSphere(10, 6),
-  crown: organicSphere(14, 9, true),
+  crown: organicSphere(20, 12, true),
   farCrown: organicSphere(8, 6, true),
   hill: organicSphere(14, 8),
   palmTrunk: palmTrunk(),

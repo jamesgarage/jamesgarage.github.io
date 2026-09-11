@@ -476,6 +476,9 @@ button.truck-card:hover { transform: translateY(-3px); border-color: #a0eee0; ba
   .truck-card .truck-preview { height: 128px; }
   .garage-header h2 { font-size: 44px; }
 }
+@media (min-width: 1000px) and (orientation: landscape) {
+  .truck-list { grid-template-columns: repeat(4,minmax(0,1fr)); }
+}
 @media (max-width: 680px) and (orientation: portrait) {
   .menu-shade { background: linear-gradient(180deg, #12364bea 0%, #12364b9c 32%, transparent 56%, #12364b70 74%, #12364bf7 100%); }
   .brand-name { font-size: 23px; }

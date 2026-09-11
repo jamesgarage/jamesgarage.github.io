@@ -113,6 +113,22 @@ test('all progression thresholds unlock exactly the earned vehicles', () => {
   }
 });
 
+test('the expanded garage preserves existing saves and adds fire and shark unlocks to earned balances', () => {
+  for (const selected of ['rumbler','bear-crusher','night-stomper','gator-claw','chrome-guardian','mega-titan']) {
+    const saved={version:1,stars:110,races:4,selected,muted:true,reducedMotion:false};
+    assert.deepEqual(createProgress(saved),saved);
+    assert.equal(unlockedTrucks(createProgress(saved)).length,8);
+  }
+  const rescue=createProgress({version:1,stars:40,selected:'rescue-roarer'});
+  assert.equal(rescue.selected,'rescue-roarer');
+  assert.equal(selectTruck(rescue,'shark-surge'),rescue);
+  const shark=createProgress({version:1,stars:48,selected:'shark-surge'});
+  assert.equal(shark.selected,'shark-surge');
+  assert.equal(selectTruck(shark,'mega-titan'),shark);
+  assert.equal(TRUCKS.at(-1).id,'mega-titan');
+  assert.equal(TRUCKS.at(-1).threshold,100);
+});
+
 test('corrupted, future-version, and locked-truck saves recover to safe values', () => {
   const defaults = createProgress();
   for (const raw of [null, undefined, false, 5, [], 'broken', { version: 2, stars: 999 }]) {

@@ -91,6 +91,10 @@ Continue with Three.js for the guided racer. This update's needs are visual pres
 
 Before a rewrite, compare one truck, one ramp, and one landing on a real target device. Keep the current playable game available while evaluating that small prototype. The [game and engine research](RESEARCH-PLAYFUL-WORLD.md) records the current comparison and primary sources, including verified Unity/Unreal references and the distinction between native and browser renderers.
 
+## Distinct forms and rendering polish
+
+The garage now adds Rescue Roarer, a full fire engine, and Shark Surge, a complete shark body, while keeping every previous truck and saved selection. Mega Titan exposes large rear coilovers and more of its existing tires. Nearby crowns are smoother and celebration particles share one draw. The [iOS visual study](RESEARCH-IOS-KIDS-RACING.md) compares relevant 3D and side-view references without treating broad App Store chart positions as a toddler suitability ranking. Keep the current guided 3D view; a later matched 2.5D camera experiment can use the same models and controls.
+
 ## Deferred: playful racing additions
 
 - An optional toy popper for James's interest in “pew pew,” keeping the course easy to complete and rewards positive.

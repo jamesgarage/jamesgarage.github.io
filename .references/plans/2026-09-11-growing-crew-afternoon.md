@@ -27,8 +27,12 @@ Preserve guided driving, positive crushing/turbo, truthful rank and no-input fir
 
 ## Ledger
 
+At16:18 EDT the distinct truck, softer forest and batched celebration increment passes157 units, ten production browser checks in both engines, independent model/effect review, a144-replacement resource check and three actual consecutive races from an empty save. Publishing this accepted increment. Road-texture and water-offset studies add too little visible benefit and remain unshipped. A paired side-camera study improves truck readability but exposes portrait/bridge framing issues; retain chase for this release.
+
 Second increment: natural lagoon banks (docs/DESIGN-LAGOON-SHORES.md) and a nontextual two-star crush reward cue (docs/DESIGN-CRUSH-STARS.md). Both independently reviewed and visually checked; all141 release units and8 production browser checks in Chrome/WebKit pass. Publication follows. The crew release also completed a controlled public playthrough:54 awarded stars,6 crushed cars,7 landings,1 loop,first place and an earned Bear replay.
 
 Next bounded work at15:31 EDT: batch the existing celebration particles to reduce peak draw calls; separately compare smoother nearby forest crowns before choosing a geometry change. Keep future modules isolated from the shore release until their integration is reviewed.
+
+At15:55 EDT the parent resumed after an interruption with a more specific priority: fire trucks, a shark-shaped monster and a truck with prominent tires/shocks. Add two distinct collectible bodies while preserving all existing IDs and saves; docs/DESIGN-DISTINCT-TRUCKS.md defines the implementation. Finish the particle batching and accepted20x12 nearby foliage alongside this increment. Research official iOS references and explain the current3D versus potential2.5D choice. Shore release aab8ec0 is live and its eight public checks pass in both engines.
 
 Start observed at 14:58:44 EDT. Last live runtime fdddcde; source/docs head0237fd2. All113 units and7browserchecks inbothengines passed before this increment. Permission to continue to17:00 comes directly from the parent; no extra approval is needed for the established workflow.

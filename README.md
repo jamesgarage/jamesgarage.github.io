@@ -52,12 +52,16 @@ The lobby shows your selected truck in the live 3D world. Garage cards use portr
 | Bear Crusher | 12 | Purple bear ears, a honey-colored muzzle, and paw-print doors |
 | Night Stomper | 24 | Low dark cab, neon green flame motifs, and a rear wing |
 | Gator Claw | 32 | Long green snout, raised scales, and a friendly tooth bumper |
+| Rescue Roarer | 40 | Red fire-engine body, ladder, equipment lockers and a rear hose reel |
+| Shark Surge | 48 | Rounded shark body, pale jaw, friendly teeth, fins and a tail |
 | Chrome Guardian | 60 | Faceted silver armor, swept fins, and a turquoise shield |
-| Mega Titan | 100 | Broad armored cab, crowned roof, and the biggest tires |
+| Mega Titan | 100 | Lifted armored cab, exposed rear coilovers, and the biggest tires |
+
+![The fire engine Rescue Roarer, shark-shaped Shark Surge, and Mega Titan rendered from their game models](docs/screenshots/special-trucks.png)
 
 These are original models inspired by broad toy and vehicle interests. The game does not include licensed vehicle replicas or branded characters.
 
-![Six original truck designs in the collectible garage](docs/screenshots/garage.png)
+![Eight original truck designs in the collectible garage](docs/screenshots/garage.png)
 
 ## Around the skyway
 
@@ -65,7 +69,7 @@ These are original models inspired by broad toy and vehicle interests. The game 
 
 Bear Woods climbs a timber bridge beside a giant waterwheel. Rocket Runway adds a launch pad, a tall toy rocket, and a boost toward the next ramp. Gator Falls brings a broad waterfall, reeds, and a waterfront boardwalk to the rainy lagoon. Picnic stops, balloons, friendly bears and alligators, stands, and the finish trophy garden fill out the route.
 
-Wood grain, mottled grass, worn stone and water highlights give those places more texture. Low sandy banks have uneven waterlines, gently shaded slopes, and rooted palms and alligator feet. The waterwheel turns beside the bridge and the woodland windmill slowly rotates its sails. Small butterflies flutter beside the woods; cattails sway and gentle ripples move through the lagoon. Gentler motion keeps these extra details still.
+Wood grain, mottled grass, worn stone and water highlights give those places more texture. Nearby tree crowns have smoother, softly uneven outlines. Low sandy banks have uneven waterlines, gently shaded slopes, and rooted palms and alligator feet. The waterwheel turns beside the bridge and the woodland windmill slowly rotates its sails. Small butterflies flutter beside the woods; cattails sway and gentle ripples move through the lagoon. Gentler motion keeps these extra details still.
 
 ![A close race across the raised timber bridge beside its waterwheel](docs/screenshots/bridge.png)
 

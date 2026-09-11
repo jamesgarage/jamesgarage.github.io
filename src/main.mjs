@@ -34,6 +34,7 @@ function syncPreferences(){
 function nextReward(){const next=TRUCKS.find(t=>t.threshold>progress.stars);return next?`${next.name} is next · ${next.threshold-progress.stars} stars to go`:'Mega Titan unlocked. Your whole crew is ready!';}
 function refreshMenu(){
   const spec=selected();
+  $('collection-total').textContent=TRUCKS.length;
   $('menu-next').textContent=nextReward();
   $('showcase-name').textContent=spec.name;
   $('showcase-tagline').textContent=spec.tagline;
