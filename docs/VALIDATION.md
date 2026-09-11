@@ -4,11 +4,13 @@
 
 The core suite covers no-input completion, six automatic ramp jumps, manual jumps, repeated input, bounded steering, loop completion, automatic and manual transformation, pause, invalid frame times, validated saves, every truck threshold, reward limits, and idempotent finish events.
 
-`npm test` passed 20 tests: 10 game-rule tests, 5 audio lifecycle tests, and 5 exhaust-flame tests. The audio tests check user-gesture initialization, the pause-before-first-race flow, immediate mute and voice cleanup, unavailable Web Audio, and graph reuse after pause/resume.
+`npm test` passed 34 tests: 10 game-rule tests, 5 audio lifecycle tests, 5 exhaust-flame tests, 7 truck model/resource tests, 2 course-frame tests, and 5 world geometry/visibility tests. The audio tests check user-gesture initialization, the pause-before-first-race flow, immediate mute and voice cleanup, unavailable Web Audio, and graph reuse after pause/resume.
 
 The flame tests cover frozen exhaust and trail matrices while paused, removal of trails with reduced motion, bounded and reused resources over 3,600 driving frames, cleanup on garage/reset/truck changes, and exhaust placement during truck scaling, guardian lift, and loop inversion. Flames share one instanced rendering object with a fixed pool of 64 trail particles.
 
-## Browser evidence
+The model tests exercise all six original designs, articulation and exhaust contracts, finite geometry, and independent/idempotent resource disposal. World tests check the complete transformed trucks at both outside lanes, finite batched geometry and render budgets, loop support clearance, gates above maximum jumping guardian height, and unobstructed support sightlines through the loop. The latter samples 91,584 rays across six trucks, three lanes, and both overview orientations.
+
+## Earlier prototype browser evidence
 
 On 2026-09-11, a headless Chrome run with emulated touch input completed the full 1,900-unit course. The observed result was seven landings (six automatic ramps and one touch jump), one completed loop, 30 collected stars, and 42 awarded stars. The test selected the newly earned Bear Crusher, reloaded to verify the selected truck and earned stars persisted, and began a second race. No JavaScript errors or failed resource responses were recorded in that complete run.
 
@@ -16,7 +18,7 @@ Additional browser interactions covered the garage before the first race, keyboa
 
 The portable `npm run test:browser` suite passed all three tests in approximately 1.5 minutes: input/pause/resume after a garage visit, a complete race with no driving input followed by unlock/save/replay, and touchscreen play when storage and audio are unavailable. An additional rendering pass started a race with each of the six trucks without browser errors.
 
-## Public deployment
+## Earlier public deployments
 
 The game was published on 2026-09-11 to [GitHub Pages](https://yanivalfasykeelusa.github.io/james-monster-skyway/) from [its standalone repository](https://github.com/yanivalfasykeelusa/james-monster-skyway). The [initial deployment workflow](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34564169134) completed both build and deployment successfully.
 
@@ -28,9 +30,23 @@ All three browser regressions also passed locally with the new flames. The suite
 
 The [flame deployment](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34564806748) successfully published runtime commit `fd489a6` on 2026-09-11. The public site served the expected `index-D09DpkM3.js` bundle, and all three browser regressions passed against its public URL in approximately 1.4 minutes. This included the new flame checks, a complete unattended race, an earned truck, saved-progress reload, and replay. The public inverted-loop screenshot was inspected with the flame trail following the truck.
 
+## Visual quality release: 2026-09-11
+
+The quality pass replaces the primitive truck bodies with six detailed original models, adds a dimensional track and three richer environments, upgrades sunlight/shadows and camera/landing response, and introduces the live lobby, garage portraits, and destination HUD. The race simulation, saved progress format, unlock thresholds, and flame lifecycle remain compatible.
+
+The local production build passed all three browser tests in Chrome (about 1.4 minutes) and Playwright WebKit (about 1.5 minutes). Each engine exercised keyboard/touch jumping, pause/resume, six locally loaded truck portraits, a complete unattended race through every ramp and the inverted loop, automatic transformation and flames, earned-truck selection, saved-progress reload, replay, and play with blocked storage and unavailable audio. The reduced-motion test retained two steady flames. Neither run recorded JavaScript, console, failed-request, or HTTP resource errors.
+
+Independent visual review caught a support that physically cleared the course but briefly hid the ascending truck. A rear gantry and a more direct overview corrected it. Regression coverage checks the actual support geometry, and the finished overview is inspected at ascent, crown, descent and exit in landscape and portrait. The complete production race is checked again after this correction.
+
+An isolated render-lifetime probe switched trucks 42 times across all six designs. GPU geometry counts stayed identical per truck across all seven cycles, with eight textures and ten shader programs in the fixed view. Scene, camera, particles and flame instance matrices remained unchanged through 30 paused updates; an independent review also checked 100 paused updates. These are bounded-resource checks, not physical-device frame-rate measurements.
+
+Desktop 1440×900, tablet landscape 1024×768, tablet portrait 768×1024, and phone 390×844 layouts were captured and inspected. All six portraits loaded, the garage had no horizontal overflow, and essential race controls stayed inside the viewport without overlapping one another. All six selected-truck views and the largest transformed truck in portrait were inspected. The loop browser assertion limits rendering to fewer than 600 draw calls and 400,000 triangles.
+
+The production build succeeds with all runtime assets bundled or served locally. Final deployment and public regression evidence are recorded below after publication.
+
 ## Practical limits
 
-- A desktop browser with emulated touch is not a physical iPad or iPhone. Safari behavior, actual device frame pacing, battery use, and orientation changes still need a real-device pass.
+- Chrome and Playwright WebKit on a desktop with emulated touch are not a physical iPad or iPhone. Shipping Safari behavior, actual device frame pacing, battery use, and orientation changes still need a real-device pass.
 - The initial course and unlock pacing need observation with a young player.
 - Local saves belong to a browser and site origin; moving between preview and public URLs creates separate garages.
 - Storage is not cloud-synced. Private browsing and storage clearing can remove progress.

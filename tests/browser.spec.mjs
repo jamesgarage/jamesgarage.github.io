@@ -33,6 +33,8 @@ test('keyboard and touch jumps, pause, and resume work after a garage visit', as
   await openGame(page);
   await page.getByRole('button', { name: 'Your garage', exact: true }).click();
   await expect(page.locator('#truck-list .truck-card')).toHaveCount(6);
+  await expect(page.locator('#truck-list .truck-preview img')).toHaveCount(6);
+  await page.waitForFunction(() => [...document.querySelectorAll('#truck-list img')].every(image => image.complete && image.naturalWidth > 0));
   await page.getByRole('button', { name: 'Close garage', exact: true }).click();
   await page.getByRole('button', { name: "Let's play", exact: true }).click();
   await page.waitForFunction(() => window.__skyway.distance > 20);
@@ -72,6 +74,7 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   await page.waitForFunction(() => window.__skyway.distance >= 750, null, { timeout: 90_000 });
   expect(await page.evaluate(() => window.__skyway.transformed)).toBe(true);
   expect(await page.evaluate(() => window.__skyway.flames)).toBeGreaterThan(6);
+  await expect(page.locator('#race-stage')).toHaveText('02 · SKY LOOP');
   await page.screenshot({ path: testInfo.outputPath('guardian-flames.png') });
   await page.waitForFunction(() => window.__skyway.distance >= 900, null, { timeout: 90_000 });
   const loop = await page.evaluate(() => ({ ...window.__skyway }));
@@ -80,7 +83,13 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   expect(loop.drawCalls).toBeGreaterThan(0);
   expect(loop.triangles).toBeGreaterThan(0);
   expect(loop.flames).toBeGreaterThan(6);
+  expect(loop.drawCalls).toBeLessThan(600);
+  expect(loop.triangles).toBeLessThan(400_000);
   await page.screenshot({ path: testInfo.outputPath('guided-loop.png') });
+
+  await page.waitForFunction(() => window.__skyway.distance >= 1260, null, { timeout: 90_000 });
+  await expect(page.locator('#race-stage')).toHaveText('03 · GATOR BAY');
+  await page.screenshot({ path: testInfo.outputPath('gator-bay.png') });
 
   await expect(page.locator('#results')).toBeVisible({ timeout: 90_000 });
   const finish = await page.evaluate(() => ({ ...window.__skyway }));
@@ -100,7 +109,7 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   const saved = await page.evaluate(() => ({ ...window.__skyway }));
   expect(saved.totalStars).toBe(finish.totalStars);
   expect(saved.races).toBe(1);
-  await expect(page.locator('#menu-next')).toContainText('Driving Bear Crusher');
+  await expect(page.locator('#showcase-name')).toHaveText('Bear Crusher');
 
   await page.getByRole('button', { name: "Let's play", exact: true }).tap();
   await page.waitForFunction(() => window.__skyway.phase === 'running' && window.__skyway.distance > 20);

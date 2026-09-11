@@ -1,57 +1,58 @@
 # Monster Skyway roadmap
 
-## First substantial playable release
+## Shipped: v0.1 guided race
 
-The immediate goal is a complete, cheerful guided race that a three-year-old can finish with little or no help.
+The first playable release is published at [Monster Skyway](https://yanivalfasykeelusa.github.io/james-monster-skyway/).
 
-- A 3D chase camera, orange toy track, broad curves, six ramps, and a guided vertical loop.
-- Automatic acceleration, forgiving jumps and landings, large touch controls, and optional steering.
-- An original robot guardian transformation that also activates automatically for younger drivers.
-- Six original trucks: Rumbler, Bear Crusher, Night Stomper, Gator Claw, Chrome Guardian, and Mega Titan.
-- Visible star rewards, increasingly large vehicles, local unlocks, and a finish celebration after every run.
-- Original synthesized sound effects, immediate mute, pause, and reduced-motion preferences.
-- A standalone static build with a manually triggered GitHub Pages workflow.
+- A 1,900-unit course with broad curves, six ramps, and a guided vertical loop.
+- Automatic acceleration, forgiving jumps and landings, large touch controls, and optional keyboard or touch steering.
+- An original robot guardian transformation, including automatic activation for younger drivers.
+- Six increasingly large trucks, star rewards, saved unlocks, and a finish celebration after every run.
+- Twin exhaust flames and a bounded fiery trail, scaled with truck size and guardian mode.
+- Original synthesized sound, mute, pause, gentler motion, and recovery when storage or audio is unavailable.
+- A standalone static build, local play launcher, and manually triggered GitHub Pages publication.
 
-The dark neon monster truck, angular silver truck, orange stunt track, and transforming vehicles reflect favorite play interests through original designs.
+## Completed quality pass
 
-## Before calling the release ready
+- Six detailed, sculpted truck designs with distinct silhouettes, rounded panels, treaded tires, mechanical details, and articulated guardian parts.
+- A dimensional orange toy track with raised edges, seams, supports, arrows, gates, and a fully supported loop.
+- Richer Bear Woods, a Sky Loop stunt festival, and Gator Bay with water, islands, palms, and friendly spectators.
+- Warm sunlight, sky lighting, material reflections, cast shadows, and a soft shadow beneath the truck.
+- A live lobby featuring the selected truck, collectible garage cards with portraits rendered from the actual models, and a destination-aware race display.
+- Steering lean and front-wheel movement, suspension bob, landing compression and effects, and a closer chase camera with an upright loop overview.
+- Separate model, track, and world modules; geometry batching, resource cleanup, and bounded effects.
 
-The first release is published. Twenty unit tests and three portable browser tests cover the game, including a complete unattended race, saved unlocks, replay, flame lifecycles, and missing-storage/audio recovery. Desktop and emulated phone/tablet layouts have been inspected. See [the validation record](VALIDATION.md). Real iPad/Safari testing and observation with a child remain the next gates.
+The established race rules, rewards, saved progress, and exhaust behavior remain compatible. The unit suite now passes 34 tests. See [the validation record](VALIDATION.md) for current browser-engine, layout, build, and deployment results.
 
-1. Run the automated rules tests and production build.
-2. Complete a no-input race and a race with repeated jump and steering input.
-3. Verify that all ramps land safely, the guided loop exits correctly, and transformations return to truck form.
-4. Unlock and select every truck; reload to verify browser saves. Check blocked-storage behavior too.
-5. Check pause/resume, mute during a fanfare, repeated races, resizing, and switching away from the browser.
-6. Try real touchscreen controls and portrait/landscape layouts on a representative iPad and phone.
-7. Check performance and camera comfort; reduce visual effects where needed.
-8. Watch a young player try the game and revise anything that needs adult explanation.
+## Next: physical device and child observations
 
-## Improve the race after feedback
+1. Play on a real iPad in Safari and a representative phone, in portrait and landscape. Check touch controls, orientation changes, frame pacing, and camera comfort.
+2. Watch a young player start, finish, choose an earned truck, and replay. Revise anything that requires adult explanation.
+3. Tune collectible placement, reward pacing, sound, motion, and rendering cost using those observations.
 
-- More distinct original truck silhouettes, suspension movement, wheel detail, and transformation animations.
-- Richer scenery and additional course themes that preserve clear track readability.
-- Better tactile landing effects and collectible placement informed by actual play.
-- Optional grown-up controls for challenge, sound, and motion without adding complexity to the child's play flow.
-- An installable offline edition once caching and update behavior have been tested.
+Physical iPad/Safari testing and a child playtest remain pending. Playwright's Chromium and WebKit engines with emulated touch are useful engineering checks, but do not replace those observations.
 
-## Future free-driving playground
+## Deferred: free-driving playground
 
-The current game follows a guided course. A true free-driving toy playground is a future mode with its own vehicle movement, camera, boundaries, ramps, and recovery behavior. It should offer open exploration while preserving the ability to recover easily from any position.
+The current game follows a guided course. A true free-driving toy playground needs its own vehicle movement, camera, boundaries, ramps, and recovery behavior. Build and evaluate it as a separate mode, preserving easy recovery from any position.
 
-Build and evaluate that mode separately from the dependable guided race.
+A later Snake-inspired mode could grow a colorful flame tail as the driver collects stars, with roomy turns and gentle recovery when trails cross.
 
-A future Snake-inspired monster-truck mode could grow a colorful flame tail as the driver collects stars, with roomy turns and gentle recovery when trails cross.
+## Deferred: construction adventure for iPad
 
-## Separate construction adventure for iPad
+A separate touch-first construction playground could offer excavators, dump trucks, loaders, diggable piles, and simple delivery activities. Large gestures could scoop material, fill a truck, drive to a marked area, and tip the load.
 
-A later tangent is a touch-first construction playground with excavators, dump trucks, loaders, diggable piles, and simple delivery activities. Large gestures could scoop material, fill a truck, drive to a marked area, and tip the load.
+Begin with one satisfying excavator-and-dump-truck activity and expand after observing real play. Its different controls and physics should remain separate from the guided monster truck race.
 
-Treat this as a separate play experience with different interaction and physics needs. It should not delay the monster truck race or crowd its controls. Begin with one satisfying excavator-and-dump-truck loop, then expand after observing real play.
+## Deferred: offline installation and more destinations
+
+- An installable offline edition after cache, update, and recovery behavior have been tested. This release has no offline service worker.
+- Additional course themes and activities informed by play feedback.
+- Further grown-up settings if observation identifies a clear need.
 
 ## Public project principles
 
 - Keep the game playable without accounts, advertising, or external runtime services.
-- Keep earned progress positive and preserve a useful experience when storage or audio is unavailable.
-- Use original characters and vehicle designs with clear licensing for any future contributed assets.
-- Share concrete implementation notes and measured validation results about the AI-assisted development process.
+- Keep earned progress positive and preserve play when storage or audio is unavailable.
+- Use original characters and vehicle designs with clear licensing for contributed assets.
+- Share concrete implementation notes and measured validation of the AI-assisted development process.
