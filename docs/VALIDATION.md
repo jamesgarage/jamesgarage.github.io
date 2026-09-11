@@ -66,6 +66,10 @@ Independent review checked module behavior and the complete integration. Its vis
 
 The review's 13 captures using a moving camera approach recorded no browser errors and a maximum of 530 draw calls and 467,260 triangles. The reviewer closed the player-prominence finding after inspecting all six truck designs and tablet landscape/portrait views.
 
+The [friendly racing deployment](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34581935494) built and published runtime commit `088c7b9` successfully. The public site served the matching `index-DXCmI7i1.js` and `index-Bnv56pNb.css` assets. All five browser tests passed against the public URL in Chrome (about 1.8 minutes) and WebKit (about 1.9 minutes), including corrected steering in both orientations and a complete unattended first-place race with rainy pause/resume, unlock, saved reload and replay. Both runs recorded no JavaScript, console, failed-request or HTTP errors.
+
+A public-site photo pass verified the four desktop/tablet/phone layouts, six loaded garage portraits, no horizontal garage overflow and no overlapping/offscreen essential controls or position/status displays. Public loop, rain/mud, victory, lobby and airborne Mega Titan captures were inspected. README screenshots now show that deployment; the all-trucks collection/lobby captures use a prepared browser save. Physical iPad testing remains a separate follow-up.
+
 ## Practical limits
 
 - Chrome and Playwright WebKit on a desktop with emulated touch are not a physical iPad or iPhone. Shipping Safari behavior, actual device frame pacing, battery use, and orientation changes still need a real-device pass.

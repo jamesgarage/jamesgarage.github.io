@@ -23,5 +23,5 @@ Spec: `docs/DESIGN-FRIENDLY-RACING.md`. Baseline `f2c8cc2`. Existing main branch
 
 - [x] Run units/build and complete Chrome/WebKit browser suites, including new position/victory assertions.
 - [x] Update README, roadmap, engine decision, parent-feedback notes and validation with observed results.
-- [ ] Commit/push, deploy the existing manual workflow, verify assets and repeat public browser tests/screenshots.
-- [ ] Record the result and next observations for James.
+- [x] Commit/push, deploy the existing manual workflow, verify assets and repeat public browser tests/screenshots.
+- [x] Record the result and next observations for James.

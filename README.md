@@ -27,6 +27,8 @@ Every completed race awards stars. There are no lost lives or progress penalties
 
 The lobby shows your selected truck in the live 3D world. Garage cards use portraits rendered from the same models you drive.
 
+![A first-place celebration with the winning truck and earned stars](docs/screenshots/victory.png)
+
 | Truck | Stars to unlock | Design |
 | --- | ---: | --- |
 | Rumbler | 0 | Orange rally pickup with roof lamps, roll cage, and hood scoop |
@@ -41,6 +43,8 @@ These are original models inspired by broad toy and vehicle interests. The game 
 ![Six original truck designs in the collectible garage](docs/screenshots/garage.png)
 
 ## Around the skyway
+
+![Rumbler leading two friendly racers past the woodland stands](docs/screenshots/race.png)
 
 Drive past pine trees, friendly bears, a picnic stop, and a windmill in Bear Woods. An observatory and tethered balloons lead toward the Sky Loop. Gator Bay brings sandy islands, palms, alligators, a lighthouse, a surf shack, and sailboats. Starting stands and a trophy garden bookend the race; track seams, edge rails, ramp arrows, and gates keep the route readable.
 
