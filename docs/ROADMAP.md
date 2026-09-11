@@ -72,7 +72,7 @@ The chase view includes the larger group while retaining a visible horizon. Posi
 
 Irregular sandy banks replace the repeated sphere islands. Softer contours and shaded slopes meet the water while keeping palms and gator feet grounded, with fewer total triangles and the same material/mesh counts. Two gold stars rise from an actually crushed toy, making the existing reward visible without reading. The cue uses one fixed instanced batch and suppresses its extra motion in gentler mode. Tablet orientation changes are included in browser regression checks.
 
-See [lagoon shore design](DESIGN-LAGOON-SHORES.md) and [crush-star design](DESIGN-CRUSH-STARS.md). The following performance increment will batch the existing dust/confetti particles to reduce submitted draws; it introduces no new game rules.
+See [lagoon shore design](DESIGN-LAGOON-SHORES.md) and [crush-star design](DESIGN-CRUSH-STARS.md). The subsequent performance increment batches the existing dust/confetti particles into one draw; it is shipped and introduces no new game rules.
 
 ## Next: physical device and child observations
 

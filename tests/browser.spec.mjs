@@ -29,6 +29,11 @@ async function openGame(page) {
   await expect(page.getByRole('button', { name: "Let's play", exact: true })).toBeVisible();
 }
 
+async function waitForGaragePortraits(page) {
+  await expect(page.locator('#truck-list .truck-preview img')).toHaveCount(8);
+  await page.waitForFunction(() => [...document.querySelectorAll('#truck-list img')].every(image => image.complete && image.naturalWidth === 720));
+}
+
 for (const viewport of [{ width: 1024, height: 768 }, { width: 768, height: 1024 }]) {
 test(`keyboard and on-screen steering move in the direction shown by the arrows (${viewport.width})`, async ({ page }) => {
   await page.setViewportSize(viewport);
@@ -261,8 +266,10 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   await expect(page.locator('#result-stars')).toHaveText(`+${finish.totalStars}`);
 
   await page.getByRole('button', { name: 'Your garage', exact: true }).tap();
+  await waitForGaragePortraits(page);
   await page.getByRole('button', { name: 'Bear Crusher, ready to drive', exact: true }).tap();
   await expect(page.getByRole('button', { name: 'Bear Crusher, selected', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await waitForGaragePortraits(page);
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForFunction(() => window.__skyway?.selected === 'bear-crusher');
   const saved = await page.evaluate(() => ({ ...window.__skyway }));
@@ -298,8 +305,10 @@ test(`${name} is earned, selectable, saved and playable with touch`, async ({ pa
   await page.addInitScript(balance=>{if(!localStorage.getItem('monster-skyway.progress.v1'))localStorage.setItem('monster-skyway.progress.v1',JSON.stringify({version:1,stars:balance,races:1,selected:'rumbler',muted:true,reducedMotion:false}));},stars);
   await openGame(page);
   await page.getByRole('button',{name:'Your garage',exact:true}).tap();
+  await waitForGaragePortraits(page);
   await page.getByRole('button',{name:`${name}, ready to drive`,exact:true}).tap();
   await expect(page.getByRole('button',{name:`${name}, selected`,exact:true})).toHaveAttribute('aria-pressed','true');
+  await waitForGaragePortraits(page);
   // The initializer only fills empty storage; a reload must retain this choice.
   await page.getByRole('button',{name:'Close garage',exact:true}).tap();
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('monster-skyway.progress.v1')).selected)).toBe(id);
