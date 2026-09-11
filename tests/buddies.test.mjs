@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS, RACE_SPEED, TRUCKS, createRace, stepRace } from '../src/core.mjs';
 import { sampleRaceBuddies, racePlace, RaceBuddies } from '../src/buddies.mjs';
 import { makeTruck, disposeTruck } from '../src/models.mjs';
+import { poseGuardian } from '../src/guardian-pose.mjs';
 import { sampleTrack, laneOffset } from '../src/track.mjs';
 import { CREW_SIZE, raceCrew } from '../src/crew.mjs';
 
@@ -30,11 +31,22 @@ function matrices(field) {
   });
 }
 
-function approachRace(spec = TRUCKS[0], guardian = false) {
-  const race = { ...createRace(), phase: 'running', distance: 210, truckScale: spec.scale, transformTime: guardian ? 9 : 0 };
-  race.buddies.forEach((buddy, index) => { buddy.distance = race.distance - 10 - index * 4; buddy.lane = index % 2 ? 1.65 : -1.65; });
+function approachRace(spec = TRUCKS[0], guardian = false, afterStep) {
+  const race = { ...createRace(), phase: 'running', truckScale: spec.scale };
+  // Reach the approach through the actual ramps, smash rewards and friend
+  // movement. Resetting to a ten-unit gap at210 skips that shared history.
+  while (race.distance < 190) {
+    stepRace(race, 1 / 60, { transform: guardian && race.elapsed === 0 });
+    afterStep?.(race);
+  }
   return race;
 }
+
+// The two largest trucks reserve the guardian envelope even before Robot is
+// pressed. Their reachable close-follow gap is8.5; the six smaller trucks
+// still fit alongside Sunny and therefore exercise genuine overtakes.
+const passesAlongside = spec => spec.scale <= 1.3;
+const mergeTriggers = spec => passesAlongside(spec) ? [7.9, 2, -.1] : [10, 9, 8.55];
 
 test('distance-only previews remain deterministic, behind, separated and independent of player actions', () => {
   for (let distance = 0; distance <= COURSE_LENGTH; distance += .5) {
@@ -114,27 +126,32 @@ test('stateful buddies take every ramp using elapsed gravity during changing spe
 });
 
 test('the rendered field uses simulated poses without changing them', () => {
-  const scene = new THREE.Scene(), field = new RaceBuddies(scene);
-  const race = approachRace();
-  let passed = false;
-  try {
-    for (let frame = 0; frame < 300; frame++) {
-      stepRace(race, 1 / 60);
-      field.update(1 / 60, race);
-      if (field.poses[0].distance > race.distance) passed = true;
-    }
-    assert.deepEqual(field.poses, sampleRaceBuddies(race));
-    assert.ok(passed, 'The renderer showed Sunny actually passing during the approach');
-    const frozen = structuredClone(race);
-    field.update(.05, race);
-    assert.deepEqual(race, frozen);
-    field.poses[0].distance += 20;
-    assert.deepEqual(race, frozen, 'Renderer cannot mutate the simulation through sampled poses');
-  } finally { field.dispose(); }
+  const smallTrucks = TRUCKS.filter(passesAlongside);
+  assert.equal(smallTrucks.length, 6);
+  for (const spec of smallTrucks) {
+    const scene = new THREE.Scene(), field = new RaceBuddies(scene);
+    const race = approachRace(spec, false, state => field.update(1 / 60, state));
+    let passed = false, recovered = false;
+    try {
+      for (let frame = 0; frame < 450; frame++) {
+        stepRace(race, 1 / 60);
+        field.update(1 / 60, race);
+        if (field.poses[0].distance > race.distance) passed = true;
+        else if (passed) recovered = true;
+      }
+      assert.deepEqual(field.poses, sampleRaceBuddies(race));
+      assert.ok(passed && recovered, `${spec.id}: the renderer shows Sunny pass and the driver recover the lead`);
+      const frozen = structuredClone(race);
+      field.update(.05, race);
+      assert.deepEqual(race, frozen);
+      field.poses[0].distance += 20;
+      assert.deepEqual(race, frozen, 'Renderer cannot mutate the simulation through sampled poses');
+    } finally { field.dispose(); }
+  }
 });
 
 test('late steering yields safely, preserves steering intent and resumes once a pass clears', () => {
-  for (const spec of TRUCKS) for (const steer of [-1, 1]) for (const triggerGap of [7.9, 2, -.1]) {
+  for (const spec of TRUCKS) for (const steer of [-1, 1]) for (const triggerGap of mergeTriggers(spec)) {
     const race = approachRace(spec);
     let steering = false, guarded = false, resumed = false;
     for (let frame = 0; frame < 650; frame++) {
@@ -146,7 +163,7 @@ test('late steering yields safely, preserves steering intent and resumes once a 
       for (const [index, buddy] of race.buddies.entries()) {
         const lateral = Math.abs(race.lane - buddy.lane) * 3.4;
         const longitudinal = Math.abs(race.distance - buddy.distance);
-        assert.ok(lateral >= 2.5 * spec.scale + 1.125 || longitudinal >= 2.8 * spec.scale + 1.4,
+        assert.ok(lateral >= 3.2 * spec.scale + 1.125 || longitudinal >= 2.8 * spec.scale + 1.4,
           `${spec.id} steer ${steer} trigger ${triggerGap}: truck overlaps ${buddy.id} at ${race.elapsed.toFixed(3)}`);
         assert.ok(buddy.distance >= previous.buddies[index].distance, 'Yielding never teleports a buddy backward');
         assert.ok(buddy.distance - previous.buddies[index].distance <= 30.5 / 60 + 1e-8, 'No emergency forward teleport');
@@ -155,47 +172,57 @@ test('late steering yields safely, preserves steering intent and resumes once a 
       if (steering) assert.equal(Math.sign(race.targetLane), steer, 'Assistance preserves the requested direction');
     }
     assert.ok(steering && resumed, `${spec.id}: steering resumes after the temporary pass clears`);
-    if (steer < 0 && triggerGap < 1) assert.ok(guarded, 'A merge begun alongside uses gentle spacing assistance');
+    if (steer < 0) assert.ok(guarded, `${spec.id}: approaching Sunny's occupied side exercises actual spacing assistance`);
   }
 });
 
-test('actual normal and guardian tires never intersect during a late merge', () => {
+test('actual normal and guardian tires never intersect during a late merge or immediate transformation', () => {
   let closeFrames = 0;
-  for (const spec of TRUCKS) for (const guardian of [false, true]) for (const steer of [-1, 1]) {
+  for (const spec of TRUCKS) for (const mode of ['truck', 'robot', 'transform-during-merge']) for (const steer of [-1, 1]) {
     const player = makeTruck(spec), field = new RaceBuddies(new THREE.Scene());
-    const race = approachRace(spec, guardian);
-    let steering = false, transform = 0, lean = 0;
+    let steering = false, guarded = false, transform = 0, lean = 0;
+    const updateArticulation = race => {
+      transform += ((race.transformTime > 0 ? 1 : 0) - transform) * (1 - Math.exp(-5 / 60));
+      lean += (-(race.targetLane - race.lane) * .16 - lean) * (1 - Math.exp(-7 / 60));
+      poseGuardian(player, { transform, lean, time: race.elapsed, flight: race.flying });
+      player.wheels.forEach((wheel, index) => {
+        wheel.rotation.order = 'YXZ'; wheel.rotation.y = index > 1 ? lean * 1.4 : 0;
+        wheel.rotation.x += 19 / 60 * race.speed / RACE_SPEED;
+      });
+      field.update(1 / 60, race);
+    };
+    const race = approachRace(spec, mode === 'robot', updateArticulation);
+    const triggerGap = passesAlongside(spec) ? -.1 : 8.55;
+    let checkedFrames = 0;
     try {
       for (let frame = 0; frame < 650; frame++) {
-        if (race.distance - race.buddies[0].distance < (guardian ? 10 : 2)) steering = true;
-        stepRace(race, 1 / 60, { steer: steering ? steer : 0 });
+        if (race.distance - race.buddies[0].distance < triggerGap) steering = true;
+        stepRace(race, 1 / 60, { steer: steering ? steer : 0, transform: mode === 'transform-during-merge' && steering });
+        if (steering && Math.abs(race.targetLane) > .95 && Math.abs(race.lane) < .9) guarded = true;
         // Match scene articulation, including the tire yaw that broadens the
         // footprint when actual lane is briefly held clear of an opponent.
-        transform += ((race.transformTime > 0 ? 1 : 0) - transform) * (1 - Math.exp(-5 / 60));
-        lean += (-(race.targetLane - race.lane) * .16 - lean) * (1 - Math.exp(-7 / 60));
+        updateArticulation(race);
         const road = sampleTrack(race.distance);
         player.group.position.copy(road.position).addScaledVector(road.right, laneOffset(race.lane)).addScaledVector(road.up, race.height);
         player.group.quaternion.copy(road.quaternion);
         if (race.height > 0) player.group.rotateX(Math.max(-.28, Math.min(.35, -race.velocityY * .025)));
-        player.wheels.forEach((wheel, index) => {
-          wheel.position.x = (index % 2 === 0 ? -1 : 1) * (1.65 + transform * .7);
-          wheel.rotation.order = 'YXZ'; wheel.rotation.y = index > 1 ? lean * 1.4 : 0;
-          wheel.rotation.x += 19 / 60 * race.speed / RACE_SPEED;
-        });
         player.group.updateMatrixWorld(true);
-        field.update(1 / 60, race);
         for (const [index, buddy] of race.buddies.entries()) {
           if (Math.abs(race.distance - buddy.distance) > 9) continue;
           closeFrames++;
+          checkedFrames++;
           const otherWheels = field.trucks[index].wheels.map(wheel => new THREE.Box3().setFromObject(wheel));
           for (const wheel of player.wheels) {
             const playerBox = new THREE.Box3().setFromObject(wheel);
             assert.ok(otherWheels.every(box => !box.intersectsBox(playerBox)),
-              `${spec.id} ${guardian ? 'guardian' : 'normal'} steer ${steer}: actual tires intersect at ${race.elapsed.toFixed(3)}`);
+              `${spec.id} ${mode} steer ${steer}: actual tires intersect at ${race.elapsed.toFixed(3)}`);
           }
         }
       }
       assert.ok(steering && Math.abs(race.lane) > .99, 'Late steering remains possible after clearance');
+      assert.ok(checkedFrames > 0, `${spec.id} ${mode}: every scenario reaches a close physical comparison`);
+      if (steer < 0) assert.ok(guarded, 'Actual tire comparisons include the temporary spacing hold');
+      if (mode !== 'truck') assert.ok(transform > .99 && race.robotMode, 'Both early and late Robot inputs reach the complete guardian pose');
     } finally { disposeTruck(player); field.dispose(); }
   }
   assert.ok(closeFrames > 1000, 'The check exercises actual close passes and waiting beside the player');

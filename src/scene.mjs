@@ -14,6 +14,13 @@ import { WorldLife } from './world-life.mjs';
 import { LandmarkMotion } from './landmark-motion.mjs';
 import { BurstParticles } from './burst-particles.mjs';
 import { poseRearSuspension } from './rear-suspension.mjs';
+import { getCourse } from './courses.mjs';
+import { getCrushCars } from './encounters.mjs';
+import { createCanyonWorld } from './canyon-world.mjs';
+import { poseGuardian } from './guardian-pose.mjs';
+import { SmashTargets } from './smash-scene.mjs';
+import { createCourseFinish } from './course-finish.mjs';
+import { sampleFlight } from './flight.mjs';
 export { makeTruck } from './models.mjs';
 export { sampleTrack } from './track.mjs';
 
@@ -64,6 +71,8 @@ export class GameScene {
     this.buddies=new RaceBuddies(this.scene);
     this.weather=new RaceWeather(this.scene);
     this.encounters=new RoadEncounters(this.scene);
+    this.smashTargets=new SmashTargets(this.scene);
+    this.courseFinish=createCourseFinish();this.scene.add(this.courseFinish.group);this.course=getCourse();
     this.life=new WorldLife(this.scene);
     const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=128;
     const shadowContext=shadowCanvas.getContext('2d');const gradient=shadowContext.createRadialGradient(64,64,8,64,64,64);
@@ -93,8 +102,23 @@ export class GameScene {
     disposeTruck(this.truck);
     this.scene.remove(this.truck.group);this.truck=makeTruck(spec);this.scene.add(this.truck.group);this.transform=0;this.boost=0;
   }
-  reset(variant=0) {this.flames.clear();this.buddies.reset(variant);this.weather.reset();this.encounters.reset();this.life.reset(variant);this.landmarks.reset(variant);this.bursts.clear();poseRearSuspension(this.truck.rearSuspension);this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;}
-  menu() {this.flames.clear();this.weather.reset();this.bursts.clear();poseRearSuspension(this.truck.rearSuspension);this.mode='menu';this.snapCamera=true;}
+  setCourse(id) {
+    this.course=getCourse(id);
+    const canyon=this.course.theme==='canyon';
+    if(canyon&&!this.canyonWorld){this.canyonWorld=createCanyonWorld();this.scene.add(this.canyonWorld);}
+    this.world.visible=!canyon;if(this.canyonWorld)this.canyonWorld.visible=canyon;
+    this.life.group.visible=!canyon;
+    this.scene.fog.color.setHex(canyon?0xefc49b:0xbce6f5);
+    this.sky.material.uniforms.top.value.setHex(canyon?0x719bc1:0x3b9edd);
+    this.sky.material.uniforms.bottom.value.setHex(canyon?0xf8d5ae:0xd3eff9);
+    this.courseFinish.setCourse(this.course);this.courseFinish.group.visible=this.mode==='race'&&this.course.end<1900;
+    const cars=getCrushCars(this.course.id);
+    for(const car of this.encounters.cars)car.group.visible=cars.some(definition=>definition.id===car.id);
+    for(const star of this.stars){const gap=this.course.gaps.find(item=>star.distance>=item.launch&&star.distance<=item.land);star.flightLift=gap?sampleFlight({start:gap.launch,end:gap.land,height:gap.height},star.distance).height:0;}
+    this.snapCamera=true;this.weather.reset();
+  }
+  reset(variant=0) {this.flames.clear();this.buddies.reset(variant);this.weather.reset();this.encounters.reset();this.smashTargets?.reset();this.life.reset(variant);this.landmarks.reset(variant);this.bursts.clear();poseRearSuspension(this.truck.rearSuspension);poseGuardian(this.truck,{menu:true});this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';if(this.courseFinish)this.courseFinish.group.visible=this.course.end<1900;this.snapCamera=true;this.transform=0;this.flight=0;this.boost=0;this.squash=0;this.steerLean=0;}
+  menu() {this.flames.clear();this.weather.reset();this.bursts.clear();this.smashTargets?.reset();poseRearSuspension(this.truck.rearSuspension);poseGuardian(this.truck,{menu:true});this.mode='menu';if(this.courseFinish)this.courseFinish.group.visible=false;this.snapCamera=true;}
   resize() {this.width=innerWidth;this.height=innerHeight;this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();this.renderer.setSize(this.width,this.height,false);this.snapCamera=true;}
   burst(colorful=true,count=20,origin=this.truck.group.position,reward=false) {
     if(this.reducedMotion||this.mode!=='race')return 0;
@@ -105,7 +129,7 @@ export class GameScene {
   update(dt,race) {
     this.time+=dt;
     const isMenu=this.mode==='menu';
-    const d=isMenu?14:race.distance;
+    const d=isMenu?(this.course?.start??0)+14:race.distance;
     const inLoop=d>LOOP_START-18&&d<LOOP_END+15&&!isMenu;
     const f=sampleTrack(d);const g=this.truck.group;
     g.scale.setScalar(this.truck.spec.scale*(isMenu?(this.width<this.height?1.72:2.1):1));
@@ -114,21 +138,19 @@ export class GameScene {
     if(isMenu)g.rotateY(-.15+Math.sin(this.time*.32)*.1);
     else if(race.height>0)g.rotateX(clamp(-race.velocityY*.025,-.28,.35));
     this.transform=lerp(this.transform,!isMenu&&race.transformTime>0?1:0,1-Math.exp(-dt*5));
+    this.flight=lerp(this.flight||0,!isMenu&&race.flying?1:0,1-Math.exp(-dt*6));
     this.boost=lerp(this.boost,!isMenu&&race.turboTime>0?1:0,1-Math.exp(-dt*4));
     this.squash=Math.max(0,this.squash-dt*3.5);
     this.steerLean=lerp(this.steerLean,isMenu?0:-(race.targetLane-race.lane)*.16,1-Math.exp(-dt*7));
-    this.truck.body.position.y=this.transform*1.8-this.squash*.2+(isMenu?.035*Math.sin(this.time*2):Math.sin(this.time*16)*.025);
-    this.truck.body.rotation.z=-this.steerLean;
+    poseGuardian(this.truck,{transform:this.transform,flight:this.flight,lean:this.steerLean,squash:this.squash,time:this.time,reducedMotion:this.reducedMotion,menu:isMenu});
     poseRearSuspension(this.truck.rearSuspension,!isMenu&&!this.reducedMotion&&!inLoop?this.squash*.2:0,this.steerLean);
-    this.truck.head.visible=this.transform>.06;this.truck.head.scale.setScalar(Math.max(.01,this.transform));
-    this.truck.arms.forEach((arm,i)=>{arm.visible=this.transform>.06;arm.rotation.z=(i===0?-1:1)*this.transform*.85;});
-    this.truck.struts.forEach(leg=>{leg.visible=this.transform>.06;leg.scale.y=1.2+this.transform*1.9;leg.position.y=1.7+this.transform*.8;});
-    this.truck.wheels.forEach((wheel,i)=>{wheel.position.x=(i%2===0?-1:1)*(1.65+this.transform*.7);wheel.rotation.order='YXZ';wheel.rotation.y=i>1?this.steerLean*1.4:0;if(!isMenu&&race.phase==='running')wheel.rotation.x+=dt*19*(race.speed??RACE_SPEED)/RACE_SPEED;});
+    this.truck.wheels.forEach((wheel,i)=>{wheel.rotation.order='YXZ';wheel.rotation.y=i>1?this.steerLean*1.4:0;if(!isMenu&&race.phase==='running')wheel.rotation.x+=dt*19*(race.speed??RACE_SPEED)/RACE_SPEED;});
     this.flames.update(dt,{truck:this.truck,time:this.time,mode:this.mode,race,transform:this.transform,reducedMotion:this.reducedMotion});
     this.contactShadow.position.copy(f.position).addScaledVector(f.right,laneOffset(isMenu?0:race.lane)).addScaledVector(f.up,.042);
     this.contactShadow.quaternion.copy(f.quaternion);this.contactShadow.rotateX(-Math.PI/2);
     const shadowScale=g.scale.x*(1+(isMenu?0:race.height)*.06);
     this.contactShadow.scale.set(7.6*shadowScale,6.8*shadowScale,1);this.contactShadow.material.opacity=.65/(1+(isMenu?0:race.height)*.17);
+    const overGap=this.course?.gaps.some(gap=>d>gap.start&&d<gap.end);this.contactShadow.visible=!overGap;
     this.landingRing.visible=!isMenu&&!this.reducedMotion&&this.squash>0;
     this.landingRing.position.copy(f.position).addScaledVector(f.right,laneOffset(isMenu?0:race.lane)).addScaledVector(f.up,.065);
     this.landingRing.quaternion.copy(f.quaternion);this.landingRing.rotateX(-Math.PI/2);
@@ -150,7 +172,7 @@ export class GameScene {
       const portrait=this.width<this.height;
       const distance=(portrait?53:42)+(this.truck.spec.scale-1)*4;
       this.targetCamera.copy(g.position).addScaledVector(horizontal,-distance).add(new THREE.Vector3(0,(portrait?18:14.5)+race.height*.1+(this.truck.spec.scale-1)*2.5,0));
-      this.targetLook.copy(f.position).addScaledVector(horizontal,-9).add(new THREE.Vector3(0,2.4+race.height*.4,0));
+      this.targetLook.copy(f.position).addScaledVector(horizontal,-9).add(new THREE.Vector3(0,2.4+race.height*.7+this.transform*1.1,0));
       this.camera.fov=55+(this.reducedMotion?0:this.transform*3+this.boost*3);
       if(!this.reducedMotion)this.targetCamera.y-=this.squash*.32;
     }
@@ -161,18 +183,18 @@ export class GameScene {
     let collected=0;
     for(const s of this.stars) {
       if(s.collected)continue;
-      s.mesh.visible=isMenu?s.distance<170:Math.abs(s.distance-d)<170;
+      s.mesh.visible=s.distance>=(this.course?.start??0)&&s.distance<=(this.course?.end??COURSE_LENGTH)&&Math.abs(s.distance-d)<170;
       if(!s.mesh.visible)continue;
-      s.mesh.rotation.y=this.time*1.7;s.mesh.position.y=s.base.y+Math.sin(this.time*2+s.distance)*.2;
+      s.mesh.rotation.y=this.time*1.7;s.mesh.position.y=s.base.y+(s.flightLift||0)+Math.sin(this.time*2+s.distance)*.2;
       if(!isMenu&&race.phase==='running'&&Math.abs(s.distance-d)<2.2&&(this.transform>.3||Math.abs(race.lane-s.lane)<.65)) {s.collected=true;s.mesh.visible=false;if(!this.reducedMotion)this.burst(true,4,s.mesh.position);collected++;}
     }
     this.bursts.update(dt,{phase:race.phase,mode:this.mode,reducedMotion:this.reducedMotion});
     if(race.phase==='running'&&Number.isFinite(dt)&&dt>0&&this.transform>.5&&Math.random()<dt*20&&!this.reducedMotion)this.burst(true,1);
     this.buddies.update(dt,race,!isMenu,{camera:this.camera,reducedMotion:this.reducedMotion});
-    this.weather.update(dt,{race,truck:this.truck,mode:this.mode,reducedMotion:this.reducedMotion});
+    this.weather.update(dt,{race,truck:this.truck,mode:this.course?.theme==='canyon'?'menu':this.mode,reducedMotion:this.reducedMotion});
     this.encounters.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});
-    this.life.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});
-    this.landmarks.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});
+    this.smashTargets.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});
+    if(this.course?.theme!=='canyon'){this.life.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});this.landmarks.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});}
     this.renderer.render(this.scene,this.camera);
     return collected;
   }

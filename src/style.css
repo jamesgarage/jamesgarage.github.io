@@ -28,7 +28,13 @@ svg { display: block; }
 [hidden] { display: none !important; }
 .svg-library { position: absolute; width: 0; height: 0; overflow: hidden; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-#app { position: relative; width: 100%; height: 100%; height: 100dvh; isolation: isolate; }
+#app { position: relative; width: 100%; height: 100%; height: 100dvh; isolation: isolate; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+#app * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+#app img, #app svg { -webkit-user-drag: none; }
+.overlay { touch-action: pan-y; overscroll-behavior: contain; }
+.gamepad-focus { outline: 4px solid #ffe46a !important; outline-offset: 4px; }
+.controller-hint { max-width: 420px; margin: 9px 0 0; color: #d8f1dc; font-size: 11px; line-height: 1.4; }
+.controller-note { color: #52727b; font-size: 12px; line-height: 1.6; }
 #game-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; }
 .global-tools { position: absolute; z-index: 12; top: max(24px, env(safe-area-inset-top)); right: max(var(--edge), env(safe-area-inset-right)); display: flex; gap: 10px; }
 .icon-button { width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 16px; border: 1px solid #ffffff2b; color: var(--cream); }
@@ -533,7 +539,7 @@ button.truck-card:hover { transform: translateY(-3px); border-color: #a0eee0; ba
   .callout { top: 22%; font-size: 23px; padding: 7px 14px; }
 }
 
-/* Keep turbo and jump side by side; transformation remains a secondary action. */
+/* Keep the three action controls reachable without covering the convoy. */
 @media (max-width: 700px) {
   .action-controls { position: relative; }
   .action-controls .transform-button { position: absolute; right: 0; bottom: 106px; width: 78px; min-height: 58px; height: 58px; border-radius: 17px; gap: 2px; font-size: 7px; }
@@ -544,6 +550,71 @@ button.truck-card:hover { transform: translateY(-3px); border-color: #a0eee0; ba
 @media (max-width: 359px) {
   .turbo-button { width: 68px; font-size: 11px; }
 }
+.course-choice { display: flex; align-items: center; gap: 9px; min-height: 44px; margin-top: 14px; padding: 7px 13px; border: 1px solid #a4deda66; border-radius: 12px; color: #ecf9df; background: #164653d9; font: inherit; font-size: 13px; font-weight: 850; }
+.course-choice:hover, .route-chip:hover { background: #246374; border-color: #b5f5d8; }
+.menu-next { margin-top: 12px; }
+button.route-chip { text-align: left; cursor: pointer; font-family: inherit; min-height: 48px; }
+.canyon-chip > b { background: #ffcf8d; color: #934d35; }
+.tracks-overlay { overflow-y: auto; padding: max(28px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)); background: linear-gradient(125deg,#173d50,#0d293d); }
+.tracks-panel { width: min(1080px,100%); margin: auto; }
+.tracks-panel h2 { font-size: clamp(28px,4vw,48px); }
+.tracks-intro { color: #bddbdc; margin: 16px 0 25px; }
+.course-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; padding-bottom: 18px; }
+.course-card { position: relative; display: flex; flex-direction: column; overflow: hidden; padding: 0; border: 3px solid #fff7d8; border-radius: 22px; color: #183d4b; background: #fff7e5; text-align: left; cursor: pointer; box-shadow: 0 6px 0 #071f303d; }
+.course-card[aria-pressed="true"] { border-color: #ffd84e; box-shadow: 0 0 0 3px #e5c44d35,0 6px 0 #071f303d; }
+.course-card:hover { border-color: #8de9d9; }
+.course-card > svg { width: 100%; height: auto; display: block; }
+.course-card-copy { padding: 18px 50px 20px 18px; display: flex; flex-direction: column; gap: 7px; }
+.course-card-copy strong { font-size: 23px; letter-spacing: -.6px; }
+.course-card-copy > span { font-size: 11px; color: #58727b; line-height: 1.4; }
+.course-card-go { position: absolute; right: 15px; bottom: 23px; display: grid; place-items: center; border-radius: 50%; width: 32px; height: 32px; color: #173b4b; background: #ffcd45; }
+.race-route[data-stage="canyon"] { --stage-color: #ffcf8d; }
+.transform-button.active { background: #b1f1e6; }
+.transform-button .energy-track { display: none; }
+.transform-button { font-size: 13px; }
+@media (orientation: portrait) and (max-width: 1000px) {
+  .course-choice { margin-top: 10px; }
+  .course-list { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 15px; }
+  .course-card-copy { padding: 14px 35px 17px 12px; }
+  .course-card-copy strong { font-size: 20px; }
+  .course-card-go { right: 10px; width: 26px; height: 26px; font-size: 12px; }
+}
+@media (max-width: 700px) {
+  .course-choice { min-height: 40px; font-size: 11px; margin-top: 9px; }
+  .route-chip { flex: 1; justify-content: center; padding: 7px 3px; min-width: 0; }
+  .route-chip > b { display: none; }
+  .route-chip small { font-size: 7px; }
+  .route-chip > span { font-size: 7px; }
+  .tracks-overlay { padding: 22px 16px; }
+  .tracks-panel .garage-header { align-items: center; gap: 8px; }
+  .tracks-panel h2 { font-size: 28px; }
+  .tracks-panel .eyebrow { font-size: 8px; }
+  .course-list { gap: 12px; }
+  .course-card { border-radius: 16px; }
+  .course-card-copy { padding: 13px 10px; }
+  .course-card-copy strong { font-size: 18px; }
+  .course-card-copy > span { font-size: 10px; min-height: 28px; }
+  .course-card-go { display: none; }
+  .action-controls .transform-button { font-size: 11px; min-height: 66px; height: 66px; }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .course-choice { display: inline-flex; margin-top: 6px; min-height: 36px; font-size: 10px; }
+  .menu-next { display: none; }
+  .course-list { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .course-card-copy { padding: 10px 40px 12px 12px; }
+  .course-card-copy strong { font-size: 18px; }
+  .result-card .modal-actions { flex-wrap: wrap; }
+  #result-tracks-btn { flex-basis: 100%; }
+}
 @media (max-height: 600px) and (orientation: landscape) {
   .turbo-button { width: 90px; height: 86px; border-radius: 22px; font-size: 12px; }
+}
+
+/* Celebrate below the HUD without covering the flying robot's helmet. */
+.callout { top: calc(max(24px, env(safe-area-inset-top)) + 68px); font-size: 20px; padding: 6px 14px; }
+@media (orientation: landscape) {
+  .callout { left: 25%; max-width: calc(50% - 36px); }
+}
+@media (max-width: 680px) and (orientation: portrait) {
+  .callout { top: calc(max(22px, env(safe-area-inset-top)) + 120px); }
 }

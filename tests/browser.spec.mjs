@@ -34,6 +34,70 @@ async function waitForGaragePortraits(page) {
   await page.waitForFunction(() => [...document.querySelectorAll('#truck-list img')].every(image => image.complete && image.naturalWidth === 720));
 }
 
+test('robot mode is ready immediately and one touch flies, pauses and lands safely', async ({page},testInfo)=>{
+  await page.setViewportSize({width:768,height:1024});
+  await openGame(page);await page.locator('#play-btn').tap();
+  await page.getByRole('button',{name:'Become a robot',exact:true}).tap();
+  await page.waitForFunction(()=>window.__skyway.robotMode&&window.__skyway.transformed);
+  await page.getByRole('button',{name:'Fly',exact:true}).tap();
+  await page.waitForFunction(()=>window.__skyway.flying&&window.__skyway.height>5);
+  await page.screenshot({path:testInfo.outputPath('robot-touch-flight.png')});
+  await page.locator('#pause-btn').tap();const paused=await page.evaluate(()=>window.__skyway);
+  await page.waitForTimeout(250);const still=await page.evaluate(()=>window.__skyway);
+  expect(still.flight).toEqual(paused.flight);expect(still.distance).toBe(paused.distance);expect(still.height).toBe(paused.height);expect(still.buddies).toEqual(paused.buddies);
+  await page.locator('#resume-btn').tap();
+  await page.getByRole('button',{name:'Become a truck',exact:true}).tap();
+  await page.waitForFunction(()=>!window.__skyway.flying&&window.__skyway.height===0);
+  expect(await page.evaluate(()=>window.__skyway.transformed)).toBe(false);
+  await expect(page.getByRole('button',{name:'Become a robot',exact:true})).toBeEnabled();
+});
+
+test('the picture picker exposes all five races and works at phone width',async({page},testInfo)=>{
+  await page.setViewportSize({width:390,height:844});await openGame(page);
+  await page.getByRole('button',{name:'Choose a racetrack',exact:true}).tap();
+  await expect(page.locator('#course-list button')).toHaveCount(5);
+  expect(await page.locator('#tracks').evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
+  await page.screenshot({path:testInfo.outputPath('phone-track-picker.png')});
+  await page.locator('#course-list').getByRole('button',{name:'Race Canyon Run',exact:true}).tap();
+  await page.waitForFunction(()=>window.__skyway.courseId==='canyon'&&window.__skyway.distance>3);
+  expect(await page.evaluate(()=>window.__skyway.courseProgress)).toBeLessThan(.03);
+});
+
+for(const [id,name,start,end] of [['woods','Bear Woods',0,550],['loop','Sky Loop',565,1140],['bay','Gator Bay',1160,1900]]){
+  test(`${name} is a selectable complete race with its own start, finish and saved replay`,async({page},testInfo)=>{
+    test.setTimeout(100_000);await openGame(page);await page.locator(`[data-race="${id}"]`).tap();
+    await page.waitForFunction(id=>window.__skyway.courseId===id&&window.__skyway.phase==='running',id);
+    const beginning=await page.evaluate(()=>window.__skyway);expect(beginning.distance).toBeGreaterThanOrEqual(start);expect(beginning.distance).toBeLessThan(start+50);expect(beginning.courseProgress).toBeLessThan(.1);
+    await expect(page.locator('#results')).toBeVisible({timeout:85_000});
+    const finish=await page.evaluate(()=>window.__skyway);expect(finish.distance).toBe(end);expect(finish.place).toBe(1);expect(finish.courseProgress).toBe(1);expect(finish.totalStars).toBe(12+Math.min(50,finish.stars));
+    await page.waitForFunction(()=>document.querySelector('#result-truck').complete&&document.querySelector('#result-truck').naturalWidth===720);
+    await page.screenshot({path:testInfo.outputPath(`${id}-finish.png`)});
+    await page.reload({waitUntil:'networkidle'});await page.waitForFunction(id=>window.__skyway?.courseId===id,id);
+    expect(await page.evaluate(()=>window.__skyway.totalStars)).toBe(finish.totalStars);
+    await page.locator('#play-btn').tap();await page.waitForFunction(()=>window.__skyway.phase==='running');
+    const replay=await page.evaluate(()=>window.__skyway);expect(replay.distance).toBeLessThan(start+50);expect(replay.smashes).toBe(0);expect(replay.smashedTargets).toEqual([]);expect(replay.canyonCrossings).toBe(0);
+  });
+}
+
+test('Mega Titan flies all four real canyon gaps, smashes toys and wins without driving input',async({page},testInfo)=>{
+  test.setTimeout(150_000);
+  await page.addInitScript(()=>localStorage.setItem('monster-skyway.progress.v1',JSON.stringify({version:1,stars:110,races:3,selected:'mega-titan',muted:true,courseId:'canyon'})));
+  await openGame(page);await page.locator('#play-btn').tap();
+  await page.waitForFunction(()=>window.__skyway.smashes>0);expect(await page.evaluate(()=>window.__skyway.smashModels.broken.length)).toBeGreaterThan(0);
+  await page.screenshot({path:testInfo.outputPath('canyon-smash.png')});
+  for(const [distance,index] of [[242,1],[493,2],[1292,3],[1618,4]]){
+    await page.waitForFunction(d=>window.__skyway.distance>=d,distance,{timeout:90_000});
+    const airborne=await page.evaluate(()=>window.__skyway);expect(airborne.flying).toBe(true);expect(airborne.height).toBeGreaterThan(8);expect(airborne.transformed).toBe(true);expect(airborne.canyonCrossings).toBe(index-1);expect(airborne.rain).toBe(false);
+    expect(airborne.buddies).toHaveLength(4);await page.screenshot({path:testInfo.outputPath(`canyon-flight-${index}.png`)});
+  }
+  await expect(page.locator('#results')).toBeVisible({timeout:90_000});const finish=await page.evaluate(()=>window.__skyway);
+  expect(finish.canyonCrossings).toBe(4);expect(finish.place).toBe(1);expect(finish.height).toBe(0);expect(finish.flying).toBe(false);expect(finish.smashes).toBeGreaterThanOrEqual(4);expect(finish.loops).toBe(1);
+  await page.waitForFunction(()=>document.querySelector('#result-truck').complete&&document.querySelector('#result-truck').naturalWidth===720);
+  await page.screenshot({path:testInfo.outputPath('canyon-win.png')});
+  await page.locator('#result-tracks-btn').tap();await page.locator('#course-list [data-course="woods"]').tap();
+  await page.waitForFunction(()=>window.__skyway.courseId==='woods'&&window.__skyway.distance>3);expect(await page.evaluate(()=>window.__skyway.canyonCrossings)).toBe(0);
+});
+
 for (const viewport of [{ width: 1024, height: 768 }, { width: 768, height: 1024 }]) {
 test(`keyboard and on-screen steering move in the direction shown by the arrows (${viewport.width})`, async ({ page }) => {
   await page.setViewportSize(viewport);

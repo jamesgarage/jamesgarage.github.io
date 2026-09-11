@@ -6,7 +6,7 @@ const browserName = process.env.PLAYWRIGHT_BROWSER || 'chromium';
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: '**/browser.spec.mjs',
+  testMatch: ['**/browser.spec.mjs','**/*.browser.spec.mjs'],
   outputDir: './test-results',
   workers: 1,
   fullyParallel: false,

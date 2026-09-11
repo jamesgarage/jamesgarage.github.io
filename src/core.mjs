@@ -1,9 +1,11 @@
 /** Pure game rules. Rendering, audio, and storage are owned by the application. */
-import { CRUSH_CARS, TURBO_PADS } from './encounters.mjs';
+import { getCrushCars, getSmashTargets, TURBO_PADS } from './encounters.mjs';
+import { getCourse } from './courses.mjs';
+import { sampleFlight } from './flight.mjs';
 import { createBuddyMind, normalizeRaceVariant, stepBuddyMind } from './buddy-brain.mjs';
 import { raceCrew } from './crew.mjs';
 
-export const COURSE_LENGTH = 1900;
+export const COURSE_LENGTH = getCourse('skyway').end;
 export const RACE_SPEED = 26;
 export const LOOP_START = 820;
 export const LOOP_END = 1000;
@@ -54,6 +56,7 @@ export function createProgress(raw) {
     version: 1,
     stars,
     selected: selected?.id ?? 'rumbler',
+    courseId: getCourse(source.courseId).id,
     muted: source.muted === true,
     reducedMotion: source.reducedMotion === true,
     races: nonnegativeInteger(source.races),
@@ -81,12 +84,16 @@ export function awardRace(progress, bonusStars = 0) {
   };
 }
 
-export function createRace(seed = 0) {
+export function createRace(seed = 0, courseId = 'skyway') {
   const variant = normalizeRaceVariant(seed);
+  const course = getCourse(courseId);
   return {
     variant,
+    courseId: course.id,
+    courseStart: course.start,
+    courseEnd: course.end,
     phase: 'ready',
-    distance: 0,
+    distance: course.start,
     elapsed: 0,
     lane: 0,
     targetLane: 0,
@@ -95,6 +102,14 @@ export function createRace(seed = 0) {
     stars: 0,
     energy: 0,
     transformTime: 0,
+    robotMode: false,
+    robotManual: false,
+    transformHeld: false,
+    jumpHeld: false,
+    flight: null,
+    flying: false,
+    canyonCrossings: 0,
+    crossedGaps: [],
     guardianClearTime: 0,
     landings: 0,
     loops: 0,
@@ -110,9 +125,11 @@ export function createRace(seed = 0) {
     crushBoostTime: 0,
     crushes: 0,
     crushedCars: [],
+    smashes: 0,
+    smashedTargets: [],
     buddySignalCooldown: 0,
-    buddies: raceCrew(variant).map((buddy, slot) => ({ ...buddy, homeLane: buddy.lane, distance: -buddy.gap,
-      height: 0, velocityY: 0, ...createBuddyMind(variant, buddy, slot) })),
+    buddies: raceCrew(variant).map((buddy, slot) => ({ ...buddy, homeLane: buddy.lane, distance: course.start - buddy.gap,
+      height: 0, velocityY: 0, flight: null, flying: false, ...createBuddyMind(variant, buddy, slot) })),
   };
 }
 
@@ -127,22 +144,54 @@ function travelSpeed(state) {
   return RACE_SPEED * (state.turboTime > 0 ? TURBO_MULTIPLIER : state.crushBoostTime > 0 ? CRUSH_BOOST_MULTIPLIER : 1);
 }
 
+function beginFlight(state, flight, events) {
+  state.flight = { ...flight, startHeight: state.height };
+  state.flying = true;
+  if (state.transformTime === 0) events.push({ type: 'transform' });
+  state.transformTime = TRANSFORM_DURATION;
+  events.push({ type: 'flight', kind: flight.kind, id: flight.id });
+}
+
+function stepFlight(state, events) {
+  const flight = state.flight;
+  Object.assign(state, sampleFlight(flight, state.distance, state.speed));
+  if (state.distance < flight.end) {
+    state.transformTime = TRANSFORM_DURATION;
+    return;
+  }
+  state.flight = null;
+  state.flying = false;
+  state.jumpCooldown = Math.max(state.jumpCooldown, .18);
+  state.landings += 1;
+  events.push({ type: 'land', strength: .65 });
+  if (flight.kind === 'canyon' && !state.crossedGaps.includes(flight.id)) {
+    state.crossedGaps.push(flight.id);
+    state.canyonCrossings += 1;
+    events.push({ type: 'canyon', id: flight.id });
+  }
+  // A Truck choice made above a chasm waits until this safe landing.
+  if (state.robotManual && !state.robotMode) state.transformTime = 0;
+}
+
 function approachStrength(distance, start, end) {
   const t = clamp(Math.min((distance - start) / 45, (end - distance) / 35), 0, 1);
   return t * t * (3 - 2 * t);
 }
 
-/** Intersect the swept truck center with an expanded toy-car box. Testing the
+/** Intersect the swept truck center with an expanded toy-object box. Testing the
  * same time interval on all axes prevents a fast diagonal pass from missing a
  * contact, or a jump in a different part of the frame from creating one. */
-function touchesCar(state, previous, car) {
-  const halfWidth = (1.05 + 2 * state.truckScale) / 3.4;
-  const halfLength = 1.65 + 2.8 * state.truckScale;
+function touchesTarget(state, previous, target) {
+  // Unfolded wheels occupy the same broad envelope reserved for friends.
+  // Their eased return remains visible after transformTime reaches zero.
+  const truckHalfWidth = (state.transformTime > 0 || state.guardianClearTime > 0 ? 3.2 : 2) * state.truckScale;
+  const halfWidth = ((target.halfWidth ?? 1.05) + truckHalfWidth) / 3.4;
+  const halfLength = (target.halfLength ?? 1.65) + 2.8 * state.truckScale;
   let enter = 0, leave = 1;
   for (const [from, to, lower, upper] of [
-    [previous.distance, state.distance, car.distance - halfLength, car.distance + halfLength],
-    [previous.lane, state.lane, car.lane - halfWidth, car.lane + halfWidth],
-    [previous.height, state.height, -Infinity, 1.1],
+    [previous.distance, state.distance, target.distance - halfLength, target.distance + halfLength],
+    [previous.lane, state.lane, target.lane - halfWidth, target.lane + halfWidth],
+    [previous.height, state.height, -Infinity, target.height ?? 1.1],
   ]) {
     const change = to - from;
     if (Math.abs(change) < 1e-12) {
@@ -161,10 +210,9 @@ function touchesCar(state, previous, car) {
  * They approach during two authored stretches, ease off when ahead, and close
  * a large turbo gap gradually. Nothing assigns their finishing position. */
 function passingWidth(state) {
-  // Full wheel envelopes, plus room for lean and the different road frames of
-  // nearby actors. This clears even the transformed Titan's broad silhouette.
-  const halfWidth = state.transformTime > 0 || state.guardianClearTime > 0 ? 3.2 : 2.5;
-  return (halfWidth * state.truckScale + 1.15 + .25) / 3.4;
+  // Robot is available at any instant, including in the middle of a pass.
+  // Reserve its full envelope before the driver chooses to unfold the arms.
+  return (3.2 * state.truckScale + 1.15 + .25) / 3.4;
 }
 
 function holdClearLane(state, previousLane) {
@@ -180,18 +228,22 @@ function holdClearLane(state, previousLane) {
 }
 
 function stepBuddies(state, step, steering, events) {
+  const course = getCourse(state.courseId);
   const predictedLane = clamp(state.targetLane + steering * .6 * 2.4, -1, 1);
   const width = passingWidth(state);
-  const playerEvents = events.slice();
+  // Both toy types use the existing sparse positive cheer vocabulary.
+  const playerEvents = events.map(event => event.type === 'smash' ? { ...event, type: 'crush' } : event);
   state.buddySignalCooldown = Math.max(0, state.buddySignalCooldown - step);
   for (const [index, buddy] of state.buddies.entries()) {
     const previousDistance = buddy.distance;
     const gap = state.distance - buddy.distance;
     const offset = buddy.brain.approachOffset;
-    const approach = Math.max(approachStrength(state.distance, 175 + offset, 335 + offset), approachStrength(state.distance, 1020 + offset, 1200 + offset));
+    const finishRoom = clamp((course.end - state.distance - 140) / 120, 0, 1);
+    const approach = finishRoom * Math.max(approachStrength(state.distance, 175 + offset, 335 + offset), approachStrength(state.distance, 1020 + offset, 1200 + offset));
     const safeJump = buddy.height === 0 && buddy.velocityY === 0 &&
       (buddy.distance < LOOP_START - 34 || buddy.distance > LOOP_END + 12) &&
-      RAMPS.every(ramp => buddy.distance < ramp - 34 || buddy.distance > ramp + 10);
+      RAMPS.every(ramp => buddy.distance < ramp - 34 || buddy.distance > ramp + 10) &&
+      course.gaps.every(gap => buddy.distance < gap.launch - 25 || buddy.distance > gap.land + 10);
     const signalCount = state.buddies.filter(friend => friend !== buddy && friend.signalTime > 0).length;
     const allowSignal = state.buddySignalCooldown === 0 && signalCount < 2;
     const beforeEvents = events.length;
@@ -216,7 +268,7 @@ function stepBuddies(state, step, steering, events) {
     const intendedClearance = Math.max(playerMin - buddyMax, buddyMin - playerMax, 0);
     const needsRoom = intendedClearance < width;
     if (needsRoom && Math.abs(gap) < PASSING_GAP) speed = Math.min(speed, Math.max(0, state.speed - 12));
-    let nextDistance = Math.min(COURSE_LENGTH, buddy.distance + speed * step);
+    let nextDistance = Math.min(course.end, buddy.distance + speed * step);
     if (needsRoom && gap >= PASSING_GAP) nextDistance = Math.min(nextDistance, state.distance - PASSING_GAP);
     // Each friend queues behind the preceding truck even when it yields or
     // changes passing sides, preventing every pair from merging together.
@@ -224,7 +276,15 @@ function stepBuddies(state, step, steering, events) {
     buddy.distance = Math.max(previousDistance, nextDistance);
     buddy.speed = (buddy.distance - previousDistance) / step;
     buddy.lane = nextLane;
-    if (buddy.distance >= LOOP_START && buddy.distance < LOOP_END) {
+    const gapFlight = course.gaps.find(gap => buddy.distance >= gap.launch && buddy.distance < gap.land);
+    if (gapFlight && buddy.flight?.id !== gapFlight.id) {
+      buddy.flight = { kind: 'canyon', id: gapFlight.id, start: gapFlight.launch, end: gapFlight.land, height: gapFlight.height, startHeight: buddy.height };
+    }
+    if (buddy.flight) {
+      Object.assign(buddy, sampleFlight(buddy.flight, buddy.distance, buddy.speed));
+      buddy.flying = buddy.distance < buddy.flight.end;
+      if (!buddy.flying) buddy.flight = null;
+    } else if (buddy.distance >= LOOP_START && buddy.distance < LOOP_END) {
       buddy.height = 0;
       buddy.velocityY = 0;
     } else {
@@ -249,6 +309,7 @@ export function stepRace(state, dt, inputs = {}) {
   const events = [];
   if (state.phase !== 'running' || state.finished || !Number.isFinite(dt) || dt <= 0) return events;
   const step = Math.min(dt, 0.05);
+  const course = getCourse(state.courseId);
   const previousDistance = state.distance;
   const previous = { distance: previousDistance, lane: state.lane, height: state.height };
   state.truckScale = Number.isFinite(state.truckScale) ? clamp(state.truckScale, 1, 1.5) : 1;
@@ -259,7 +320,7 @@ export function stepRace(state, dt, inputs = {}) {
   if (turboPressed && !state.turboHeld && state.turboEnergy >= 100) activateTurbo(state, events, 'manual');
   state.turboHeld = turboPressed;
   state.speed = travelSpeed(state);
-  state.distance = Math.min(COURSE_LENGTH, previousDistance + state.speed * step);
+  state.distance = Math.min(course.end, previousDistance + state.speed * step);
   state.elapsed += step;
   state.jumpCooldown = Math.max(0, state.jumpCooldown - step);
 
@@ -271,29 +332,54 @@ export function stepRace(state, dt, inputs = {}) {
   holdClearLane(state, previous.lane);
 
   for (const pad of TURBO_PADS) {
+    if (pad.distance <= course.start || pad.distance >= course.end) continue;
     if (state.distance >= pad.distance - pad.length / 2 && previousDistance < pad.distance + pad.length / 2 && !state.usedTurboPads.includes(pad.id)) {
       state.usedTurboPads.push(pad.id);
       activateTurbo(state, events, 'pad');
     }
   }
 
-  if (state.transformTime > 0) {
+  const transformPressed = Boolean(inputs.transform);
+  if (transformPressed && !state.transformHeld) {
+    state.robotMode = state.transformTime === 0;
+    state.robotManual = true;
+    state.transformTime = state.robotMode || state.flight ? TRANSFORM_DURATION : 0;
+    if (state.robotMode) {
+      state.energy = 0;
+      events.push({ type: 'transform' });
+    }
+  }
+  state.transformHeld = transformPressed;
+  if (state.robotMode) {
+    state.transformTime = TRANSFORM_DURATION;
+  } else if (state.transformTime > 0) {
     state.transformTime = Math.max(0, state.transformTime - step);
   } else {
     state.energy = Math.min(100, state.energy + (state.distance - previousDistance) / 7);
   }
-  if (state.energy >= 100 && state.transformTime === 0 && (inputs.transform || state.distance >= AUTO_TRANSFORM_GATE)) {
+  if (!state.robotManual && state.energy >= 100 && state.transformTime === 0 && state.distance >= AUTO_TRANSFORM_GATE) {
     state.energy = 0;
     state.transformTime = TRANSFORM_DURATION;
     events.push({ type: 'transform' });
   }
-  // Rendering eases the guardian wheels back inward after the timer ends.
-  // Reserve the wide envelope until that visible shrink has settled.
-  state.guardianClearTime = state.transformTime > 0 ? 1 : Math.max(0, state.guardianClearTime - step);
-
   const onLoop = state.distance >= LOOP_START && state.distance < LOOP_END;
   const crossedRamp = RAMPS.some(ramp => previousDistance < ramp && state.distance >= ramp);
-  if (onLoop) {
+  const jumpPressed = Boolean(inputs.jump);
+  const flyPressed = jumpPressed && !state.jumpHeld;
+  state.jumpHeld = jumpPressed;
+  const gap = course.gaps.find(candidate => state.distance >= candidate.launch && state.distance < candidate.land);
+  if (gap && state.flight?.id !== gap.id) {
+    beginFlight(state, { kind: 'canyon', id: gap.id, start: gap.launch, end: gap.land, height: gap.height }, events);
+  } else if (!state.flight && !onLoop && state.transformTime > 0 && flyPressed) {
+    const end = Math.min(state.distance + 110, course.end - 12, state.distance < LOOP_START ? LOOP_START - 24 : Infinity);
+    if (end - state.distance >= 18) beginFlight(state, {
+      kind: 'rocket', id: `rocket-${state.elapsed}`, start: state.distance, end, height: Math.min(12, (end - state.distance) * .11),
+    }, events);
+  }
+  const guidedFlight = Boolean(state.flight);
+  if (guidedFlight) {
+    stepFlight(state, events);
+  } else if (onLoop) {
     // Bring even a last-second jump safely onto the guided loop.
     if (state.height > 0) {
       state.landings += 1;
@@ -301,13 +387,13 @@ export function stepRace(state, dt, inputs = {}) {
     }
     state.height = 0;
     state.velocityY = 0;
-  } else if (crossedRamp || (inputs.jump && state.height === 0 && state.jumpCooldown === 0)) {
+  } else if (crossedRamp || (jumpPressed && state.transformTime === 0 && state.height === 0 && state.jumpCooldown === 0)) {
     state.velocityY = crossedRamp ? RAMP_JUMP_SPEED : JUMP_SPEED;
     state.jumpCooldown = 0.35;
     events.push({ type: 'jump', auto: crossedRamp });
   }
 
-  if (!onLoop && (state.height > 0 || state.velocityY > 0)) {
+  if (!guidedFlight && !onLoop && (state.height > 0 || state.velocityY > 0)) {
     state.velocityY -= GRAVITY * step;
     state.height = Math.max(0, state.height + state.velocityY * step);
     if (state.height === 0) {
@@ -319,8 +405,11 @@ export function stepRace(state, dt, inputs = {}) {
     }
   }
 
-  for (const car of CRUSH_CARS) {
-    if (!state.crushedCars.includes(car.id) && touchesCar(state, previous, car)) {
+  // Keep the wide model clearance reserved through its eased return to Truck.
+  state.guardianClearTime = state.transformTime > 0 ? 1 : Math.max(0, state.guardianClearTime - step);
+
+  for (const car of getCrushCars(course.id)) {
+    if (!state.crushedCars.includes(car.id) && touchesTarget(state, previous, car)) {
       const powered = state.turboTime > 0;
       state.crushedCars.push(car.id);
       state.crushes += 1;
@@ -330,6 +419,16 @@ export function stepRace(state, dt, inputs = {}) {
       events.push({ type: 'crush', id: car.id, powered });
     }
   }
+  for (const target of getSmashTargets(course.id)) {
+    if (!state.smashedTargets.includes(target.id) && touchesTarget(state, previous, target)) {
+      state.smashedTargets.push(target.id);
+      state.smashes += 1;
+      state.stars += 3;
+      state.turboEnergy = Math.min(100, state.turboEnergy + 35);
+      state.crushBoostTime = CRUSH_BOOST_DURATION;
+      events.push({ type: 'smash', id: target.id, kind: target.kind, stars: 3 });
+    }
+  }
   state.speed = travelSpeed(state);
   stepBuddies(state, step, steering, events);
 
@@ -337,11 +436,13 @@ export function stepRace(state, dt, inputs = {}) {
     state.loops += 1;
     events.push({ type: 'loop' });
   }
-  if (state.distance >= COURSE_LENGTH) {
+  if (state.distance >= course.end) {
     state.phase = 'finished';
     state.finished = true;
     state.height = 0;
     state.velocityY = 0;
+    state.flight = null;
+    state.flying = false;
     events.push({ type: 'finish' });
   }
   return events;

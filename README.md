@@ -2,7 +2,7 @@
 
 **[Play Monster Skyway](https://yanivalfasykeelusa.github.io/james-monster-skyway/)** on an iPad, phone, or computer. Open the link in your browser; no game account or download is required.
 
-A cheerful 3D monster truck game for little drivers. Race with four friendly trucks, squash toy cars, fire up the turbo, soar over ramps, ride a giant guided loop, and grow a garage of increasingly enormous wheels.
+A cheerful 3D monster truck game for little drivers. Race with four friendly trucks, squash toy cars, fire up the turbo, become a flying robot, leap across canyons, ride a giant guided loop, and grow a garage of increasingly enormous wheels.
 
 Rounded bodywork, sculpted tires, visible suspension, reflective paint and glass, warm sunlight and shadows give the trucks their toy-box feel. The raised orange track visits rounded woodland canopies, the Sky Loop festival, and Gator Bay, with cheering stands, playful landmarks, muddy splashes, and a gentle shower along the way.
 
@@ -14,7 +14,7 @@ This project began with a three-year-old's love of monster trucks, orange stunt 
 
 On iPad, open the game in Safari. Landscape gives the track more room, and portrait works too. To keep a shortcut beside James's other games, use Safari's Share menu, More if shown, then **Add to Home Screen** and **Add**. See [Apple's instructions](https://support.apple.com/guide/ipad/bookmark-a-website-ipadc602b75b/ipados).
 
-Choose **Let's play** to start a race of roughly a minute, depending on turbo and jumps. The truck accelerates automatically, six ramps launch automatically, and the loop guides the truck through safely. A driver can enjoy and complete a race without pressing any driving controls.
+Choose **Let's play** for the saved track, or **Choose a racetrack** for five picture cards: the complete Skyway Adventure, Bear Woods, Sky Loop, Gator Bay, and Canyon Run. Every track is available immediately. The shorter races have their own starting lines and finishes. The truck drives automatically; ramps, the loop and canyon crossings guide the truck through safely. A driver can complete every race without pressing any driving controls.
 
 Sunny and Splash bring two guests to each race: Ember, Pebble, Bolt or Digger. Each friend has a distinct little truck and favorite activity. They greet you with a smile, copy safe jumps after you, and cheer when you crush a car or use turbo. Sunny likes a playful race and can briefly pull ahead; Splash enjoys the puddles. Little pictures above their trucks show what they are doing, with at most two reactions showing together. The guests, reaction timing and butterflies' colors change between completed races, while the familiar route stays easy to follow.
 
@@ -33,14 +33,30 @@ Sunny and Splash bring two guests to each race: Ember, Pebble, Bolt or Digger. E
 
 Crushing a toy car gives you a little speed burst; turbo helps you pull ahead even faster. Gentle steering assistance keeps close passes clear. The position badge follows the actual race, and your chosen truck takes the spotlight at the finish. Winning does not make the next race harder.
 
-- **Touch:** use the large on-screen controls to jump, steer, fire the turbo, or transform when energy is ready.
+- **Touch:** use the large on-screen controls to jump or fly, steer, fire the turbo, or become a robot. Steering and actions support separate fingers. Game surfaces suppress accidental pinch zoom, double-tap zoom and text selection; the garage and track picker still scroll.
 - **Keyboard:** use the arrow keys to steer, Space to jump, B or Shift for turbo, T to transform, and P or Escape to pause. Menus also support Tab and Enter.
 - **Turbo:** start with a full charge. A tap gives a short flame-powered burst; charge refills as you drive. Colored boost strips also trigger turbo automatically.
 - **Crushing:** drive over the small parked toy cars to flatten them, earn two stars, recharge turbo and get a short speed burst. Two gold stars rise from the flattened toy so the reward is easy to see. Crushing always helps and never brakes the truck. Jumping clears a car.
-- **Transformation:** energy charges as you drive. Use the transformation control when charged; automatic activation helps little drivers enjoy the spectacle too.
+- **Robot and flight:** tap **ROBOT!** at any time for an armored robot with fists, boots, wings and jet exhaust. **FLY!** launches a guided flight with a safe landing. **TRUCK!** changes back, waiting for a safe landing during guided flight. Automatic temporary transformation remains for drivers who leave the button alone.
+- **Smashing:** drive into toy crates, barrels and block stacks for three stars, turbo charge and a speed burst. The larger robot tires count too. Each object pays out once per race; a replay restores the toys.
 - **Pause and sound:** use the visible controls to pause or mute. Sound starts after a user interaction and remains optional.
 
 Every completed race awards stars. There are no lost lives or progress penalties. Unlocks and preferences save in this browser when local storage is available; if storage is blocked, the game keeps working with progress for the current session.
+
+### Play with a controller
+
+Pair a supported Bluetooth or USB controller with the device, open the game, then press and release a controller button. A **Controller ready** message confirms that the browser has exposed it. On iPad, follow [Apple's controller pairing instructions](https://support.apple.com/en-us/111099). Use the public HTTPS game link for controller play; a plain HTTP Wi-Fi preview may not expose the browser's Gamepad API.
+
+| Action | Xbox-style | PlayStation-style |
+| --- | --- | --- |
+| Steer / choose a menu item | Left stick or D-pad | Left stick or D-pad |
+| Jump / fly / select | A | Cross (✕) |
+| Become robot / truck | X | Square (□) |
+| Turbo / back in menus | B | Circle (○) |
+| Turbo alternative | Right trigger | R2 |
+| Pause / resume | Menu | Options |
+
+Gold outlines show the selected menu item. Disconnecting during a race pauses it. Reconnecting or resuming while holding an action button requires releasing it and pressing again. Support uses the browser's standard controller mapping; unknown layouts keep touch and keyboard available. Simulated controller input is covered in Chrome and WebKit; the family's physical controller and iPad combination still needs a play check.
 
 The lobby shows your selected truck in the live 3D world. Garage cards use portraits rendered from the same models you drive.
 
@@ -66,6 +82,10 @@ These are original models inspired by broad toy and vehicle interests. The game 
 ## Around the skyway
 
 ![Rumbler celebrating a flattened toy car with stars and a speed burst](docs/screenshots/race.png)
+
+Canyon Run adds layered sandstone cliffs, desert plants, colored launch pads and four real gaps in the orange track. Your truck and all four friends fly across automatically.
+
+![Mega Titan flying across a real canyon gap](docs/screenshots/canyon.png)
 
 Bear Woods climbs a timber bridge beside a giant waterwheel. Rocket Runway adds a launch pad, a tall toy rocket, and a boost toward the next ramp. Gator Falls brings a broad waterfall, reeds, and a waterfront boardwalk to the rainy lagoon. Picnic stops, balloons, friendly bears and alligators, stands, and the finish trophy garden fill out the route.
 
@@ -114,7 +134,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-The suite includes a complete real-time race, so allow about three to four minutes per browser. `PLAYWRIGHT_CHROME_PATH` can point to an existing Chrome executable instead of downloading Chromium.
+The suite includes full races on all five tracks, so allow about six to eight minutes per browser. `PLAYWRIGHT_CHROME_PATH` can point to an existing Chrome executable instead of downloading Chromium.
 
 To exercise Playwright's WebKit engine, install it once and select `PLAYWRIGHT_BROWSER=webkit`:
 
@@ -141,7 +161,7 @@ The friends use small local decision systems with individual timers and preferen
 
 Run `npm test` for race rules, progression and save recovery, truck and effect lifecycles, friendly racer behavior, and world geometry. The browser suite also checks steering against the visible road and completes a full race.
 
-See [the validation record](docs/VALIDATION.md) for recorded test results, screenshot inspection, and public deployment evidence. James's parent reports that he is delighted with the existing game; his play device is unconfirmed. Physical iPad/Safari checks and observations of this update remain follow-up work.
+See [the validation record](docs/VALIDATION.md) for recorded test results, screenshot inspection, and public deployment evidence. James's parent reports that he is delighted with the existing game and has observed unwanted zoom/selection on iPad. This update addresses those interactions. Physical iPad/Safari checks with the family's controller and observations of this update remain follow-up work.
 
 ## Publish with GitHub Pages
 

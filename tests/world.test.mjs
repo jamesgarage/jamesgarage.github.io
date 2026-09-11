@@ -5,6 +5,8 @@ import { makeTruck, disposeTruck } from '../src/models.mjs';
 import { DRIVE_HALF_WIDTH, createWorld } from '../src/world.mjs';
 import { TRUCKS, LOOP_START, LOOP_END } from '../src/core.mjs';
 import { sampleTrack } from '../src/track.mjs';
+import { sampleFlight } from '../src/flight.mjs';
+import { poseGuardian } from '../src/guardian-pose.mjs';
 
 test('every fully transformed truck clears both rails at the outer driving lanes', () => {
   for (const spec of TRUCKS) {
@@ -126,7 +128,7 @@ test('complete loop towers and overhead clear the sampled road and guardian corr
   assert.ok(links.min.x > crown.position.x - 8.5 && links.max.x < crown.position.x + 8.5);
 });
 
-test('both gate faces and all overhead trim clear a pitched guardian at maximum jump height', () => {
+test('both gate faces and all overhead trim retain a complete tall flight opening', () => {
   // A minimal canvas surface exercises the browser-only label geometry in Node.
   const oldDocument = globalThis.document;
   const context = new Proxy({}, { get: (target, key) => target[key] ?? (() => {}) });
@@ -141,7 +143,9 @@ test('both gate faces and all overhead trim clear a pitched guardian at maximum 
     const inverse = new THREE.Matrix4().compose(f.position, f.quaternion, new THREE.Vector3(1, 1, 1)).invert();
     const overhead = world.getObjectByName(`${label}-gate-overhead`);
     const bounds = geometryBounds(overhead, inverse);
-    assert.ok(bounds.min.y >= 16.5, `${label}: every overhead vertex clears the required opening`);
+    assert.ok(bounds.min.y >= 26.7, `${label}: every overhead vertex clears the required flight opening`);
+    const postBounds = geometryBounds(world.getObjectByName(`${label}-gate-posts`), inverse);
+    assert.ok(postBounds.max.y > bounds.min.y + 1, 'the extended posts remain connected to the raised overhead');
     let overlappingPoses = 0;
     for (let offset = -16; offset <= 16; offset += .2) for (const pitch of [-.35, .35]) {
       const pose = sampleTrack(d + offset), vehicle = new THREE.Box3();
@@ -162,6 +166,55 @@ test('both gate faces and all overhead trim clear a pitched guardian at maximum 
     const titleBounds = geometryBounds(signs[0], inverse);
     assert.ok(titleBounds.min.z < -.68 && titleBounds.max.z > .68, 'titles occupy both faces');
   }
+});
+
+test('actual flying robot bounds clear every gate with carried jump height, turbo and front/rear overhang', () => {
+  const world = createWorld();
+  // A normal jump can still be airborne when an automatic ramp adds its launch.
+  // Rocket sampling then carries that accumulated height into its own arc.
+  const startHeight = 10.8 ** 2 / (2 * 24) + 16 ** 2 / (2 * 24);
+  const gates = ['start', 'sky-loop', 'gator-bay', 'finish'].map(label => {
+    const gate = world.getObjectByName(`${label}-gate`), distance = gate.userData.distance;
+    const frame = sampleTrack(distance);
+    const inverse = new THREE.Matrix4().compose(frame.position, frame.quaternion, new THREE.Vector3(1, 1, 1)).invert();
+    return { label, distance, inverse, bounds: geometryBounds(world.getObjectByName(`${label}-gate-overhead`), inverse) };
+  });
+  let crossings = 0;
+  for (const spec of TRUCKS) {
+    const truck = makeTruck(spec); truck.group.scale.setScalar(1);
+    try {
+      for (const lean of [-.2, 0, .2]) {
+        poseGuardian(truck, { transform: 1, flight: 1, lean });
+        truck.group.updateMatrixWorld(true);
+        const model = new THREE.Box3(), point = new THREE.Vector3();
+        truck.group.traverseVisible(mesh => {
+          if (!mesh.isMesh) return;
+          const positions = mesh.geometry.attributes.position;
+          for (let i = 0; i < positions.count; i++) model.expandByPoint(point.fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld));
+        });
+        for (const gate of gates) for (const offset of [-8, -6, -4, -2, 0, 2, 4, 6, 8]) {
+          const frame = sampleTrack(gate.distance + offset);
+          for (const t of [.1, .2, .3, .4, .45, .5, .6, .7, .8, .9]) for (const speed of [26, 40.3]) {
+            const flight = sampleFlight({ start: 0, end: 110, height: 12, startHeight }, t * 110, speed);
+            const pitch = THREE.MathUtils.clamp(-flight.velocityY * .025, -.28, .35);
+            for (const lane of [-1, 0, 1]) {
+              const vehicle = new THREE.Box3();
+              for (const x of [model.min.x, model.max.x]) for (const y of [model.min.y, model.max.y]) for (const z of [model.min.z, model.max.z]) {
+                const local = new THREE.Vector3(x, y, z).multiplyScalar(spec.scale).applyAxisAngle(new THREE.Vector3(1, 0, 0), pitch);
+                local.x += lane * 3.4; local.y += flight.height;
+                vehicle.expandByPoint(framePoint(frame, local.x, local.y, local.z).applyMatrix4(gate.inverse));
+              }
+              if (vehicle.max.z < gate.bounds.min.z || vehicle.min.z > gate.bounds.max.z) continue;
+              crossings++;
+              assert.ok(vehicle.max.y + .5 < gate.bounds.min.y,
+                `${spec.id} ${gate.label}: flight crosses trim at offset ${offset}, t=${t}, speed=${speed}, top=${vehicle.max.y}`);
+            }
+          }
+        }
+      }
+    } finally { disposeTruck(truck); }
+  }
+  assert.ok(crossings > 10000, 'actual model bounds cross both faces throughout ascent and descent');
 });
 
 

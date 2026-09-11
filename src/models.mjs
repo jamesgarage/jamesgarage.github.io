@@ -174,25 +174,67 @@ export function makeTruck(spec) {
   // Guardian parts retain their independent articulation pivots.
   for (const side of [-1, 1]) {
     const arm = new THREE.Group(); arm.name = `guardian-arm-${side}`; arm.position.set(side * 1.5, 2.45, 0); arm.visible = false; body.add(arm); arms.push(arm);
-    ball(arm, p.chrome, [side * .06, -.11, 0], [.3, .3, .3]);
-    box(arm, p.paint, [side * .17, -.46, 0], [.62, .86, .77], .18);
-    cylinder(arm, p.dark, [side * .2, -.83, 0], .23, .58);
-    box(arm, p.accent, [side * .18, -1.12, .06], [.71, .51, .88], .15);
-    for (let j = 0; j < 3; j++) box(arm, p.chrome, [side * .19 + (j - 1) * .18, -1.13, .51], [.12, .26, .09], .035);
+    ball(arm, p.chrome, [side * .05, -.08, 0], [.36, .36, .36]);
+    box(arm, p.paint, [side * .13, -.27, 0], [.85, .76, .94], .2);
+    box(arm, p.accent, [side * .1, .06, 0], [.98, .26, 1.05], .1);
+    cylinder(arm, p.dark, [side * .16, -.73, 0], .27, .76);
+    box(arm, p.paint, [side * .16, -.88, .07], [.67, .51, .8], .15);
+    box(arm, p.accent, [side * .17, -1.2, .12], [.9, .62, 1.03], .17);
+    box(arm, p.dark, [side * .17, -1.18, -.414], [.58, .3, .035], .055);
+    for (let j = 0; j < 3; j++) box(arm, p.chrome, [side * .17 + (j - 1) * .23, -1.2, .651], [.16, .31, .09], .045);
     const strut = new THREE.Group(); strut.name = `guardian-leg-${side}`; strut.position.set(side * .85, 1.9, 0); strut.visible = false; group.add(strut); struts.push(strut);
     box(strut, p.dark, [0, 0, 0], [.44, 1.2, .54], .08);
     cylinder(strut, p.chrome, [0, 0, .29], .09, 1.05, [0, 0, 0]);
     box(strut, p.accent, [0, -.24, .4], [.49, .31, .16], .05);
   }
   // Special bodies bring the head forward so it clears the ladder or dorsal fin.
-  const head = new THREE.Group(); head.name = 'guardian-head'; head.position.set(0, shark ? 3.25 : 3.4, rescue ? 1.72 : shark ? 1.42 : -.3); head.visible = false; body.add(head);
-  box(head, p.paint, [0, .48, 0], [1.16, 1.01, .95], .22, [0, 0, 0], 2);
-  box(head, p.dark, [0, .55, .47], [.91, .35, .1], .07);
-  box(head, p.glow, [0, .57, .532], [.75, .15, .055], .045);
-  box(head, p.chrome, [0, .15, .48], [.61, .26, .12], .075);
-  box(head, p.dark, [0, .47, -.475], [.73, .55, .06], .065);
-  for (const x of [-.21, 0, .21]) box(head, p.accent, [x, .47, -.52], [.075, .35, .04], .025);
-  for (const side of [-1, 1]) cylinder(head, p.accent, [side * .61, .48, 0], .2, .16);
+  const head = new THREE.Group(); head.name = 'guardian-head'; head.position.set(0, 3.4, rescue ? 1.8 : shark ? 1.5 : -.3); head.visible = false; body.add(head);
+  box(head, p.paint, [0, .34, 0], [1.4, .94, 1.02], .23, [0, 0, 0], 2);
+  box(head, p.accent, [0, .72, -.07], [.26, .25, .85], .09);
+  box(head, p.dark, [0, .39, .52], [1.12, .37, .1], .09);
+  for (const side of [-1, 1]) box(head, p.glow, [side * .255, .43, .581], [.39, .17, .055], .05);
+  box(head, p.chrome, [0, .04, .54], [.76, .27, .14], .08);
+  box(head, p.dark, [0, .34, -.52], [1.0, .54, .065], .08);
+  for (const x of [-.27, 0, .27]) box(head, p.accent, [x, .34, -.567], [.095, .34, .045], .025);
+  for (const side of [-1, 1]) cylinder(head, p.accent, [side * .73, .35, 0], .2, .18);
+
+  // Additional robot armor is hidden in truck mode. Its separate parents give
+  // the pose helper real legs, swept wings and jets without stretching details.
+  const guardianLower = new THREE.Group(); guardianLower.name = 'guardian-lower-armor'; guardianLower.visible = false; group.add(guardianLower);
+  const guardianUpper = new THREE.Group(); guardianUpper.name = 'guardian-chest-backpack'; guardianUpper.visible = false; body.add(guardianUpper);
+  const guardianLegs = [], guardianWings = [];
+  box(guardianLower, p.dark, [0, 2.93, 0], [1.96, .55, 1.2], .16);
+  box(guardianLower, p.accent, [0, 2.94, -.64], [1.66, .28, .14], .065);
+  box(guardianLower, p.accent, [0, 2.88, .67], [.62, .43, .2], .1);
+  for (const side of [-1, 1]) {
+    const leg = new THREE.Group(); leg.name = `guardian-armored-leg-${side}`; leg.position.set(side * .86, 2.75, 0); guardianLower.add(leg); guardianLegs.push(leg);
+    box(leg, p.paint, [0, -.3, 0], [.79, .91, .85], .16);
+    cylinder(leg, p.dark, [0, -.88, 0], .29, .86);
+    cylinder(leg, p.chrome, [side * .444, -.88, 0], .18, .04);
+    box(leg, p.paint, [0, -1.46, .04], [.69, .94, .76], .13);
+    cylinder(leg, p.chrome, [side * .23, -1.44, -.405], .045, .75, [0, 0, 0]);
+    box(leg, p.dark, [0, -2.05, 0], [.44, .34, .55], .085);
+    box(leg, p.paint, [0, -2.36, .19], [1.01, .5, 1.47], .16);
+    box(leg, p.dark, [0, -2.605, .2], [1.06, .14, 1.52], .055);
+    for (const x of [-.23, 0, .23]) box(leg, p.chrome, [x, -2.31, .94], [.12, .13, .055], .025);
+
+    const wing = new THREE.Group(); wing.name = `guardian-wing-${side}`; wing.position.set(side * 1.15, 2.97, -1.55); guardianUpper.add(wing); guardianWings.push(wing);
+    prism(wing, p.accent, [[.28, 0], [-.15, 1.0], [-.69, .71], [-.58, 0]], .12, [0, 0, 0], .055, [0, 0, -side * Math.PI / 2]);
+    cylinder(guardianUpper, p.dark, [side * 1.05, 3.09, -2.04], .26, .3, [Math.PI / 2, 0, 0]);
+    part(guardianUpper, new THREE.TorusGeometry(.205, .045, 6, 20), p.chrome, [side * 1.05, 3.09, -2.198]);
+    part(guardianUpper, new THREE.TorusGeometry(.154, .03, 6, 20), p.glow, [side * 1.05, 3.09, -2.222]);
+  }
+  box(guardianUpper, p.dark, [0, 2.6, -2.04], [1.35, 1.2, .31], .17);
+  box(guardianUpper, p.paint, [0, 2.64, -2.22], [1.13, .94, .14], .11);
+  for (const x of [-.3, 0, .3]) box(guardianUpper, p.glow, [x, 2.67, -2.303], [.1, .46, .045], .025);
+  box(guardianUpper, p.accent, [0, 2.13, 2.14], [1.57, .83, .3], .18);
+  box(guardianUpper, p.glow, [0, 2.23, 2.307], [.44, .3, .055], .08);
+  const guardianJets = new THREE.Group(); guardianJets.name = 'guardian-flight-jets'; guardianJets.visible = false; body.add(guardianJets);
+  for (const side of [-1, 1]) {
+    const jet = new THREE.ConeGeometry(.15, .48, 12); jet.rotateX(-Math.PI / 2);
+    part(guardianJets, jet, p.glow, [side * 1.05, 3.09, -2.44]);
+  }
+  const guardian = Object.freeze({ upper: guardianUpper, lower: guardianLower, legs: Object.freeze(guardianLegs), wings: Object.freeze(guardianWings), jets: guardianJets });
 
   if (rescue) {
     character.userData.description = 'Flat-front fire engine with equipment lockers, roof ladder, rear hose reel and steady red beacons';
@@ -373,7 +415,7 @@ export function makeTruck(spec) {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = `${parent.name}-${material.name}`;
     mesh.castShadow = true; mesh.receiveShadow = true; parent.add(mesh);
   }
-  const truck = { group, body, wheels, arms, head, struts, spec, rearSuspension };
+  const truck = { group, body, wheels, arms, head, struts, spec, rearSuspension, guardian };
   ownership.set(truck, { geometries: ownedGeometry, materials: new Set(Object.values(palette)) });
   return truck;
 }

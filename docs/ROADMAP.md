@@ -74,6 +74,12 @@ Irregular sandy banks replace the repeated sphere islands. Softer contours and s
 
 See [lagoon shore design](DESIGN-LAGOON-SHORES.md) and [crush-star design](DESIGN-CRUSH-STARS.md). The subsequent performance increment batches the existing dust/confetti particles into one draw; it is shipped and introduces no new game rules.
 
+## Robot flights, five tracks and controller play
+
+All five races are selectable immediately, including three shorter destination races and Canyon Run with four real gaps. The robot is available from the start, with a Fly action and safe automatic crossings for all five racers. Fifteen authored toy targets add positive smash rewards, filtered by the selected course and flight paths. Browser-standard controllers navigate menus and drive; touch guards prevent accidental game-surface zoom and selection while keeping the garage scrollable. See [the design](DESIGN-ROBOT-CANYONS.md).
+
+Next, observe whether James can independently choose a track, recognize Robot/Fly/Truck, enjoy the canyon landings and return to his favorite truck. Check the exact iPad/controller pairing, comfort during flights, and two-finger touch control before adding more controls.
+
 ## Next: physical device and child observations
 
 The playful-world increment gives Sunny and Splash independent local decision state: staggered greetings, delayed safe jump imitation, bounded celebrations and different preferences for racing or puddles. Completed races vary reaction timing and incidental world accents. Original material tiles add grass, timber, stone and water detail; small butterflies, moving cattails and ripples add life around the unchanged route. See [the design](DESIGN-PLAYFUL-WORLD.md) and [primary-source engine/game research](RESEARCH-PLAYFUL-WORLD.md).
@@ -83,7 +89,7 @@ The playful-world increment gives Sunny and Splash independent local decision st
 3. Check that the richer scenery and weather feel exciting without hiding the route or making the controls harder to understand.
 4. Tune collectible placement, reward pacing, sound, motion, and rendering cost using those observations.
 
-The parent has shared enthusiastic feedback from James, but his play device is unconfirmed. Physical iPad/Safari testing and focused observations of this update remain follow-up work. Playwright's Chromium and WebKit engines with emulated touch are useful engineering checks, but do not replace those observations.
+The parent has shared enthusiastic feedback from James and reported accidental zoom/selection on iPad. Physical iPad/Safari testing and focused observations of this update remain follow-up work. Playwright's Chromium and WebKit engines with emulated touch are useful engineering checks, but do not replace those observations.
 
 ## Engine direction
 

@@ -116,7 +116,7 @@ test('all progression thresholds unlock exactly the earned vehicles', () => {
 test('the expanded garage preserves existing saves and adds fire and shark unlocks to earned balances', () => {
   for (const selected of ['rumbler','bear-crusher','night-stomper','gator-claw','chrome-guardian','mega-titan']) {
     const saved={version:1,stars:110,races:4,selected,muted:true,reducedMotion:false};
-    assert.deepEqual(createProgress(saved),saved);
+    assert.deepEqual(createProgress(saved),{ ...saved, courseId: 'skyway' });
     assert.equal(unlockedTrucks(createProgress(saved)).length,8);
   }
   const rescue=createProgress({version:1,stars:40,selected:'rescue-roarer'});
@@ -139,7 +139,7 @@ test('corrupted, future-version, and locked-truck saves recover to safe values',
   }), defaults);
   assert.deepEqual(createProgress({
     version: 1, stars: 32.9, races: 2.9, selected: 'gator-claw', muted: true, reducedMotion: true,
-  }), { version: 1, stars: 32, races: 2, selected: 'gator-claw', muted: true, reducedMotion: true });
+  }), { version: 1, stars: 32, races: 2, selected: 'gator-claw', courseId: 'skyway', muted: true, reducedMotion: true });
   assert.equal(createProgress({ version: 1, stars: Infinity }).stars, 0);
   assert.equal(createProgress({ version: 1, stars: -1 }).stars, 0);
 });
@@ -158,12 +158,14 @@ test('reward bonuses are bounded integers and saved preferences survive a round 
   assert.deepEqual(createProgress(JSON.parse(JSON.stringify(rewarded))), rewarded);
 });
 
-test('a full energy charge can transform early, expires, then starts charging again', () => {
+test('manual robot selection persists without charge and a second press returns to a charging truck', () => {
   const state = { ...runningRace(), energy: 100 };
   assert.ok(stepRace(state, 1 / 60, { transform: true }).some(event => event.type === 'transform'));
   assert.equal(state.energy, 0);
   assert.equal(state.transformTime, 9);
   for (let frame = 0; frame < 550; frame += 1) stepRace(state, 1 / 60);
+  assert.equal(state.transformTime, 9);
+  stepRace(state, 1 / 60, { transform: true });
   assert.equal(state.transformTime, 0);
   assert.ok(state.energy > 0 && state.energy < 100);
 });
@@ -345,10 +347,13 @@ test('all truck sizes and seeded variants finish first with no input, held contr
     assert.equal(state.finished, true, `${truck.id} completes`);
     assert.equal(racePlace(state), 1, `${truck.id} earns the lead back before the finish`);
     assert.equal(state.loops, 1);
-    assert.equal(events.filter(event => event.type === 'jump' && event.auto).length, RAMPS.length);
+    const rampJumps = events.filter(event => event.type === 'jump' && event.auto).length;
+    if (pattern === patterns[0]) assert.equal(rampJumps, RAMPS.length);
+    else assert.ok(rampJumps <= RAMPS.length, 'Guided rocket flight can carry the driver across an ordinary ramp');
     assert.equal(state.crushes, state.crushedCars.length);
     assert.ok(state.crushes <= CRUSH_CARS.length);
-    assert.equal(state.stars, 2 * state.crushes);
+    assert.equal(state.smashes, state.smashedTargets.length);
+    assert.equal(state.stars, 2 * state.crushes + 3 * state.smashes);
     assert.equal(state.rewardGranted, false);
     assert.ok(events.filter(event => event.type === 'buddy').length < 80, 'Signals stay sparse even with held controls');
     assert.deepEqual(JSON.parse(JSON.stringify(state)), state);
@@ -381,7 +386,9 @@ test('late player merges retain clearance through every guest pairing and guardi
     });
     let steering = false;
     for (let frame = 0; frame < 650; frame++) {
-      if (race.distance - race.buddies[0].distance < (guardian ? 10 : 2)) steering = true;
+      // The always-available robot now reserves its widest passing clearance,
+      // including while the visible player is still a truck.
+      if (race.distance - race.buddies[0].distance < 10) steering = true;
       stepRace(race, 1 / 60, { steer: steering ? steer : 0 });
       for (const [slot, buddy] of race.buddies.entries()) {
         const lateral = Math.abs(race.lane - buddy.lane) * 3.4, longitudinal = Math.abs(race.distance - buddy.distance);

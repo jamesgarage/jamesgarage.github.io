@@ -150,11 +150,13 @@ function roadRibbon(start, end, left, right, paint) {
   geometry.setIndex(indices); geometry.computeVertexNormals();
   const mesh = new THREE.Mesh(geometry, paint);
   mesh.castShadow = true; mesh.receiveShadow = true;
+  mesh.userData.roadInterval = Object.freeze([start, end]);
   return mesh;
 }
 
-function makeRoad() {
+export function makeRoad({ gaps = [] } = {}) {
   const road = new THREE.Group(); road.name = 'molded-orange-skyway';
+  const openings = gaps.filter(gap => Number.isFinite(gap.start) && Number.isFinite(gap.end) && gap.end > gap.start).slice().sort((a, b) => a.start - b.start);
   const paints = {
     top: new THREE.MeshStandardMaterial({ color: 0xf56618, roughness: .66, envMapIntensity: .08, side: THREE.DoubleSide }),
     side: new THREE.MeshStandardMaterial({ color: 0xc53e0c, roughness: .65, envMapIntensity: .08, side: THREE.DoubleSide }),
@@ -163,14 +165,27 @@ function makeRoad() {
   };
   // Short sections keep geometry cullable rather than submitting a whole world.
   for (let d = -30; d < COURSE_LENGTH + 70; d += 90) {
-    const end = Math.min(d + 90, COURSE_LENGTH + 70);
-    road.add(roadRibbon(d, end, [-8.5, 0], [8.5, 0], paints.top));
-    road.add(roadRibbon(d, end, [8.5, -.65], [-8.5, -.65], paints.side));
-    for (const side of [-1, 1]) {
-      road.add(roadRibbon(d, end, [side * 8.5, -.65], [side * 8.5, .64], paints.side));
-      road.add(roadRibbon(d, end, [side * 8.5, .64], [side * DRIVE_HALF_WIDTH, .64], paints.rail));
-      road.add(roadRibbon(d, end, [side * DRIVE_HALF_WIDTH, .64], [side * DRIVE_HALF_WIDTH, .06], paints.rail));
-      road.add(roadRibbon(d, end, [side * 7.58, .025], [side * 7.77, .025], paints.stripe));
+    const sectionEnd = Math.min(d + 90, COURSE_LENGTH + 70), spans = [];
+    let cursor = d;
+    for (const gap of openings) {
+      if (gap.end <= cursor || gap.start >= sectionEnd) continue;
+      if (gap.start > cursor) spans.push([cursor, gap.start]);
+      cursor = Math.max(cursor, Math.min(sectionEnd, gap.end));
+    }
+    if (cursor < sectionEnd) spans.push([cursor, sectionEnd]);
+    for (const [start, end] of spans) {
+      const add = (left, right, paint) => {
+        const ribbon = roadRibbon(start, end, left, right, paint);
+        ribbon.userData.roadSection = d; road.add(ribbon);
+      };
+      add([-8.5, 0], [8.5, 0], paints.top);
+      add([8.5, -.65], [-8.5, -.65], paints.side);
+      for (const side of [-1, 1]) {
+        add([side * 8.5, -.65], [side * 8.5, .64], paints.side);
+        add([side * 8.5, .64], [side * DRIVE_HALF_WIDTH, .64], paints.rail);
+        add([side * DRIVE_HALF_WIDTH, .64], [side * DRIVE_HALF_WIDTH, .06], paints.rail);
+        add([side * 7.58, .025], [side * 7.77, .025], paints.stripe);
+      }
     }
   }
   return road;
@@ -302,12 +317,13 @@ function gate(parent, d, accent, label, finish = false) {
   posts.name = `${label}-gate-posts`; overhead.name = `${label}-gate-overhead`;
   g.add(posts, overhead, markings);
   // Move the complete assembly together, including its lowest checker tiles.
-  // This clears the pitched guardian and the maximum 16-unit/s ramp jump.
-  overhead.position.y = 6.7;
+  // Rocket flight also carries a previous jump's height. The complete opening
+  // clears that arc and the pitched robot, including its forward overhang.
+  overhead.position.y = 16.9;
   for (const side of [-1, 1]) {
-    round(posts, 0x194b62, [side * 10, 9.15, 0], [1.15, 18.3, 1.2]);
-    round(posts, accent, [side * 10, 7.4, .72], [1.23, 12.4, .26]);
-    round(posts, 0xffedb8, [side * 10, 15.5, .72], [1.25, .5, .3]);
+    round(posts, 0x194b62, [side * 10, 14.25, 0], [1.15, 28.5, 1.2]);
+    round(posts, accent, [side * 10, 12.5, .72], [1.23, 22.6, .26]);
+    round(posts, 0xffedb8, [side * 10, 25.7, .72], [1.25, .5, .3]);
     round(posts, 0x13394e, [side * 10, .2, 0], [2.2, .45, 2.2]);
   }
   round(overhead, 0x163d54, [0, 11.2, 0], [21.1, 2.6, 1.25]);
@@ -343,7 +359,7 @@ function gate(parent, d, accent, label, finish = false) {
   result.add(batch(posts), batch(overhead), batch(markings)); parent.add(result);
 }
 
-function makeLoopSupport() {
+export function makeLoopSupport() {
   const support = new THREE.Group(); support.name = 'loop-support';
   // Sample both overlapping approaches and the whole loop, including outer lanes,
   // road lips and the conservative fully transformed vehicle envelope.

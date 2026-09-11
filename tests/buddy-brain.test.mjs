@@ -32,7 +32,9 @@ test('a manual jump invites staggered physical echoes from all four grounded fri
 });
 
 test('greetings are staggered, bounded and repeat only on a fresh race', () => {
-  const race = runningRace(2), greetings = [];
+  // Isolate greetings from the first newly authored smash celebration.
+  const quietRace = () => ({ ...runningRace(2), smashedTargets: ['smash-65'] });
+  const race = quietRace(), greetings = [];
   for (let frame = 0; frame < 240; frame++) {
     for (const event of buddyEvents(stepRace(race, 1 / 60))) {
       if (event.action === 'hello') greetings.push({ id: event.id, time: race.elapsed });
@@ -42,7 +44,7 @@ test('greetings are staggered, bounded and repeat only on a fresh race', () => {
   assert.ok(greetings.every(event => event.time > .1 && event.time < 2.6));
   for (let index = 1; index < greetings.length; index++) assert.ok(greetings[index].time - greetings[index - 1].time > .5);
   assert.ok(race.buddies.every(buddy => buddy.signal === '' && buddy.signalTime === 0));
-  assert.deepEqual(advance(runningRace(2), 4).map(event => event.action), ['hello', 'hello', 'hello', 'hello']);
+  assert.deepEqual(advance(quietRace(), 4).map(event => event.action), ['hello', 'hello', 'hello', 'hello']);
 });
 
 test('echoes are suppressed while airborne, near ramps or near both loop transitions', () => {
@@ -85,7 +87,7 @@ test('crushing and turbo produce delayed cheers without changing the reward', ()
     assert.equal(buddyEvents(events).length, 0, 'The response follows rather than coincides with the action');
     const cheers = advance(race, 2.8).filter(event => event.action === (action === 'crush' ? 'star' : 'turbo'));
     assert.deepEqual(cheers.map(event => event.id).sort(), race.buddies.map(buddy => buddy.id).sort());
-    assert.equal(race.stars, action === 'crush' ? 2 : 0);
+    assert.equal(race.stars, (action === 'crush' ? 2 : 0) + 3 * race.smashes, 'Only actual toy hits award stars; cheering adds none');
     assert.equal(race.rewardGranted, false);
   }
 });
