@@ -36,13 +36,17 @@ The quality pass replaces the primitive truck bodies with six detailed original 
 
 The local production build passed all three browser tests in Chrome (about 1.4 minutes) and Playwright WebKit (about 1.5 minutes). Each engine exercised keyboard/touch jumping, pause/resume, six locally loaded truck portraits, a complete unattended race through every ramp and the inverted loop, automatic transformation and flames, earned-truck selection, saved-progress reload, replay, and play with blocked storage and unavailable audio. The reduced-motion test retained two steady flames. Neither run recorded JavaScript, console, failed-request, or HTTP resource errors.
 
-Independent visual review caught a support that physically cleared the course but briefly hid the ascending truck. A rear gantry and a more direct overview corrected it. Regression coverage checks the actual support geometry, and the finished overview is inspected at ascent, crown, descent and exit in landscape and portrait. The complete production race is checked again after this correction.
+Independent visual review caught a support that physically cleared the course but briefly hid the ascending truck. A rear gantry and a more direct overview corrected it. Regression coverage checks the actual support geometry, and the finished overview was inspected at ascent, crown, descent and exit in landscape and portrait. A separate review tested 43,200 sightlines through the actual eased camera transitions without a support obstruction. The corrected production build passed the complete Chrome race again in about 1.4 minutes.
 
 An isolated render-lifetime probe switched trucks 42 times across all six designs. GPU geometry counts stayed identical per truck across all seven cycles, with eight textures and ten shader programs in the fixed view. Scene, camera, particles and flame instance matrices remained unchanged through 30 paused updates; an independent review also checked 100 paused updates. These are bounded-resource checks, not physical-device frame-rate measurements.
 
 Desktop 1440×900, tablet landscape 1024×768, tablet portrait 768×1024, and phone 390×844 layouts were captured and inspected. All six portraits loaded, the garage had no horizontal overflow, and essential race controls stayed inside the viewport without overlapping one another. All six selected-truck views and the largest transformed truck in portrait were inspected. The loop browser assertion limits rendering to fewer than 600 draw calls and 400,000 triangles.
 
-The production build succeeds with all runtime assets bundled or served locally. Final deployment and public regression evidence are recorded below after publication.
+The [quality deployment](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34569485051) successfully built and published commit `6b41b88` on 2026-09-11. The public site served the matching `index-pFJ28z9S.js` and `index-B5owj6Dq.css` assets. All three browser tests passed against the public URL in Chrome in about 1.4 minutes, including a complete race, saved unlock and replay. The public loop, guardian and bay screenshots were inspected.
+
+All three tests also passed against that same public URL in Playwright WebKit in about 1.5 minutes. The public runs in both engines recorded no JavaScript, console, failed-request or HTTP resource errors. The WebKit inverted-loop screenshot was inspected. This verifies the deployed repository subpath and browser-engine behavior; physical iPad/Safari testing remains pending.
+
+A separate public-site capture checked the four desktop/tablet/phone layouts, all six garage portraits, and jumping Mega Titan. It found no JavaScript/console errors, horizontal garage overflow, or overlapping/offscreen essential controls. The five README screenshots were refreshed from that public build; the collection capture uses a prepared local browser save to show all six trucks.
 
 ## Practical limits
 

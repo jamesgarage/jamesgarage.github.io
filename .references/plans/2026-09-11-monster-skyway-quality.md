@@ -88,7 +88,7 @@ export { sampleTrack } from './track.mjs';
 - [x] Run the three portable browser tests locally with `PLAYWRIGHT_CHROME_PATH` pointing to installed Chrome. Add a check only where a changed lifecycle or interaction needs a regression assertion.
 - [x] Capture and compare before/after game frames. Check all six trucks, complete race/rewards/replay, pause, reduced motion, both tablet orientations, blocked storage/audio, and bounded scene resources after repeated truck changes.
 - [x] Obtain one independent full-change review of spec compliance and correctness. Address material findings and recheck the affected behavior.
-- [ ] Update documentation and screenshots to match the actual release, including concrete test evidence and physical-device limits. Push the verified commits to existing main.
-- [ ] Dispatch `.github/workflows/pages.yml` using the saved GitHub credential helper, wait for the build and deploy jobs to succeed, and verify the public asset hash.
-- [ ] Set `PLAYWRIGHT_BASE_URL=https://yanivalfasykeelusa.github.io/james-monster-skyway/` and run the browser suite against the public game. Inspect the public screenshots, record the deployment and evidence, and verify the worktree is clean.
-- [ ] Mark the active goal complete only after the tested visual upgrade is actually live. Report the playable link and material limitations succinctly.
+- [x] Update documentation and screenshots to match the actual release, including concrete test evidence and physical-device limits. Push the verified commits to existing main.
+- [x] Dispatch `.github/workflows/pages.yml` using the saved GitHub credential helper, wait for the build and deploy jobs to succeed, and verify the public asset hash.
+- [x] Set `PLAYWRIGHT_BASE_URL=https://yanivalfasykeelusa.github.io/james-monster-skyway/` and run the browser suite against the public game. Inspect the public screenshots, record the deployment and evidence, and verify the worktree is clean.
+- [x] Mark the active goal complete only after the tested visual upgrade is actually live. Report the playable link and material limitations succinctly.
