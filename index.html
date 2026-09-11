@@ -38,25 +38,26 @@
           <span class="brand-name">MONSTER<span>SKYWAY<span class="brand-dot">.</span></span></span>
         </header>
         <div class="menu-copy">
-          <p class="eyebrow menu-eyebrow"><span class="live-dot"></span> SMALL DRIVER. MONSTER POSSIBILITIES.</p>
-          <h1>Little driver.<br /><span>BIG ADVENTURE.</span></h1>
-          <p class="menu-description">Big jumps. Friendly faces.<br class="desktop-break" /> The next truck is yours.</p>
+          <p class="eyebrow menu-eyebrow"><span class="live-dot"></span> YOUR NEXT BIG ADVENTURE</p>
+          <h1>Big wheels.<br /><span>BIGGER FUN!</span></h1>
+          <p class="menu-description">Fly over ramps. Become a robot.<br class="desktop-break" /> Bring home your next monster.</p>
           <div class="menu-actions">
             <button id="play-btn" class="button button-primary play-button" type="button"><svg aria-hidden="true"><use href="#icon-play" /></svg><span>Let's play</span><span class="button-arrow" aria-hidden="true">↗</span></button>
             <button id="garage-btn" class="button button-secondary garage-button" type="button"><svg aria-hidden="true"><use href="#icon-garage" /></svg><span>Your garage</span></button>
           </div>
           <p id="menu-next" class="menu-next">A whole garage of bigger adventures awaits.</p>
         </div>
-        <div class="adventure-label" aria-hidden="true"><span class="adventure-label-star">✦</span><span>BUILT FOR<br /><strong>BIG IMAGINATIONS</strong></span></div>
+        <div class="showcase-label"><span class="showcase-number" id="showcase-number">01</span><div><span class="eyebrow">READY TO RUMBLE</span><strong id="showcase-name">Rumbler</strong><span id="showcase-tagline">Little truck. Huge adventures.</span></div><span class="showcase-check" aria-hidden="true">✓</span></div>
+        <div class="adventure-label" aria-hidden="true"><span class="adventure-label-star">6</span><span>MONSTER TRUCKS<br /><strong>ONE MIGHTY CREW</strong></span></div>
         <footer class="menu-footer">
-          <div class="route-strip" aria-label="Three places to explore"><span><b>01</b> BEAR WOODS</span><i aria-hidden="true">·</i><span><b>02</b> SKY LOOP</span><i aria-hidden="true">·</i><span><b>03</b> GATOR BAY</span></div>
+          <div class="route-strip" aria-label="Three places to explore"><span class="route-chip woods-chip"><b aria-hidden="true">♣</b><span><small>01 · EXPLORE</small>BEAR WOODS</span></span><span class="route-chip loop-chip"><b aria-hidden="true">↻</b><span><small>02 · FLY</small>SKY LOOP</span></span><span class="route-chip bay-chip"><b aria-hidden="true">≈</b><span><small>03 · SPLASH</small>GATOR BAY</span></span></div>
           <p class="keyboard-hint">ARROWS TO STEER <span>·</span> SPACE TO JUMP <span>·</span> T TO TRANSFORM</p>
         </footer>
       </section>
 
       <section id="hud" class="hud" aria-label="Race information" hidden>
         <div class="star-counter"><svg aria-hidden="true"><use href="#icon-star" /></svg><span id="race-stars">0</span><span class="sr-only">stars collected</span></div>
-        <div class="race-route"><div class="race-route-label"><span>YOUR BIG ADVENTURE</span><span id="race-distance">0%</span></div><progress id="race-progress" max="100" value="0" aria-label="Race progress"></progress></div>
+        <div class="race-route" data-stage="woods"><div class="race-route-label"><span id="race-stage">01 · BEAR WOODS</span><span id="race-distance">0%</span></div><progress id="race-progress" max="100" value="0" aria-label="Race progress"></progress><div class="race-stage-dots" aria-hidden="true"><i></i><i></i></div></div>
         <button id="pause-btn" class="icon-button glass-button pause-button" type="button" aria-label="Pause game"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="5" /></svg></button>
       </section>
 
@@ -70,8 +71,8 @@
 
       <section id="garage" class="overlay garage-overlay" role="dialog" aria-modal="true" aria-labelledby="garage-title" hidden>
         <div class="garage-panel">
-          <header class="garage-header"><div><p class="eyebrow">LITTLE TRUCK. LEGENDARY FUTURE.</p><h2 id="garage-title">Your monster crew<span class="accent-dot">.</span></h2></div><button id="garage-close" class="icon-button close-button" type="button" aria-label="Close garage"><svg aria-hidden="true"><use href="#icon-close" /></svg></button></header>
-          <div class="garage-intro"><p>Every adventure brings your next monster closer.</p><div class="garage-wallet"><svg aria-hidden="true"><use href="#icon-star" /></svg><span id="garage-stars">0</span><span>stars</span></div></div>
+          <header class="garage-header"><div><p class="eyebrow">JAMES' GARAGE · <span id="crew-count">1 / 6 COLLECTED</span></p><h2 id="garage-title">Meet your monsters<span class="accent-dot">!</span></h2></div><button id="garage-close" class="icon-button close-button" type="button" aria-label="Close garage"><svg aria-hidden="true"><use href="#icon-close" /></svg></button></header>
+          <div class="garage-intro"><p>Pick your ride. Every race grows your crew.</p><div class="garage-wallet"><svg aria-hidden="true"><use href="#icon-star" /></svg><span id="garage-stars">0</span><span>stars</span></div></div>
           <div id="truck-list" class="truck-list" aria-label="Your trucks"></div>
           <p id="garage-progress" class="garage-progress">Collect stars. Grow your crew. Go big.</p>
           <div class="garage-bottom-mark" aria-hidden="true">DREAM BIG. DRIVE BIGGER.</div>

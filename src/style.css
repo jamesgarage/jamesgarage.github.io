@@ -340,3 +340,151 @@ button.truck-card:hover { transform: translateY(-3px); border-color: #6be3e38a; 
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
 body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+
+/* Toy-box lobby: the live model is the hero; the interface frames its stage. */
+.menu-shade { background: linear-gradient(90deg, #12364bea, #12364bb8 30%, #12364b20 64%, transparent 80%), linear-gradient(0deg, #12364bf2, transparent 28%); }
+.brand-name { font-size: 30px; letter-spacing: -1.5px; text-shadow: 0 3px 0 #0b26364d; }
+.brand-eyebrow { color: #e8f7f5; }
+.menu-copy { top: 47%; }
+h1 { letter-spacing: -.065em; }
+h1 > span { color: #ffe16a; text-shadow: 0 5px 0 #9f582c70; }
+.menu-eyebrow { display: inline-flex; padding: 8px 12px; border: 1px solid #b7f2de40; border-radius: 30px; background: #10324877; color: #b0f8de; font-size: 9px; letter-spacing: 1.3px; margin-bottom: 20px; }
+.menu-description { color: #e1eeed; }
+.play-button { border: 2px solid #fff2ac; box-shadow: 0 6px 0 #c58428, 0 12px 30px #102b4433; }
+.showcase-label { position: absolute; right: 8%; bottom: 21%; display: flex; align-items: center; gap: 16px; padding: 13px 18px 15px; min-width: 295px; border: 1px solid #ffffff96; border-radius: 20px; color: var(--ink); background: #fff9e8ed; box-shadow: 0 7px 0 #153b5126, 0 14px 35px #153b5126; transform: rotate(-3deg); }
+.showcase-number { font-weight: 1000; font-size: 38px; line-height: 1; color: #1b8e91; letter-spacing: -2px; border-right: 1px solid #16394d20; padding-right: 16px; }
+.showcase-label > div { display: flex; flex-direction: column; gap: 4px; }
+.showcase-label .eyebrow { font-size: 7px; letter-spacing: 1.8px; color: #456f76; }
+#showcase-name { font-size: 23px; line-height: 1.1; letter-spacing: -.6px; }
+#showcase-tagline { font-size: 10px; color: #567279; }
+.showcase-check { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; margin-left: 4px; color: #174b4b; background: #91e6c0; font-weight: 1000; }
+.adventure-label { top: 128px; bottom: auto; right: 6%; background: #ffe16a; color: #293d49; border: 2px solid #fff2ae; border-radius: 17px; box-shadow: 0 5px 0 #c5862b33; transform: rotate(7deg); }
+.adventure-label-star { color: #293d49; font-weight: 1000; font-size: 41px; }
+.route-strip { gap: 11px; flex-wrap: nowrap; }
+.route-chip { display: flex; align-items: center; gap: 9px; padding: 11px 15px; border: 1px solid #b6e4e44a; border-radius: 15px; background: #12394cca; color: #f1f9e8; font-size: 10px; letter-spacing: 1px; box-shadow: 0 3px 0 #08232c26; }
+.route-chip > b { display: grid; place-items: center; width: 32px; height: 32px; margin: 0; border-radius: 10px; color: #163e3e; background: #a9eaa8; font-size: 24px; }
+.loop-chip > b { background: #ffda73; font-size: 32px; }
+.bay-chip > b { background: #91e8f2; font-size: 30px; }
+.route-chip > span { display: flex; flex-direction: column; gap: 3px; }
+.route-chip small { font-size: 7px; letter-spacing: 1.2px; color: #bed8de; }
+.keyboard-hint { color: #c7dce3c4; }
+
+/* Collectible cards keep the trucks bright, including those still to earn. */
+.garage-overlay { background: radial-gradient(ellipse at 15% 0, #286078 0, transparent 58%), #122f45; }
+.garage-panel { max-width: 1100px; }
+.garage-header .eyebrow { color: #a5eed8; }
+.garage-intro { margin: 16px 0 20px; }
+.garage-wallet { color: #183b4c; background: #fff0ba; box-shadow: 0 3px 0 #091d2f30; font-weight: 800; }
+.garage-wallet svg { color: #d08c1d; }
+.truck-list { gap: 16px; }
+.truck-card { color: var(--ink); border: 3px solid #fff9e8; padding: 14px 17px 16px; border-radius: 22px; background: #fff9e8; box-shadow: 0 6px 0 #0a213638; isolation: isolate; }
+.truck-card::before { content: ''; position: absolute; inset: 0 0 auto; height: 185px; z-index: -1; background: radial-gradient(ellipse at 50% 65%, color-mix(in srgb, var(--truck-accent), #fff 74%), #eaf2eb); }
+.truck-card::after { content: ''; position: absolute; top: 47px; right: 13px; width: 75px; height: 75px; border-radius: 50%; border: 17px solid #ffffff75; z-index: -1; }
+button.truck-card:hover { transform: translateY(-3px); border-color: #a0eee0; background: #fffdf3; }
+.truck-card.selected, .truck-card.is-selected, .truck-card[aria-pressed="true"] { padding: 14px 17px 16px; border: 3px solid #ffe16a; background: #fff9e8; box-shadow: 0 0 0 3px #ffe16a33, 0 6px 0 #0a213638; }
+.truck-card.locked, .truck-card.is-locked { color: var(--ink); }
+.truck-card.locked .truck-preview, .truck-card.is-locked .truck-preview { opacity: 1; filter: none; }
+.truck-card .truck-preview { height: 145px; width: calc(100% + 34px); margin: -8px -17px -7px; filter: drop-shadow(0 10px 5px #213f472e); }
+.truck-preview img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.truck-card .truck-meta { margin: 0; font-size: 10px; }
+.truck-badge { color: #416974; background: #ffffffa1; font-size: 11px; letter-spacing: 1px; border: 1px solid #ffffffb3; }
+.truck-status { color: #315f69; background: #ffffffa1; font-size: 9px; padding: 7px 9px; }
+.truck-card.selected .truck-status { background: #ffe16a; color: var(--ink); }
+.truck-name { margin: 9px 0 4px; font-size: 23px; letter-spacing: -.8px; }
+.truck-description { color: #5e7479; font-size: 11px; margin-bottom: 12px; }
+.truck-price { color: #2d6870; background: #e0eee6; font-size: 10px; padding: 7px 10px; margin-top: auto; }
+.truck-card.selected .truck-price { color: #274a45; background: #c8efcf; }
+.truck-unlock-track { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #173a4b0c; }
+.truck-unlock-track > span { display: block; height: 100%; background: #e7b743; }
+.garage-progress { margin: 22px 0 10px; padding: 12px 18px; border: 1px solid #bee7de29; border-radius: 13px; background: #ffffff08; color: #ddf1e7; }
+.garage-bottom-mark { color: #bbd4df91; padding-top: 10px; }
+
+/* Race feedback stays at the edges of the driving view. */
+.race-route { position: relative; padding-bottom: 12px; }
+.race-route-label { font-size: 10px; letter-spacing: .8px; margin-bottom: 8px; }
+.race-stage-dots { position: absolute; inset: auto 16px 12px; height: 6px; pointer-events: none; }
+.race-stage-dots i { position: absolute; left: 29.7%; width: 2px; height: 6px; background: #16364e80; }
+.race-stage-dots i + i { left: 61.1%; }
+.race-route[data-stage="woods"] { --stage-color: #b5f098; }
+.race-route[data-stage="loop"] { --stage-color: #ffe16a; }
+.race-route[data-stage="bay"] { --stage-color: #92eff6; }
+#race-stage, #race-distance { color: var(--stage-color); }
+#race-progress::-webkit-progress-value { background: var(--stage-color); }
+#race-progress::-moz-progress-bar { background: var(--stage-color); }
+.callout { top: 17%; width: max-content; max-width: calc(100% - 36px); padding: 10px 21px; border: 2px solid #fff4ba; border-radius: 14px; background: #ffdf62; color: #183c50; font-size: clamp(23px, 2.7vw, 36px); text-shadow: none; box-shadow: 0 5px 0 #b97d2d55; }
+
+@media (max-width: 1100px) {
+  .menu-copy { width: 56vw; }
+  .showcase-label { right: 5%; bottom: 20%; min-width: 265px; }
+  .adventure-label { top: 125px; right: 5%; }
+  .truck-card .truck-preview { height: 127px; }
+  .truck-name { font-size: 21px; }
+  .truck-description { font-size: 10px; }
+}
+@media (min-width: 681px) and (orientation: portrait) {
+  .menu-shade { background: linear-gradient(180deg, #12364bd9 0%, #12364ba6 35%, transparent 66%, #12364bef 100%); }
+  .menu-copy { top: 17%; transform: none; width: calc(100% - var(--edge)*2); }
+  h1 { font-size: 70px; }
+  .menu-description { margin: 18px 0 23px; }
+  .menu-actions { position: fixed; bottom: 18%; left: var(--edge); }
+  .menu-next { position: fixed; bottom: 14%; left: var(--edge); font-size: 12px; }
+  .showcase-label { bottom: 29%; right: 5%; }
+  .adventure-label { top: 37%; right: 6%; }
+  .route-chip { padding: 13px 17px; }
+  .truck-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .truck-card .truck-preview { height: 128px; }
+  .garage-header h2 { font-size: 44px; }
+}
+@media (max-width: 680px) and (orientation: portrait) {
+  .menu-shade { background: linear-gradient(180deg, #12364bea 0%, #12364b9c 32%, transparent 56%, #12364b70 74%, #12364bf7 100%); }
+  .brand-name { font-size: 23px; }
+  .menu-copy { top: 16%; width: calc(100% - var(--edge)*2); }
+  .menu-eyebrow { font-size: 7px; padding: 6px 9px; margin-bottom: 12px; letter-spacing: 1px; }
+  h1 { font-size: clamp(42px, 11.8vw, 65px); }
+  .menu-description { font-size: 12px; margin-top: 11px; }
+  .showcase-label { right: 50%; bottom: 29%; transform: translateX(50%) rotate(-3deg); min-width: 243px; gap: 11px; padding: 9px 13px 11px; border-radius: 16px; }
+  .showcase-number { font-size: 29px; padding-right: 11px; }
+  #showcase-name { font-size: 20px; }
+  #showcase-tagline { font-size: 9px; }
+  .showcase-label .eyebrow { font-size: 6px; }
+  .showcase-check { width: 24px; height: 24px; }
+  .menu-actions { bottom: max(117px, calc(env(safe-area-inset-bottom) + 97px)); }
+  .menu-next { bottom: max(88px, calc(env(safe-area-inset-bottom) + 68px)); font-size: 9px; }
+  .menu-footer { bottom: max(22px, calc(env(safe-area-inset-bottom) + 10px)); }
+  .route-strip { gap: 6px; width: 100%; }
+  .route-chip { flex: 1; gap: 5px; padding: 8px 6px; font-size: 6.5px; letter-spacing: .1px; border-radius: 11px; }
+  .route-chip > b { width: 22px; height: 26px; font-size: 21px; border-radius: 7px; }
+  .route-chip small { font-size: 5.5px; letter-spacing: .4px; }
+  .race-route { position: absolute; }
+  .race-route-label { font-size: 9px; }
+  .race-stage-dots { left: 13px; right: 13px; bottom: 12px; }
+  .callout { top: 23%; font-size: 24px; padding: 8px 16px; }
+  .garage-header h2 { font-size: 31px; }
+  .garage-header .eyebrow { font-size: 6.5px; letter-spacing: .9px; }
+  .garage-intro > p { font-size: 11px; }
+  .truck-card, .truck-card.selected, .truck-card.is-selected, .truck-card[aria-pressed="true"] { padding: 10px 10px 13px; border-radius: 18px; }
+  .truck-card::before { height: 136px; }
+  .truck-card::after { top: 39px; width: 50px; height: 50px; border-width: 10px; }
+  .truck-card .truck-preview { height: 103px; width: calc(100% + 30px); margin: -4px -15px -8px; }
+  .truck-card .truck-meta { gap: 3px; flex-wrap: nowrap; }
+  .truck-badge { padding: 5px; font-size: 9px; }
+  .truck-status { padding: 5px 6px; font-size: 7px; letter-spacing: .2px; }
+  .truck-name { font-size: 18px; line-height: 1.08; margin: 10px 0 6px; }
+  .truck-description { font-size: 9px; line-height: 1.4; min-height: 25px; }
+  .truck-price { padding: 6px 7px; font-size: 8px; letter-spacing: .2px; }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .brand-name { font-size: 21px; }
+  .menu-copy { top: 45%; }
+  .menu-eyebrow { font-size: 6px; padding: 5px 8px; margin-bottom: 9px; }
+  .menu-description { margin: 8px 0 15px; }
+  .showcase-label { right: 5%; bottom: 17%; min-width: 240px; padding: 9px 13px; }
+  .showcase-number { font-size: 28px; }
+  #showcase-name { font-size: 19px; }
+  #showcase-tagline { font-size: 9px; }
+  .route-chip { padding: 6px 10px; font-size: 7px; border-radius: 10px; }
+  .route-chip > b { width: 24px; height: 25px; font-size: 21px; }
+  .route-chip small { font-size: 6px; }
+  .menu-next { margin-top: 12px; }
+  .callout { top: 22%; font-size: 23px; padding: 7px 14px; }
+}
