@@ -162,6 +162,8 @@ Each newly crushed toy car produces two gold stars that rise briefly from the fl
 
 All **141 release unit tests pass**. The production build produces `index-DIABTUBB.js` / `index-L73CJAqG.css`, approximately 719 kB minified / 194 kB gzip JavaScript, with the existing Vite size advisory. All **eight production browser checks pass in Chrome (about 2.1 minutes) and WebKit (about 2.6 minutes)**. Added coverage checks visible crush stars and their frozen/expired/reset states, plus rotating the tablet during driving and while paused without losing the race or usable touch controls. Both complete races finish first, save an earned truck and replay successfully; neither engine records browser/network errors.
 
+The [shore and crush-star deployment](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34639371761) successfully publishes runtime commit `aab8ec0`; the public page serves `index-DIABTUBB.js` / `index-L73CJAqG.css`. All **eight public browser checks pass in Chrome (about 2.2 minutes) and WebKit (about 2.8 minutes)**, including complete first-place races, orientation changes, crush-star pause/replay and persistent unlocks. A public four-viewport capture verifies loaded portraits and no overflowing garage or overlapping/offscreen controls. No browser/network errors were recorded. Public screenshots show the current reward cue and shoreline.
+
 ## Practical limits
 
 - Chrome and Playwright WebKit on a desktop with emulated touch are not a physical iPad or iPhone. Shipping Safari behavior, actual device frame pacing, battery use, and orientation changes still need a real-device pass.
