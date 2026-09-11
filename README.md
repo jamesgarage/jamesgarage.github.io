@@ -2,7 +2,7 @@
 
 **[Play Monster Skyway](https://yanivalfasykeelusa.github.io/james-monster-skyway/)** on an iPad, phone, or computer. Open the link in your browser; no game account or download is required.
 
-A cheerful 3D monster truck game for little drivers. Race with two friendly trucks, squash toy cars, fire up the turbo, soar over ramps, ride a giant guided loop, and grow a garage of increasingly enormous wheels.
+A cheerful 3D monster truck game for little drivers. Race with four friendly trucks, squash toy cars, fire up the turbo, soar over ramps, ride a giant guided loop, and grow a garage of increasingly enormous wheels.
 
 Rounded bodywork, sculpted tires, visible suspension, reflective paint and glass, warm sunlight and shadows give the trucks their toy-box feel. The raised orange track visits rounded woodland canopies, the Sky Loop festival, and Gator Bay, with cheering stands, playful landmarks, muddy splashes, and a gentle shower along the way.
 
@@ -16,7 +16,18 @@ On iPad, open the game in Safari. Landscape gives the track more room, and portr
 
 Choose **Let's play** to start a race of roughly a minute, depending on turbo and jumps. The truck accelerates automatically, six ramps launch automatically, and the loop guides the truck through safely. A driver can enjoy and complete a race without pressing any driving controls.
 
-Sunny and Splash are your little racing friends. They greet you with a smile, copy safe jumps after you, and cheer when you crush a car or use turbo. Sunny likes a playful race and can briefly pull ahead; Splash enjoys the puddles. Little pictures above their trucks show what they are doing. Their timing and the butterflies' colors change between completed races, while the familiar route stays easy to follow.
+Sunny and Splash bring two guests to each race: Ember, Pebble, Bolt or Digger. Each friend has a distinct little truck and favorite activity. They greet you with a smile, copy safe jumps after you, and cheer when you crush a car or use turbo. Sunny likes a playful race and can briefly pull ahead; Splash enjoys the puddles. Little pictures above their trucks show what they are doing, with at most two reactions showing together. The guests, reaction timing and butterflies' colors change between completed races, while the familiar route stays easy to follow.
+
+| Friend | Favorite thing | Recognizable detail |
+| --- | --- | --- |
+| Sunny | A friendly race | Yellow pickup and roof lights |
+| Splash | Puddles | Aqua truck with rounded roof bubbles |
+| Ember | Jumping together | Red paint, flame panels and a little wing |
+| Pebble | Crushing toy cars | Purple crawler with a rear spare wheel |
+| Bolt | Turbo | Silver body and electric-blue accents |
+| Digger | Building and big wheels | Yellow dump bed and a roof beacon |
+
+![The six original racing friends: Sunny, Splash, Ember, Pebble, Bolt and Digger](docs/screenshots/crew.png)
 
 ![Sunny and Splash copying a jump, with an arrow above each friend](docs/screenshots/friends.png)
 
@@ -54,7 +65,7 @@ These are original models inspired by broad toy and vehicle interests. The game 
 
 Bear Woods climbs a timber bridge beside a giant waterwheel. Rocket Runway adds a launch pad, a tall toy rocket, and a boost toward the next ramp. Gator Falls brings a broad waterfall, reeds, and a waterfront boardwalk to the rainy lagoon. Picnic stops, balloons, friendly bears and alligators, stands, and the finish trophy garden fill out the route.
 
-Wood grain, mottled grass, worn stone and water highlights give those places more texture. Small butterflies flutter beside the woods; cattails sway and gentle ripples move through the lagoon. Gentler motion keeps these extra details still.
+Wood grain, mottled grass, worn stone and water highlights give those places more texture. The waterwheel turns beside the bridge and the woodland windmill slowly rotates its sails. Small butterflies flutter beside the woods; cattails sway and gentle ripples move through the lagoon. Gentler motion keeps these extra details still.
 
 ![A close race across the raised timber bridge beside its waterwheel](docs/screenshots/bridge.png)
 
@@ -62,7 +73,7 @@ Wood grain, mottled grass, worn stone and water highlights give those places mor
 
 ![The complete raised-edge toy loop and its stunt festival surroundings](docs/screenshots/loop.png)
 
-Steering turns the front wheels and leans the body. Left and right follow the chase camera's view for both touch and keyboard controls. Landings compress the suspension and kick up a brief dust burst and ring. The chase camera frames your truck and its two followers, then pulls aside for an upright view of the loop.
+Steering turns the front wheels and leans the body. Left and right follow the chase camera's view for both touch and keyboard controls. Landings compress the suspension and kick up a brief dust burst and ring. The chase camera frames your truck and its four friends, then pulls aside for an upright view of the loop.
 
 ![The rainy skyway passing Gator Falls and its waterfront boardwalk](docs/screenshots/bay.png)
 
@@ -122,7 +133,7 @@ The running game does not fetch third-party assets, call external services, or r
 
 ## Validation
 
-The friends use small local decision systems with individual timers and preferences. They react to successful actions and obey the same safe passing rules every time. They do not use a network AI service. See the [playful world design](docs/DESIGN-PLAYFUL-WORLD.md) and [research into comparable games and engines](docs/RESEARCH-PLAYFUL-WORLD.md).
+The friends use small local decision systems with individual timers and preferences. They react to successful actions and obey the same safe passing rules every time. They do not use a network AI service. See the [growing crew design](docs/DESIGN-GROWING-CREW.md), [working landmarks](docs/DESIGN-WORKING-LANDMARKS.md), and [research into comparable games and engines](docs/RESEARCH-PLAYFUL-WORLD.md).
 
 Run `npm test` for race rules, progression and save recovery, truck and effect lifecycles, friendly racer behavior, and world geometry. The browser suite also checks steering against the visible road and completes a full race.
 

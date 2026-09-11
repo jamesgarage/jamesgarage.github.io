@@ -62,6 +62,12 @@ James's parent asked for less pointy graphics, more realism and detail, more nat
 
 See [the smoother world brief](DESIGN-SMOOTHER-WORLD.md) for scope and [validation](VALIDATION.md) for measured results. Continue checking the actual chase view, not only model close-ups.
 
+## Four friends and working landmarks
+
+Four friendly trucks now race with the player. Sunny and Splash are regulars; two guests rotate through all six pairings of Ember, Pebble, Bolt and Digger. Each keeps its own appearance, preference and reaction timing. A shared limit of two visible reactions and short audio spacing keeps the group readable. Dedicated companion models provide six original designs at under 8,600 triangles each.
+
+The chase view includes the larger group while retaining a visible horizon. Position and accessible labels describe all five trucks. The bridge waterwheel and woodland windmill turn gently; pause and gentler motion freeze them. See the [growing crew](DESIGN-GROWING-CREW.md) and [working landmarks](DESIGN-WORKING-LANDMARKS.md) designs.
+
 ## Next: physical device and child observations
 
 The playful-world increment gives Sunny and Splash independent local decision state: staggered greetings, delayed safe jump imitation, bounded celebrations and different preferences for racing or puddles. Completed races vary reaction timing and incidental world accents. Original material tiles add grass, timber, stone and water detail; small butterflies, moving cattails and ripples add life around the unchanged route. See [the design](DESIGN-PLAYFUL-WORLD.md) and [primary-source engine/game research](RESEARCH-PLAYFUL-WORLD.md).

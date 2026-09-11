@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { LOOP_START, LOOP_END } from './core.mjs';
+import { raceCrew } from './crew.mjs';
 
 function polygon(points) {
   const shape = new THREE.Shape();
@@ -30,7 +31,7 @@ function icons() {
 
 /** Pictorial, camera-facing reactions. Fixed owned geometry; no text or textures. */
 export class BuddySignals {
-  constructor(scene) {
+  constructor(scene, crew = raceCrew()) {
     this.disposed = false;
     this.icons = icons();
     this.circle = new THREE.CircleGeometry(1, 32);
@@ -38,7 +39,7 @@ export class BuddySignals {
     this.geometries = new Set([this.circle, this.tail, ...Object.values(this.icons)]);
     this.cream = new THREE.MeshBasicMaterial({ color: 0xfff6db, depthWrite: false });
     this.ink = new THREE.MeshBasicMaterial({ color: 0x17485a, depthWrite: false });
-    this.accents = [0xffd458, 0x4edbcc].map(color => new THREE.MeshBasicMaterial({ color, depthWrite: false }));
+    this.accents = crew.map(({ color }) => new THREE.MeshBasicMaterial({ color, depthWrite: false }));
     this.materials = new Set([this.cream, this.ink, ...this.accents]);
     this.badges = this.accents.map((accent, i) => {
       const badge = new THREE.Group(); badge.name = `buddy-signal-${i}`;
@@ -72,9 +73,10 @@ export class BuddySignals {
     });
   }
 
-  reset() {
+  reset(crew) {
     if (this.disposed) return;
-    this.badges.forEach(badge => {
+    this.badges.forEach((badge, i) => {
+      if (crew?.[i]) { this.accents[i].color.setHex(crew[i].color); badge.name = `buddy-signal-${crew[i].id}`; }
       badge.visible = false; badge.position.set(0, 0, 0); badge.quaternion.identity(); badge.scale.setScalar(1);
       badge.userData.signal = ''; badge.getObjectByName('pictogram').geometry = this.icons.hello;
     });

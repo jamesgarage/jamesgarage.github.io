@@ -10,6 +10,8 @@ There are no downloaded character models, branded vehicle logos, texture packs, 
 
 ## Garage portraits
 
+`src/buddy-models.mjs` constructs six separate original companion designs for the friendly racing crew. These smaller models have rounded tire profiles, material-batched body details, and distinct colors and shapes. They are independent of the six collectible player trucks. `docs/screenshots/crew.png` is a labeled browser rendering of those actual companion models.
+
 `public/trucks/` contains transparent 720×480 PNG portraits of all six original trucks. These are rendered from the same `makeTruck()` models used in play. The lobby displays the live selected model; garage cards use the PNGs so each card does not need its own WebGL renderer.
 
 After changing a truck model, install Chromium for Playwright if needed and start Vite at the local origin root:

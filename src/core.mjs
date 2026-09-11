@@ -1,6 +1,7 @@
 /** Pure game rules. Rendering, audio, and storage are owned by the application. */
 import { CRUSH_CARS, TURBO_PADS } from './encounters.mjs';
 import { createBuddyMind, normalizeRaceVariant, stepBuddyMind } from './buddy-brain.mjs';
+import { raceCrew } from './crew.mjs';
 
 export const COURSE_LENGTH = 1900;
 export const RACE_SPEED = 26;
@@ -31,10 +32,6 @@ const CRUSH_BOOST_DURATION = 1;
 const CRUSH_BOOST_MULTIPLIER = 1.18;
 const PASSING_GAP = 8.5;
 const BUDDY_FOLLOWING_GAP = 4;
-const BUDDY_GRID = Object.freeze([
-  Object.freeze({ id: 'sunny', name: 'Sunny', distance: -10, lane: -.65 }),
-  Object.freeze({ id: 'splash', name: 'Splash', distance: -14, lane: .65 }),
-]);
 
 const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
 
@@ -111,7 +108,9 @@ export function createRace(seed = 0) {
     crushBoostTime: 0,
     crushes: 0,
     crushedCars: [],
-    buddies: BUDDY_GRID.map((buddy, index) => ({ ...buddy, height: 0, velocityY: 0, ...createBuddyMind(variant, index) })),
+    buddySignalCooldown: 0,
+    buddies: raceCrew(variant).map((buddy, slot) => ({ ...buddy, homeLane: buddy.lane, distance: -buddy.gap,
+      height: 0, velocityY: 0, ...createBuddyMind(variant, buddy, slot) })),
   };
 }
 
@@ -182,6 +181,7 @@ function stepBuddies(state, step, steering, events) {
   const predictedLane = clamp(state.targetLane + steering * .6 * 2.4, -1, 1);
   const width = passingWidth(state);
   const playerEvents = events.slice();
+  state.buddySignalCooldown = Math.max(0, state.buddySignalCooldown - step);
   for (const [index, buddy] of state.buddies.entries()) {
     const previousDistance = buddy.distance;
     const gap = state.distance - buddy.distance;
@@ -190,15 +190,19 @@ function stepBuddies(state, step, steering, events) {
     const safeJump = buddy.height === 0 && buddy.velocityY === 0 &&
       (buddy.distance < LOOP_START - 34 || buddy.distance > LOOP_END + 12) &&
       RAMPS.every(ramp => buddy.distance < ramp - 34 || buddy.distance > ramp + 10);
-    const decision = stepBuddyMind(buddy, step, { elapsed: state.elapsed, approach, safeJump, playerEvents }, events);
-    // Sunny offers a brief lead challenge; Splash stays close behind so the
-    // smallest drivers never fall to last place during ordinary cruising.
-    const desiredGap = -BUDDY_GRID[index].distance - (index === 0 ? 17 : 11) * approach + decision.gapAdjustment;
+    const signalCount = state.buddies.filter(friend => friend !== buddy && friend.signalTime > 0).length;
+    const allowSignal = state.buddySignalCooldown === 0 && signalCount < 2;
+    const beforeEvents = events.length;
+    const decision = stepBuddyMind(buddy, step, { elapsed: state.elapsed, approach, safeJump, playerEvents, allowSignal }, events);
+    if (events.length > beforeEvents) state.buddySignalCooldown = .24;
+    // Only Sunny offers the brief lead challenge. All other friends stay
+    // behind him, leaving the smallest driver room during ordinary cruising.
+    const desiredGap = buddy.gap - (buddy.id === 'sunny' ? 17 : 11) * approach + decision.gapAdjustment;
     let speed = RACE_SPEED + clamp((gap - desiredGap) * .5, -3.5, 4.5);
 
     // Read steering intent before a pass; once alongside, hold the outer lane
     // and yield longitudinally instead of cutting across the player's model.
-    let targetLane = BUDDY_GRID[index].lane;
+    let targetLane = buddy.homeLane;
     if (Math.abs(gap) < 25) {
       const preferredSide = Math.abs(predictedLane) > .12 ? -Math.sign(predictedLane) : Math.sign(targetLane);
       const side = Math.abs(gap) < PASSING_GAP && Math.abs(buddy.lane) > 1 ? Math.sign(buddy.lane) : preferredSide;
@@ -212,8 +216,8 @@ function stepBuddies(state, step, steering, events) {
     if (needsRoom && Math.abs(gap) < PASSING_GAP) speed = Math.min(speed, Math.max(0, state.speed - 12));
     let nextDistance = Math.min(COURSE_LENGTH, buddy.distance + speed * step);
     if (needsRoom && gap >= PASSING_GAP) nextDistance = Math.min(nextDistance, state.distance - PASSING_GAP);
-    // Splash queues behind Sunny even when Sunny yields or changes passing
-    // sides, so the two small trucks cannot merge into each other either.
+    // Each friend queues behind the preceding truck even when it yields or
+    // changes passing sides, preventing every pair from merging together.
     if (index > 0) nextDistance = Math.min(nextDistance, state.buddies[index - 1].distance - BUDDY_FOLLOWING_GAP);
     buddy.distance = Math.max(previousDistance, nextDistance);
     buddy.speed = (buddy.distance - previousDistance) / step;

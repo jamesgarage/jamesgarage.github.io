@@ -11,6 +11,7 @@ import { RaceWeather } from './weather.mjs';
 import { RoadEncounters } from './encounter-scene.mjs';
 import { createAdventureScenery } from './adventure.mjs';
 import { WorldLife } from './world-life.mjs';
+import { LandmarkMotion } from './landmark-motion.mjs';
 export { makeTruck } from './models.mjs';
 export { sampleTrack } from './track.mjs';
 
@@ -53,7 +54,10 @@ export class GameScene {
       vertexShader:'varying vec3 direction; void main(){direction=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
       fragmentShader:'uniform vec3 top; uniform vec3 bottom; varying vec3 direction; void main(){float h=pow(max(normalize(direction).y,0.0),0.55);gl_FragColor=vec4(mix(bottom,top,h),1.0);\n#include <colorspace_fragment>\n}'
     }));this.sky.renderOrder=-100;this.scene.add(this.sky);
-    this.world=createWorld();this.world.add(createRaceFestival(),createAdventureScenery());this.scene.add(this.world);
+    this.world=createWorld();
+    const festival=createRaceFestival(),adventure=createAdventureScenery();
+    this.world.add(festival,adventure);this.scene.add(this.world);
+    this.landmarks=new LandmarkMotion([...festival.userData.motionTargets,...adventure.userData.motionTargets]);
     this.truck=makeTruck(spec);this.scene.add(this.truck.group);
     this.buddies=new RaceBuddies(this.scene);
     this.weather=new RaceWeather(this.scene);
@@ -87,7 +91,7 @@ export class GameScene {
     disposeTruck(this.truck);
     this.scene.remove(this.truck.group);this.truck=makeTruck(spec);this.scene.add(this.truck.group);this.transform=0;this.boost=0;
   }
-  reset(variant=0) {this.flames.clear();this.buddies.reset();this.weather.reset();this.encounters.reset();this.life.reset(variant);this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;this.particles.forEach(p=>{p.life=0;p.mesh.visible=false;});}
+  reset(variant=0) {this.flames.clear();this.buddies.reset(variant);this.weather.reset();this.encounters.reset();this.life.reset(variant);this.landmarks.reset(variant);this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;this.particles.forEach(p=>{p.life=0;p.mesh.visible=false;});}
   menu() {this.flames.clear();this.weather.reset();this.mode='menu';this.snapCamera=true;}
   resize() {this.width=innerWidth;this.height=innerHeight;this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();this.renderer.setSize(this.width,this.height,false);this.snapCamera=true;}
   burst(colorful=true,count=20,origin=this.truck.group.position,reward=false) {
@@ -147,9 +151,11 @@ export class GameScene {
       this.targetLook.copy(base).add(new THREE.Vector3(6,29,0));this.camera.fov=54;
     } else {
       const horizontal=f.forward.clone();horizontal.y=0;horizontal.normalize();
-      const distance=(this.width<this.height?34:26)+(this.truck.spec.scale-1)*4;
-      this.targetCamera.copy(g.position).addScaledVector(horizontal,-distance).add(new THREE.Vector3(0,13.5+race.height*.1+(this.truck.spec.scale-1)*2.5,0));
-      this.targetLook.copy(f.position).addScaledVector(horizontal,3).add(new THREE.Vector3(0,2.4+race.height*.4,0));
+      // Leave the rear two guests in view while keeping the horizon visible.
+      const portrait=this.width<this.height;
+      const distance=(portrait?53:42)+(this.truck.spec.scale-1)*4;
+      this.targetCamera.copy(g.position).addScaledVector(horizontal,-distance).add(new THREE.Vector3(0,(portrait?18:14.5)+race.height*.1+(this.truck.spec.scale-1)*2.5,0));
+      this.targetLook.copy(f.position).addScaledVector(horizontal,-9).add(new THREE.Vector3(0,2.4+race.height*.4,0));
       this.camera.fov=55+(this.reducedMotion?0:this.transform*3+this.boost*3);
       if(!this.reducedMotion)this.targetCamera.y-=this.squash*.32;
     }
@@ -173,6 +179,7 @@ export class GameScene {
     this.weather.update(dt,{race,truck:this.truck,mode:this.mode,reducedMotion:this.reducedMotion});
     this.encounters.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});
     this.life.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});
+    this.landmarks.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});
     this.renderer.render(this.scene,this.camera);
     return collected;
   }

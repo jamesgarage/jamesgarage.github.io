@@ -1,10 +1,18 @@
 /** Original synthesized sounds. No audio work begins before start(). */
 const MASTER_LEVEL = 0.38;
 const MAX_VOICES = 24;
+const BUDDY_REPLIES = Object.freeze({
+  'buddy-sunny': [523.25, 659.25, 783.99],
+  'buddy-splash': [392, 523.25, 587.33],
+  'buddy-ember': [659.25, 783.99, 987.77],
+  'buddy-pebble': [329.63, 392, 523.25],
+  'buddy-bolt': [587.33, 739.99, 880],
+  'buddy-digger': [293.66, 440, 659.25],
+});
 const EVENT_GAPS = Object.freeze({
   jump: 0.11, land: 0.13, star: 0.065, transform: 0.8,
   loop: 0.7, finish: 1.2, start: 0.5, select: 0.08, turbo: 0.7, crush: 0.25,
-  'buddy-sunny': 1.8, 'buddy-splash': 1.8,
+  ...Object.fromEntries(Object.keys(BUDDY_REPLIES).map(event => [event, 1.8])),
 });
 
 export class GameAudio {
@@ -96,7 +104,15 @@ export class GameAudio {
       const now = this.context.currentTime;
       const previous = this.lastEvents.get(event) ?? -Infinity;
       if (now - previous < EVENT_GAPS[event]) return;
+      const reply = BUDDY_REPLIES[event];
+      if (reply && now - (this.lastEvents.get('buddy-reply') ?? -Infinity) < .24) return;
       this.lastEvents.set(event, now);
+      if (reply) {
+        this.lastEvents.set('buddy-reply', now);
+        this._tone(reply[0], 0, .12, .035, 'sine', reply[1]);
+        this._tone(reply[2], .13, .13, .025);
+        return;
+      }
       switch (event) {
         case 'turbo':
           this._tone(110, 0, .42, .09, 'triangle', 440);
@@ -106,14 +122,6 @@ export class GameAudio {
           this._tone(145, 0, .13, .09, 'triangle', 68);
           this._tone(659.25, .055, .17, .085);
           this._tone(987.77, .14, .23, .065);
-          break;
-        case 'buddy-sunny':
-          this._tone(523.25, 0, .12, .035, 'sine', 659.25);
-          this._tone(783.99, .13, .13, .025);
-          break;
-        case 'buddy-splash':
-          this._tone(392, 0, .15, .035, 'sine', 523.25);
-          this._tone(587.33, .17, .17, .025);
           break;
         case 'jump':
           this._tone(196, 0, 0.23, 0.12, 'sine', 523.25);

@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { BuddySignals } from '../src/buddy-signals.mjs';
+import { raceCrew } from '../src/crew.mjs';
 
 test('pictorial reactions follow their own trucks, face the camera and freeze during pause', () => {
-  const scene = new THREE.Scene(), signals = new BuddySignals(scene);
+  const scene = new THREE.Scene(), signals = new BuddySignals(scene, raceCrew().slice(0, 2));
   const camera = new THREE.PerspectiveCamera(); camera.position.set(12, 10, 30); camera.lookAt(0, 0, 0);
   const trucks = [0, 1].map(i => ({ group: new THREE.Group() }));
   trucks[1].group.position.set(8, 0, -6);

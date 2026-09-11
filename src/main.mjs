@@ -49,8 +49,10 @@ function updateStage(){
 function updatePosition(){
   const place=racePlace(race);
   if(place===shownPlace)return;
-  shownPlace=place;$('race-place').textContent=['','1st','2nd','3rd'][place];
-  $('race-position').setAttribute('aria-label',`${['','First','Second','Third'][place]} place out of three trucks`);
+  shownPlace=place;$('race-place').textContent=['','1st','2nd','3rd','4th','5th'][place];
+  const count=race.buddies.length+1;
+  $('race-count').textContent=`OF ${count}`;
+  $('race-position').setAttribute('aria-label',`${['','First','Second','Third','Fourth','Fifth'][place]} place out of ${count} trucks`);
 }
 function renderGarage(){
   $('crew-count').textContent=`${unlockedTrucks(progress).length} / ${TRUCKS.length} COLLECTED`;$('garage-stars').textContent=progress.stars;$('garage-progress').textContent=nextReward();
@@ -70,7 +72,7 @@ function renderGarage(){
 function showGarage(){menu();renderGarage();showModal('garage');}
 function menu(){clearInput();race.phase='ready';audio.setDriving(false);audio.pause();world.menu();hideModals();$('menu').hidden=false;$('hud').hidden=true;$('controls').hidden=true;document.body.classList.remove('playing');clearCallout();refreshMenu();}
 async function start(){
-  clearInput();hideModals();race=createRace(progress.races);race.truckScale=selected().scale;race.phase='running';world.reset(race.variant);world.setTruck(selected());
+  clearInput();hideModals();shownPlace=0;race=createRace(progress.races);race.truckScale=selected().scale;race.phase='running';world.reset(race.variant);world.setTruck(selected());
   $('menu').hidden=true;$('hud').hidden=false;$('controls').hidden=false;document.body.classList.add('playing');
   previous=performance.now();accumulator=0;await audio.start();await audio.resume();audio.setMuted(progress.muted);audio.setDriving(true);audio.play('start');updateStage();updatePosition();say('Let’s race!',1.6,2);$('jump-btn').focus();
 }
@@ -82,8 +84,8 @@ function finish(){
   const unlocked=unlockedTrucks(progress).slice(before);
   const place=racePlace(race);
   $('result-title').textContent=place===1?'You win!':'Great race!';
-  document.querySelector('.victory-medal').innerHTML=`${place}<small>${['','st','nd','rd'][place]}</small>`;
-  document.querySelector('.victory-medal').setAttribute('aria-label',`${['','First','Second','Third'][place]} place`);
+  document.querySelector('.victory-medal').innerHTML=`${place}<small>${['','st','nd','rd','th','th'][place]}</small>`;
+  document.querySelector('.victory-medal').setAttribute('aria-label',`${['','First','Second','Third','Fourth','Fifth'][place]} place`);
   document.querySelector('.victory-podium').textContent=place===1?'★ CHAMPION ★':'★ FINISHER ★';
   $('result-truck').src=`${import.meta.env.BASE_URL}trucks/${selected().id}.png`;
   $('result-truck').alt=`${selected().name}, your winning truck`;
@@ -172,7 +174,7 @@ try {
     const frame=sampleTrack(race.distance);
     const center=frame.position.addScaledVector(frame.up,race.height).project(world.camera);
     const screenLane=world.truck.group.position.clone().project(world.camera).x-center.x;
-    return Object.freeze({phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,variant:race.variant,place:racePlace(race),buddies:world.buddies.poses.map(p=>({...p})),buddySignals:world.buddies.signals.badges.filter(b=>b.visible).map(b=>b.userData.signal),worldLife:world.life.diagnostics,screenLane,speed:race.speed,turboTime:race.turboTime,turboEnergy:race.turboEnergy,crushBoostTime:race.crushBoostTime,crushes:race.crushes,crushedCars:race.crushedCars?.slice(),crushedModels:world.encounters.cars.filter(car=>car.crush>.95).map(car=>car.id),rain:world.weather.rain.visible&&world.weather.group.visible,mudSpray:world.weather.spray.count,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles,flames:world.flames.mesh.count});
+    return Object.freeze({phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,variant:race.variant,place:racePlace(race),buddies:world.buddies.poses.map(p=>({...p})),buddySignals:world.buddies.signals.badges.filter(b=>b.visible).map(b=>b.userData.signal),worldLife:world.life.diagnostics,landmarks:world.landmarks.diagnostics,crew:world.buddies.trucks.map(t=>t.spec.id),screenLane,speed:race.speed,turboTime:race.turboTime,turboEnergy:race.turboEnergy,crushBoostTime:race.crushBoostTime,crushes:race.crushes,crushedCars:race.crushedCars?.slice(),crushedModels:world.encounters.cars.filter(car=>car.crush>.95).map(car=>car.id),rain:world.weather.rain.visible&&world.weather.group.visible,mudSpray:world.weather.spray.count,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles,flames:world.flames.mesh.count});
   }});
 } catch(error) {
   $('loading').hidden=true;$('error').hidden=false;$('error').textContent='This adventure needs a browser with 3D graphics (WebGL 2). Try an updated Safari, Chrome, or Edge with graphics acceleration enabled.';

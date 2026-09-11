@@ -38,11 +38,16 @@ test('festival builds real finite geometry, shared materials and bounded cullabl
     for (const venue of festival.children) {
       const bounds = new THREE.Box3().setFromObject(venue), size = bounds.getSize(new THREE.Vector3());
       assert.ok(size.x < 100 && size.y < 80 && size.z < 100, `${venue.name} lost spatial batching: ${size.toArray()}`);
-      const keys = new Set();
-      for (const mesh of venue.children) {
-        const key = `${mesh.material.uuid}:${mesh.castShadow}:${mesh.receiveShadow}`;
-        assert.ok(!keys.has(key), `${venue.name} has an unmerged material/shadow batch`); keys.add(key);
-      }
+      // Static venue pieces and independently moving assemblies each batch
+      // their own materials; a rotor cannot merge into the stationary house.
+      venue.traverse(group => {
+        if (!group.isGroup) return;
+        const keys = new Set();
+        for (const mesh of group.children.filter(child => child.isMesh)) {
+          const key = `${mesh.material.uuid}:${mesh.castShadow}:${mesh.receiveShadow}`;
+          assert.ok(!keys.has(key), `${group.name} has an unmerged material/shadow batch`); keys.add(key);
+        }
+      });
     }
   } finally { dispose(festival); }
 });

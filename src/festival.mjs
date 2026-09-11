@@ -10,6 +10,7 @@ const C = { ink: 0x194b62, cream: 0xffefce, gold: 0xffc645, coral: 0xf47c54,
 // inside this returned group, so a normal scene traversal can dispose it safely.
 export function createRaceFestival() {
   const festival = new THREE.Group(); festival.name = 'race-festival';
+  festival.userData.motionTargets = [];
   const paints = Object.fromEntries(Object.entries(C).map(([key, color]) => [key,
     new THREE.MeshStandardMaterial({ color, roughness: key === 'gold' ? .4 : .76 })]));
   const shapes = {
@@ -31,26 +32,40 @@ export function createRaceFestival() {
     base.setPosition(frame.position.x, frame.position.y - 1, frame.position.z);
     const buckets = new Map();
     const group = new THREE.Group(); group.name = name; group.userData.distance = distance;
-    function part(kind, paint, p, s, r = [0, 0, 0], shadow = true) {
+    function part(kind, paint, p, s, r = [0, 0, 0], shadow = true, frame = base, target = buckets) {
       const key = `${paint}:${shadow}`;
-      if (!buckets.has(key)) buckets.set(key, { paint, shadow, parts: [] });
+      if (!target.has(key)) target.set(key, { paint, shadow, parts: [] });
       rotation.setFromEuler(euler.set(...r));
       local.compose(position.set(...p), rotation, scale.set(...s));
-      transform.multiplyMatrices(base, local);
+      transform.multiplyMatrices(frame, local);
       let geometry = shapes[kind].clone().applyMatrix4(transform);
       if (geometry.index) { const expanded = geometry.toNonIndexed(); geometry.dispose(); geometry = expanded; }
-      buckets.get(key).parts.push(geometry);
+      target.get(key).parts.push(geometry);
     }
-    try {
-      build(part);
-      for (const { paint, shadow, parts } of buckets.values()) {
+    function batchParts(target, parent, label) {
+      for (const { paint, shadow, parts } of target.values()) {
         const geometry = mergeGeometries(parts);
-        if (!geometry) throw new Error(`Could not batch festival venue ${name}`);
+        if (!geometry) throw new Error(`Could not batch festival venue ${label}`);
         geometry.computeBoundingBox(); geometry.computeBoundingSphere();
         const mesh = new THREE.Mesh(geometry, paints[paint]);
-        mesh.name = `${name}-${paint}${shadow ? '' : '-trim'}`;
-        mesh.castShadow = shadow; mesh.receiveShadow = shadow; group.add(mesh);
+        mesh.name = `${label}-${paint}${shadow ? '' : '-trim'}`;
+        mesh.castShadow = shadow; mesh.receiveShadow = shadow; parent.add(mesh);
       }
+    }
+    function rotor(label, origin, speed, build) {
+      const moving = new Map(), identity = new THREE.Matrix4();
+      const anchor = new THREE.Group(), pivot = new THREE.Group();
+      anchor.name = `${label}-anchor`; anchor.applyMatrix4(base);
+      pivot.name = label; pivot.position.set(...origin); anchor.add(pivot);
+      try {
+        build((kind, paint, p, s, r, shadow) => part(kind, paint, p, s, r, shadow, identity, moving));
+        batchParts(moving, pivot, label); group.add(anchor);
+        festival.userData.motionTargets.push(Object.freeze({ id: label, distance, pivot, speed }));
+      } finally { for (const { parts } of moving.values()) parts.forEach(geometry => geometry.dispose()); }
+    }
+    try {
+      build(part, rotor);
+      batchParts(buckets, group, name);
       festival.add(group);
     } finally {
       for (const { parts } of buckets.values()) parts.forEach(geometry => geometry.dispose());
@@ -161,17 +176,19 @@ export function createRaceFestival() {
         p('cone', 'gold', [-23, 6, z], [4.2, 1.8, 4.2]);
       }
     });
-    venue('woodland-windmill', 435, p => {
+    venue('woodland-windmill', 435, (p, rotor) => {
       deck(p, 31, 14, 14);
       p('cylinder', 'cream', [31, 5, 0], [3.5, 10, 3.5]);
       p('cone', 'coral', [31, 12, 0], [5, 4, 5]);
       p('box', 'ink', [31, 2, -3.5], [2, 3, .12]);
       p('ball', 'gold', [31, 9, -4], [.7, .7, .7]);
-      for (let i = 0; i < 4; i++) {
-        const a = Math.PI / 4 + i * Math.PI / 2;
-        p('box', 'ink', [31 + Math.sin(a) * 3, 9 + Math.cos(a) * 3, -4], [.3, 6.8, .3], [0, 0, -a]);
-        p('box', 'gold', [31 + Math.sin(a) * 4.7, 9 + Math.cos(a) * 4.7, -4.2], [1.5, 3.2, .15], [0, 0, -a]);
-      }
+      rotor('woodland-windmill-sails', [31, 9, -4], .16, moving => {
+        for (let i = 0; i < 4; i++) {
+          const a = Math.PI / 4 + i * Math.PI / 2;
+          moving('box', 'ink', [Math.sin(a) * 3, Math.cos(a) * 3, 0], [.3, 6.8, .3], [0, 0, -a]);
+          moving('box', 'gold', [Math.sin(a) * 4.7, Math.cos(a) * 4.7, -.2], [1.5, 3.2, .15], [0, 0, -a]);
+        }
+      });
     });
     venue('sky-observatory', 615, p => {
       deck(p, -31, 15, 17, 'cream');
@@ -228,5 +245,6 @@ export function createRaceFestival() {
       balloon(p, 44, 4, 'teal', 30);
     });
   } finally { Object.values(shapes).forEach(geometry => geometry.dispose()); }
+  Object.freeze(festival.userData.motionTargets);
   return festival;
 }

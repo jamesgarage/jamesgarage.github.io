@@ -1,15 +1,13 @@
-import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS, RACE_SPEED, TRUCKS } from './core.mjs';
-import { makeTruck, disposeTruck } from './models.mjs';
+import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS, RACE_SPEED } from './core.mjs';
+import { makeBuddyTruck, disposeBuddyTruck } from './buddy-models.mjs';
+import { raceCrew } from './crew.mjs';
+import { normalizeRaceVariant } from './buddy-brain.mjs';
 import { sampleTrack, laneOffset } from './track.mjs';
 import { BuddySignals } from './buddy-signals.mjs';
 
 const TAU = Math.PI * 2;
 const JUMP_SPEED = 16;
 const GRAVITY = 24;
-const BUDDIES = Object.freeze([
-  Object.freeze({ id: 'sunny', name: 'Sunny', gap: 10, lane: -.65, model: 0, color: 0xffd458, accent: 0xff8c54, scale: .50 }),
-  Object.freeze({ id: 'splash', name: 'Splash', gap: 14, lane: .65, model: 1, color: 0x4edbcc, accent: 0xffeea3, scale: .46 }),
-]);
 
 function playerDistance(race) {
   return Number.isFinite(race?.distance) ? Math.min(COURSE_LENGTH, Math.max(0, race.distance)) : 0;
@@ -18,14 +16,15 @@ function playerDistance(race) {
 /** Rendering samples defensive copies of the simulation's real opponent poses.
  * Distance-only tools still get an analytic preview without creating a race. */
 export function sampleRaceBuddies(race) {
-  if (Array.isArray(race?.buddies) && race.buddies.length === BUDDIES.length && race.buddies.every((pose, index) =>
-    pose?.id === BUDDIES[index].id && ['distance', 'lane', 'height', 'velocityY'].every(key => Number.isFinite(pose[key])))) {
+  const crew = raceCrew(race?.variant);
+  if (Array.isArray(race?.buddies) && race.buddies.length === crew.length && race.buddies.every((pose, index) =>
+    pose?.id === crew[index].id && ['distance', 'lane', 'height', 'velocityY'].every(key => Number.isFinite(pose[key])))) {
     return race.buddies.map(pose => ({ id: pose.id, name: pose.name, distance: pose.distance, lane: pose.lane, height: pose.height, velocityY: pose.velocityY,
       intent: typeof pose.intent === 'string' ? pose.intent : 'follow', signal: typeof pose.signal === 'string' ? pose.signal : '',
       signalTime: Number.isFinite(pose.signalTime) ? Math.max(0, pose.signalTime) : 0, speed: Number.isFinite(pose.speed) ? pose.speed : RACE_SPEED }));
   }
   const progress = playerDistance(race);
-  return BUDDIES.map(buddy => {
+  return crew.map(buddy => {
     const distance = progress - buddy.gap;
     let height = 0, velocityY = 0;
     if (distance < LOOP_START || distance > LOOP_END) {
@@ -49,16 +48,11 @@ export function racePlace(race) {
 
 export class RaceBuddies {
   constructor(scene) {
-    this.trucks = BUDDIES.map(buddy => {
-      // Retain the rally lamps and bear ears from the original sculpted models.
-      const truck = makeTruck({ ...TRUCKS[buddy.model], name: buddy.name, color: buddy.color, accent: buddy.accent, scale: buddy.scale });
-      truck.group.name = `buddy-${buddy.id}`;
-      scene.add(truck.group);
-      return truck;
-    });
+    this.scene = scene;
+    this.trucks = [];
+    this.crew = raceCrew();
     this.disposed = false;
-    this.signals = new BuddySignals(scene);
-    this.steering = [0, 0];
+    this.signals = new BuddySignals(scene, this.crew);
     this.reset();
   }
 
@@ -77,6 +71,10 @@ export class RaceBuddies {
     for (const truck of this.trucks) truck.group.visible = Boolean(visible);
     if (!visible) this.signals.update(dt, { visible: false });
     if (!visible || !Number.isFinite(dt) || dt <= 0 || race?.phase === 'paused') return;
+    if (normalizeRaceVariant(race?.variant) !== this.variant) {
+      this.reset(race?.variant);
+      for (const truck of this.trucks) truck.group.visible = true;
+    }
     const poses = sampleRaceBuddies(race);
     for (let i = 0; i < this.trucks.length; i++) {
       const truck = this.trucks[i];
@@ -95,10 +93,19 @@ export class RaceBuddies {
     this.signals.update(dt, { race, poses, trucks: this.trucks, camera, reducedMotion });
   }
 
-  reset() {
+  reset(variant = 0) {
     if (this.disposed) return;
-    this.signals.reset(); this.steering = [0, 0];
-    this.poses = sampleRaceBuddies({ distance: 0 });
+    this.variant = normalizeRaceVariant(variant);
+    this.crew = raceCrew(this.variant);
+    this.crew.forEach((spec, i) => {
+      if (this.trucks[i]?.spec.id === spec.id) return;
+      if (this.trucks[i]) { this.trucks[i].group.removeFromParent(); disposeBuddyTruck(this.trucks[i]); }
+      this.trucks[i] = makeBuddyTruck(spec);
+      this.trucks[i].group.name = `buddy-${spec.id}`;
+      this.scene.add(this.trucks[i].group);
+    });
+    this.signals.reset(this.crew); this.steering = this.crew.map(() => 0);
+    this.poses = sampleRaceBuddies({ distance: 0, variant: this.variant });
     this.trucks.forEach((truck, i) => {
       truck.group.visible = false;
       truck.body.rotation.z = 0;
@@ -113,7 +120,7 @@ export class RaceBuddies {
     this.signals.dispose();
     for (const truck of this.trucks) {
       truck.group.removeFromParent();
-      disposeTruck(truck);
+      disposeBuddyTruck(truck);
     }
   }
 }

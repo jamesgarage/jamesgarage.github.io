@@ -13,15 +13,15 @@ Preserve guided driving, positive crushing/turbo, truthful rank and no-input fir
 
 ## Crew increment
 
-- [ ] Centralize CREW and raceCrew(seed) and generalize core/brain rules to four safe, distinct friends. Own crew/core/brain and their rule tests.
-- [ ] Build six recognizable efficient companion models with bounded geometry/resources. Own buddy-models and model tests; inspect all six views.
-- [ ] Root integrates dynamic roster rendering, replacement/reset/disposal, signals, rank UI/audio and camera framing. Extend meaningful renderer/browser tests.
-- [ ] Independently review simulation, models and integration; fix material findings. Run units/build, controlled play, full Chrome/WebKit, layout, render-budget and lifetime checks.
+- [x] Centralize CREW and raceCrew(seed) and generalize core/brain rules to four safe, distinct friends. Own crew/core/brain and their rule tests.
+- [x] Build six recognizable efficient companion models with bounded geometry/resources. Own buddy-models and model tests; inspect all six views.
+- [x] Root integrates dynamic roster rendering, replacement/reset/disposal, signals, rank UI/audio and camera framing. Extend meaningful renderer/browser tests.
+- [x] Independently review simulation, models and integration; fix material findings. Run units/build, controlled play, full Chrome/WebKit, layout, render-budget and lifetime checks.
 - [ ] Publish verified crew increment, check public runtime/both browsers and update source/docs/screenshots.
 
 ## Remaining afternoon
 
-- [ ] Identify and deliver the next bounded scenery/trackside-life improvement with a concrete design and independent review.
+- [x] Identify and deliver the next bounded scenery/trackside-life improvement with a concrete design and independent review. Working waterwheel/windmill accepted with the crew; docs/DESIGN-WORKING-LANDMARKS.md records scope.
 - [ ] Use remaining time for observed visual/gameplay refinements, not speculative rewrites. Re-check the clock at milestones.
 - [ ] Reserve the final portion before 17:00 for accepted release checks and finish with the playable URL, source record and remaining physical-device observations.
 

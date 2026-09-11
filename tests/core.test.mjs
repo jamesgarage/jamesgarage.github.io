@@ -11,6 +11,14 @@ function runningRace(seed = 0) {
   return { ...createRace(seed), phase: 'running' };
 }
 
+test('a race starts with four independent friends and keeps one waiting gap per slot', () => {
+  const race = createRace(0);
+  assert.equal(race.buddies.length, 4);
+  assert.equal(new Set(race.buddies.map(buddy => buddy.id)).size, 4);
+  assert.equal(new Set(race.buddies.map(buddy => buddy.brain)).size, 4);
+  assert.deepEqual(race.buddies.map(buddy => buddy.distance), [-10, -14, -18, -22]);
+});
+
 test('a no-input run finishes with every ramp, a loop, and an automatic transformation', () => {
   const state = runningRace();
   const events = [];
@@ -272,12 +280,21 @@ test('friendly approach stretches allow a real pass and a no-input comeback with
 test('all truck sizes and seeded variants finish first with no input, held controls, and alternating inputs', () => {
   const patterns = [() => ({}), () => ({ turbo: true, jump: true, steer: 1, transform: true }),
     frame => ({ turbo: frame % 2 === 0, jump: frame % 3 === 0, steer: frame % 180 < 90 ? -1 : 1, transform: true })];
-  for (const seed of [0, 1, 7, 999_999_999]) for (const truck of TRUCKS) for (const pattern of patterns) {
+  const observedPairs = new Set();
+  for (const seed of [0, 1, 2, 3, 4, 5, 6, 7, 13, 42, 999_999_999]) for (const truck of TRUCKS) for (const pattern of patterns) {
     const state = { ...runningRace(seed), truckScale: truck.scale }, events = [];
+    let lastSignalAt = -1;
     for (let frame = 0; frame < 5000 && !state.finished; frame++) {
+      const previous = state.buddies.map(buddy => buddy.distance);
       const frameEvents = stepRace(state, 1 / 60, pattern(frame));
       events.push(...frameEvents);
-      assert.ok(frameEvents.filter(event => event.type === 'buddy').length <= 2);
+      const signals = frameEvents.filter(event => event.type === 'buddy');
+      assert.ok(signals.length <= 1);
+      if (signals.length) {
+        assert.ok(state.elapsed - lastSignalAt >= .24 - 1e-8, 'Reactions never form a burst of four sound effects');
+        lastSignalAt = state.elapsed;
+      }
+      assert.ok(state.buddies.filter(buddy => buddy.signalTime > 0).length <= 2, 'At most two readable bubbles share the screen');
       for (const value of [state.distance, state.height, state.speed, state.turboEnergy, state.turboTime, state.crushBoostTime]) assert.ok(Number.isFinite(value));
       assert.ok(state.turboEnergy >= 0 && state.turboEnergy <= 100);
       assert.ok(state.crushBoostTime >= 0 && state.crushBoostTime <= 1);
@@ -295,7 +312,19 @@ test('all truck sizes and seeded variants finish first with no input, held contr
         assert.ok(lateral >= playerWidth + 1.125 || longitudinal >= 2.8 * truck.scale + 1.4,
           `${truck.id} seed ${seed} keeps physical room for ${buddy.id}`);
       }
-      assert.ok(state.buddies[0].distance - state.buddies[1].distance >= 4 - 1e-8);
+      for (let first = 0; first < state.buddies.length; first++) {
+        assert.ok(state.buddies[first].distance >= previous[first], 'No friend teleports backward');
+        for (let second = first + 1; second < state.buddies.length; second++) {
+          const a = state.buddies[first], b = state.buddies[second];
+          observedPairs.add([a.id, b.id].sort().join('/'));
+          assert.ok(a.distance - b.distance >= 4 * (second - first) - 1e-8,
+            `${a.id} and ${b.id} preserve the safe following queue`);
+          assert.ok(Math.abs(a.lane - b.lane) * 3.4 >= 2.25 * (a.scale + b.scale) ||
+            Math.abs(a.distance - b.distance) >= 2.8 * (a.scale + b.scale), 'Every pair clears both model envelopes');
+        }
+      }
+      if (pattern === patterns[0]) assert.ok(state.buddies.slice(1).every(buddy => buddy.distance <= state.distance),
+        'Only Sunny can take the short lead from an untouched run');
     }
     assert.equal(state.finished, true, `${truck.id} completes`);
     assert.equal(racePlace(state), 1, `${truck.id} earns the lead back before the finish`);
@@ -308,6 +337,7 @@ test('all truck sizes and seeded variants finish first with no input, held contr
     assert.ok(events.filter(event => event.type === 'buddy').length < 80, 'Signals stay sparse even with held controls');
     assert.deepEqual(JSON.parse(JSON.stringify(state)), state);
   }
+  assert.equal(observedPairs.size, 15, 'Every pair from the full cast raced together under the safety checks');
 });
 
 test('pause freezes turbo, crushes and stateful opponents; replay starts with new state', () => {
@@ -324,6 +354,30 @@ test('pause freezes turbo, crushes and stateful opponents; replay starts with ne
   assert.deepEqual(replay.crushedCars, []);
   assert.notEqual(replay.buddies, state.buddies);
   assert.ok(replay.buddies.every(buddy => buddy.distance < 0));
+});
+
+test('late player merges retain clearance through every guest pairing and guardian size', () => {
+  for (let seed = 0; seed < 6; seed++) for (const truck of TRUCKS) for (const steer of [-1, 1]) for (const guardian of [false, true]) {
+    const race = { ...runningRace(seed), distance: 210, truckScale: truck.scale, transformTime: guardian ? 9 : 0 };
+    race.buddies.forEach((buddy, slot) => {
+      buddy.distance = race.distance - buddy.gap;
+      buddy.lane = slot % 2 ? 1.65 : -1.65;
+    });
+    let steering = false;
+    for (let frame = 0; frame < 650; frame++) {
+      if (race.distance - race.buddies[0].distance < (guardian ? 10 : 2)) steering = true;
+      stepRace(race, 1 / 60, { steer: steering ? steer : 0 });
+      for (const [slot, buddy] of race.buddies.entries()) {
+        const lateral = Math.abs(race.lane - buddy.lane) * 3.4, longitudinal = Math.abs(race.distance - buddy.distance);
+        const playerWidth = (race.transformTime > 0 || race.guardianClearTime > 0 ? 3.2 : 2.5) * truck.scale;
+        assert.ok(lateral >= playerWidth + 2.25 * buddy.scale || longitudinal >= 2.8 * (truck.scale + buddy.scale),
+          `${truck.id} seed ${seed} ${guardian ? 'guardian' : 'normal'} late merge clears ${buddy.id}`);
+        if (slot) assert.ok(race.buddies[slot - 1].distance - buddy.distance >= 4 - 1e-8);
+      }
+      if (steering) assert.equal(Math.sign(race.targetLane), steer, 'The driver keeps the requested direction');
+    }
+    assert.ok(steering && Math.abs(race.lane) > .99, 'The requested merge completes after the friend clears');
+  }
 });
 
 test('capped slow frames cannot skip authored contacts, pads, ramps or the comeback', () => {

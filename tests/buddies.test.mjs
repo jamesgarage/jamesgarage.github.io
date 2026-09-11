@@ -5,6 +5,7 @@ import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS, RACE_SPEED, TRUCKS, createR
 import { sampleRaceBuddies, racePlace, RaceBuddies } from '../src/buddies.mjs';
 import { makeTruck, disposeTruck } from '../src/models.mjs';
 import { sampleTrack, laneOffset } from '../src/track.mjs';
+import { CREW_SIZE, raceCrew } from '../src/crew.mjs';
 
 function close(actual, expected, tolerance = 1e-8) {
   assert.ok(Math.abs(actual - expected) < tolerance, `${actual} should equal ${expected}`);
@@ -31,7 +32,7 @@ function matrices(field) {
 
 function approachRace(spec = TRUCKS[0], guardian = false) {
   const race = { ...createRace(), phase: 'running', distance: 210, truckScale: spec.scale, transformTime: guardian ? 9 : 0 };
-  race.buddies.forEach((buddy, index) => { buddy.distance = race.distance - 10 - index * 4; buddy.lane = index ? 1.65 : -1.65; });
+  race.buddies.forEach((buddy, index) => { buddy.distance = race.distance - 10 - index * 4; buddy.lane = index % 2 ? 1.65 : -1.65; });
   return race;
 }
 
@@ -39,8 +40,8 @@ test('distance-only previews remain deterministic, behind, separated and indepen
   for (let distance = 0; distance <= COURSE_LENGTH; distance += .5) {
     const race = Object.freeze({ distance, lane: Math.sin(distance), height: 99, transformTime: 9, stars: 17 });
     const poses = sampleRaceBuddies(race);
-    assert.equal(poses.length, 2);
-    assert.equal(new Set(poses.map(pose => pose.id)).size, 2);
+    assert.equal(poses.length, CREW_SIZE);
+    assert.equal(new Set(poses.map(pose => pose.id)).size, CREW_SIZE);
     assert.ok(distance - poses[0].distance >= 10, 'Leave room behind the largest truck');
     assert.ok(poses[0].distance - poses[1].distance >= 4);
     assert.equal(racePlace(race), 1);
@@ -62,7 +63,8 @@ test('stateful sampling copies real poses and place reflects actual overtakes', 
   race.buddies[1].distance = 108;
   assert.equal(racePlace(race), 2);
   const poses = sampleRaceBuddies(race);
-  assert.deepEqual(poses.map(({ intent, signal, signalTime, speed, ...pose }) => pose), race.buddies.map(({ brain, intent, signal, signalTime, speed, ...pose }) => pose));
+  const position = ({ id, name, distance, lane, height, velocityY }) => ({ id, name, distance, lane, height, velocityY });
+  assert.deepEqual(poses.map(position), race.buddies.map(position));
   assert.ok(poses.every(pose => !('brain' in pose)), 'Private decision memories stay in the simulation');
   assert.notEqual(poses, race.buddies);
   poses[0].distance = 0;
@@ -217,19 +219,20 @@ test('invalid progress and extreme finite inputs yield a safe finite grid or fin
   for (const race of [undefined, null, {}, { distance: NaN }, { distance: Infinity }, { distance: -Infinity }, { distance: '500' }, { distance: -1e308 }, { distance: 1e308 }]) {
     assert.equal(racePlace(race), 1);
     for (const pose of sampleRaceBuddies(race)) {
-      assert.ok(pose.distance >= -14 && pose.distance < COURSE_LENGTH);
+      assert.ok(pose.distance >= -22 && pose.distance < COURSE_LENGTH);
       assert.ok(Object.values(pose).filter(value => typeof value === 'number').every(Number.isFinite));
     }
   }
 });
 
-test('reused detailed trucks follow the real road frame through every point of the loop', () => {
+test('all four crew models follow the real road frame through every point of the loop', () => {
   const scene = new THREE.Scene(), field = new RaceBuddies(scene);
   try {
-    assert.equal(scene.children.length, 4);
+    assert.equal(scene.children.length, CREW_SIZE * 2);
+    assert.deepEqual(field.trucks.map(truck => truck.spec.id), raceCrew().map(spec => spec.id));
     for (const truck of field.trucks) {
       assert.ok(truck.spec.scale >= .45 && truck.spec.scale <= .55);
-      assert.ok(truck.body.getObjectByName(`character-${truck.spec.id}`).children.length > 0);
+      assert.equal(truck.wheels.length, 4);
     }
     assert.notEqual(field.trucks[0].spec.color, field.trucks[1].spec.color);
     for (let distance = 0; distance <= COURSE_LENGTH; distance += 2) {
@@ -300,11 +303,41 @@ test('field resources stay bounded and dispose once without releasing player or 
     field.reset();
     for (let distance = 0; distance <= COURSE_LENGTH; distance += 25) field.update(.016, { distance });
     field.trucks.forEach((truck, i) => assert.deepEqual(resources(truck), original[i]));
-    assert.equal(scene.children.length, 5);
+    assert.equal(scene.children.length, CREW_SIZE * 2 + 1);
   }
   field.dispose(); field.dispose(); field.reset(); field.update(.016, { distance: 400 });
   assert.ok([...counts.values()].every(count => count === 1));
   assert.deepEqual(scene.children, [player.group]);
   assert.equal(outsideDisposals, 0);
   disposeTruck(player); borrowed.geometry.dispose(); borrowed.material.dispose();
+});
+
+test('replay rotates guest models and signal colors while reusing regular friends', () => {
+  const scene = new THREE.Scene(), field = new RaceBuddies(scene);
+  try {
+    const regulars = field.trucks.slice(0, 2);
+    const retired = field.trucks.slice(2);
+    const disposals = new Map();
+    for (const truck of retired) for (const resource of resources(truck)) {
+      disposals.set(resource, 0);
+      resource.addEventListener('dispose', () => disposals.set(resource, disposals.get(resource) + 1));
+    }
+    const seen = new Set();
+    for (let variant = 1; variant <= 18; variant++) {
+      // Also exercise the renderer's defensive automatic roster synchronization.
+      const race = { ...createRace(variant), phase: 'running' };
+      field.update(1 / 60, race);
+      assert.deepEqual(field.trucks.slice(0, 2), regulars);
+      assert.equal(scene.children.length, CREW_SIZE * 2);
+      assert.deepEqual(field.trucks.map(truck => truck.spec.id), raceCrew(variant).map(spec => spec.id));
+      assert.deepEqual(field.poses, sampleRaceBuddies(race));
+      field.trucks.forEach((truck, i) => {
+        seen.add(truck.spec.id);
+        assert.equal(truck.group.visible, true);
+        assert.equal(field.signals.accents[i].color.getHex(), truck.spec.color);
+      });
+    }
+    assert.equal(seen.size, 6);
+    assert.ok([...disposals.values()].every(count => count === 1));
+  } finally { field.dispose(); }
 });

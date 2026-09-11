@@ -29,9 +29,10 @@ function wornStone() {
   const geometry = mergeVertices(source); source.dispose(); geometry.computeVertexNormals(); return geometry;
 }
 
-/** Three original destinations, with independently owned, static GPU resources. */
+/** Three original destinations with independently owned GPU resources. */
 export function createAdventureScenery() {
   const root = new THREE.Group(); root.name = 'adventure-scenery';
+  root.userData.motionTargets = [];
   const paints = Object.fromEntries(Object.entries(COLORS).map(([name, color]) => [name,
     new THREE.MeshStandardMaterial({ color, roughness: name === 'water' ? .24 : ['teal', 'gold'].includes(name) ? .4 : .84,
       metalness: name === 'gold' ? .24 : 0, vertexColors: name === 'water' || name === 'foam',
@@ -61,9 +62,9 @@ export function createAdventureScenery() {
     const base = new THREE.Matrix4().makeRotationY(Math.atan2(frame.forward.x, frame.forward.z));
     base.setPosition(frame.position);
     const group = new THREE.Group(); group.name = name;
-    function addGeometry(geometry, paint, shadow = true, roadSurface = false) {
+    function addGeometry(geometry, paint, shadow = true, roadSurface = false, target = buckets) {
       const key = `${paint}:${shadow}:${roadSurface}`;
-      if (!buckets.has(key)) buckets.set(key, { paint, shadow, roadSurface, geometries: [] });
+      if (!target.has(key)) target.set(key, { paint, shadow, roadSurface, geometries: [] });
       if (geometry.index) { const expanded = geometry.toNonIndexed(); geometry.dispose(); geometry = expanded; }
       // Shapes and sampled surfaces share the same attributes before merging.
       if (paints[paint].userData.surface) surfaceUVs(geometry, paints[paint].userData.surface);
@@ -71,9 +72,9 @@ export function createAdventureScenery() {
       if (paints[paint].vertexColors && !geometry.hasAttribute('color')) {
         geometry.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(geometry.attributes.position.count * 3).fill(1), 3));
       }
-      buckets.get(key).geometries.push(geometry);
+      target.get(key).geometries.push(geometry);
     }
-    function part(kind, paint, p, s, r = [0, 0, 0], shadow = true, transform = base) {
+    function part(kind, paint, p, s, r = [0, 0, 0], shadow = true, transform = base, target = buckets) {
       rotation.setFromEuler(euler.set(...r));
       matrix.compose(position.set(...p), rotation, scale.set(...s)); world.multiplyMatrices(transform, matrix);
       const geometry = shapes[kind].clone().applyMatrix4(world);
@@ -86,7 +87,7 @@ export function createAdventureScenery() {
         }
         geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); paints.rock.vertexColors = true;
       }
-      addGeometry(geometry, paint, shadow);
+      addGeometry(geometry, paint, shadow, false, target);
     }
     function atTrack(station, kind, paint, p, s, r = [0, 0, 0]) {
       const f = sampleTrack(station), transform = new THREE.Matrix4().compose(f.position, f.quaternion, new THREE.Vector3(1, 1, 1));
@@ -129,18 +130,32 @@ export function createAdventureScenery() {
       geometry.setIndex(indices); geometry.computeVertexNormals(); geometry.applyMatrix4(base);
       addGeometry(geometry, paint, false);
     }
-    try {
-      build({ part, atTrack, surface, curtain });
-      for (const { paint, shadow, roadSurface, geometries } of buckets.values()) {
+    function batchParts(target, parent, label) {
+      for (const { paint, shadow, roadSurface, geometries } of target.values()) {
         const geometry = mergeGeometries(geometries);
-        if (!geometry) throw new Error(`Could not batch ${name} ${paint}`);
+        if (!geometry) throw new Error(`Could not batch ${label} ${paint}`);
         geometry.computeBoundingBox(); geometry.computeBoundingSphere();
         const mesh = new THREE.Mesh(geometry, paints[paint]);
-        mesh.name = `${name}-${paint}${roadSurface ? '-road' : shadow ? '' : '-detail'}`;
+        mesh.name = `${label}-${paint}${roadSurface ? '-road' : shadow ? '' : '-detail'}`;
         mesh.castShadow = shadow; mesh.receiveShadow = shadow || roadSurface;
         mesh.userData.roadSurface = roadSurface;
-        group.add(mesh);
+        parent.add(mesh);
       }
+    }
+    function rotor(label, origin, speed, build) {
+      const moving = new Map(), identity = new THREE.Matrix4();
+      const anchor = new THREE.Group(), pivot = new THREE.Group();
+      anchor.name = `${label}-anchor`; anchor.applyMatrix4(base);
+      pivot.name = label; pivot.position.set(...origin); anchor.add(pivot);
+      try {
+        build((kind, paint, p, s, r, shadow) => part(kind, paint, p, s, r, shadow, identity, moving));
+        batchParts(moving, pivot, label); group.add(anchor);
+        root.userData.motionTargets.push(Object.freeze({ id: label, distance, pivot, speed }));
+      } finally { for (const bucket of moving.values()) bucket.geometries.forEach(geometry => geometry.dispose()); }
+    }
+    try {
+      build({ part, atTrack, surface, curtain, rotor });
+      batchParts(buckets, group, name);
       root.add(group);
     } finally { for (const bucket of buckets.values()) bucket.geometries.forEach(geometry => geometry.dispose()); }
   }
@@ -152,7 +167,7 @@ export function createAdventureScenery() {
   }
 
   try {
-    venue('bear-creek-bridge', 347, ({ part, atTrack, surface }) => {
+    venue('bear-creek-bridge', 347, ({ part, atTrack, surface, rotor }) => {
       // Wide short planks rise with the real shared bridge; the boost pad keeps
       // its own orange background instead of competing with timber stripes.
       for (let d = 310, i = 0; d < 375; d += 2.6, i++) {
@@ -185,17 +200,19 @@ export function createAdventureScenery() {
       part('box', 'cream', [x, 9.2, z + 4], [.65, .7, 11.1]);
       part('box', 'ink', [x, 4.4, z - .08], [2, 2.6, .12]);
       for (const side of [-1, 1]) part('box', 'darkwood', [x + side * 6, 1, z - 3.4], [.8, 7, .8]);
-      for (const face of [-1, 1]) {
-        part('ring', 'darkwood', [x, y, z - 4 + face * .72], [5.3, 5.3, 5.3]);
+      rotor('bear-creek-waterwheel', [x, y, z - 4], .22, moving => {
+        for (const face of [-1, 1]) {
+          moving('ring', 'darkwood', [0, 0, face * .72], [5.3, 5.3, 5.3]);
+          for (let i = 0; i < 10; i++) {
+            const a = i * Math.PI / 5;
+            moving('box', 'wood', [Math.sin(a) * 2.5, Math.cos(a) * 2.5, face * .72], [.35, 5.2, .3], [0, 0, -a]);
+          }
+        }
         for (let i = 0; i < 10; i++) {
           const a = i * Math.PI / 5;
-          part('box', 'wood', [x + Math.sin(a) * 2.5, y + Math.cos(a) * 2.5, z - 4 + face * .72], [.35, 5.2, .3], [0, 0, -a]);
+          moving('box', i % 2 ? 'wood' : 'lightwood', [Math.sin(a) * 5.2, Math.cos(a) * 5.2, 0], [1.3, .35, 2], [0, 0, -a]);
         }
-      }
-      for (let i = 0; i < 10; i++) {
-        const a = i * Math.PI / 5;
-        part('box', i % 2 ? 'wood' : 'lightwood', [x + Math.sin(a) * 5.2, y + Math.cos(a) * 5.2, z - 4], [1.3, .35, 2], [0, 0, -a]);
-      }
+      });
       part('cylinder', 'gold', [x, y, z - 4], [.75, 3, .75], [Math.PI / 2, 0, 0]);
       part('box', 'rock', [x, -2.65, z - 6], [18, .55, 8]);
       part('box', 'water', [x, -2.32, z - 6], [16, .07, 6], [0, 0, 0], false);
@@ -303,5 +320,6 @@ export function createAdventureScenery() {
       flag(part, -18, 9, -25, 'gold');
     });
   } finally { Object.values(shapes).forEach(geometry => geometry.dispose()); }
+  Object.freeze(root.userData.motionTargets);
   return root;
 }

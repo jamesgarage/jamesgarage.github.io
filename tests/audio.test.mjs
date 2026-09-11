@@ -159,7 +159,7 @@ test('pause silences driving and effects; resume reuses and restores the graph',
   assert.equal(audio.engineGain.gain.value, 0);
 });
 
-test('both friends have distinct audible replies with repeat limits and immediate mute', async t => {
+test('the six friends have distinct quiet replies with shared and individual repeat limits', async t => {
   installAudio(t);
   const audio = new GameAudio(); await audio.start();
   audio.play('buddy-sunny');
@@ -168,9 +168,24 @@ test('both friends have distinct audible replies with repeat limits and immediat
   audio.play('buddy-sunny');
   assert.equal(audio.voices.size, 2, 'A repeated event in the same frame stays quiet');
   audio.play('buddy-splash');
+  assert.equal(audio.voices.size, 2, 'Friends cannot all reply at the same instant');
+  audio.context.currentTime += .3;
+  audio.play('buddy-splash');
   assert.equal(audio.voices.size, 4, 'Splash has its own reply');
   const splash = [...audio.voices].slice(2);
   assert.notEqual(sunny[0].oscillator.frequency.value, splash[0].oscillator.frequency.value);
+  const notes = new Set([sunny[0].oscillator.frequency.value, splash[0].oscillator.frequency.value]);
+  for (const id of ['ember', 'pebble', 'bolt', 'digger']) {
+    audio.context.currentTime += .3;
+    const before = audio.voices.size;
+    audio.play(`buddy-${id}`);
+    assert.equal(audio.voices.size, before + 2);
+    const reply = [...audio.voices].slice(-2);
+    notes.add(reply[0].oscillator.frequency.value);
+    audio.play(`buddy-${id}`);
+    assert.equal(audio.voices.size, before + 2);
+  }
+  assert.equal(notes.size, 6);
   audio.setMuted(true); audio.play('buddy-sunny');
   assert.equal(audio.voices.size, 0);
   assert.ok([...sunny, ...splash].every(voice => voice.oscillator.stoppedImmediately));

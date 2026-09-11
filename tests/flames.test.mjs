@@ -6,6 +6,7 @@ import { GameScene, makeTruck } from '../src/scene.mjs';
 import { TRUCKS } from '../src/core.mjs';
 import { RaceBuddies } from '../src/buddies.mjs';
 import { WorldLife } from '../src/world-life.mjs';
+import { LandmarkMotion } from '../src/landmark-motion.mjs';
 import { RaceWeather } from '../src/weather.mjs';
 import { RoadEncounters } from '../src/encounter-scene.mjs';
 
@@ -110,7 +111,7 @@ test('scene reset, menu, and truck replacement clear old flames before teleporti
   const target = rig();
   // Exercise the real lifecycle methods without constructing a WebGL renderer.
   Object.setPrototypeOf(target, GameScene.prototype);
-  Object.assign(target, { stars: [], particles: [], mode: 'race', buddies: new RaceBuddies(target.scene), weather: new RaceWeather(target.scene), encounters: new RoadEncounters(target.scene), life: new WorldLife(target.scene) });
+  Object.assign(target, { stars: [], particles: [], mode: 'race', buddies: new RaceBuddies(target.scene), weather: new RaceWeather(target.scene), encounters: new RoadEncounters(target.scene), life: new WorldLife(target.scene), landmarks: new LandmarkMotion() });
   const actions = [() => target.reset(), () => target.menu(), () => target.setTruck(TRUCKS.at(-1))];
   for (const [index, action] of actions.entries()) {
     fillTrail(target);
@@ -128,7 +129,7 @@ test('scene reset, menu, and truck replacement clear old flames before teleporti
       assert.ok(Math.abs(matrices[offset + 12] - destination) < 10, 'only the new truck should have visible flames');
     }
   }
-  target.buddies.dispose();target.weather.dispose();target.encounters.dispose();target.life.dispose();
+  target.buddies.dispose();target.weather.dispose();target.encounters.dispose();target.life.dispose();target.landmarks.dispose();
 });
 
 test('exhaust follows larger trucks, guardian body lift, and loop inversion', () => {
