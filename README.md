@@ -18,6 +18,8 @@ Choose **Let's play** to start a race of roughly a minute, depending on turbo an
 
 Sunny and Splash are your little racing friends. They greet you with a smile, copy safe jumps after you, and cheer when you crush a car or use turbo. Sunny likes a playful race and can briefly pull ahead; Splash enjoys the puddles. Little pictures above their trucks show what they are doing. Their timing and the butterflies' colors change between completed races, while the familiar route stays easy to follow.
 
+![Sunny and Splash copying a jump, with an arrow above each friend](docs/screenshots/friends.png)
+
 Crushing a toy car gives you a little speed burst; turbo helps you pull ahead even faster. Gentle steering assistance keeps close passes clear. The position badge follows the actual race, and your chosen truck takes the spotlight at the finish. Winning does not make the next race harder.
 
 - **Touch:** use the large on-screen controls to jump, steer, fire the turbo, or transform when energy is ready.

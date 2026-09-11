@@ -132,6 +132,12 @@ A final-build layout capture checked 1440×900 desktop, 1024×768 tablet landsca
 
 After the UV corrections, the final production build passed all **seven browser tests in Chrome (about 1.9 minutes) and WebKit (about 2.3 minutes)**. Each engine verified visible greeting/jump reactions, frozen friends and world life while paused, keyboard/touch steering, jump and turbo, positive crushing and a real comeback, a full unattended first-place race, saved unlock/reload and variant-1 replay, and play with unavailable storage/audio. Both runs recorded no JavaScript, console, failed-request or HTTP errors. Final independent integration review found no further material issues.
 
+The [playful world deployment](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34635802592) successfully built and published runtime commit `fdddcde`. The public page serves the matching `index-DTXNLMLw.js` and `index-L73CJAqG.css` assets.
+
+The public capture repeated all four viewport/garage/control checks without errors, overflow or overlapping/offscreen essential controls. It also used a real touch jump at phone width to capture both physical friend echoes. Independent public visual review confirmed readable phone arrows and controls, airborne Titan exhaust and both WebKit jump pictograms.
+
+All **seven browser tests passed on the public deployment in Chrome (about 2.0 minutes) and WebKit (about 2.4 minutes)**. Both included the new reactions and frozen ambient state, a complete unattended first-place race, saved unlock/reload and the varied replay, plus all existing input, turbo/crushing and fallback checks. No JavaScript, console, failed-request or HTTP resource errors were recorded. The ten README screenshots were captured from this deployment, including the new friends-jumping-together image; the public waterfall/material view was also inspected. Physical iPad/Safari performance and James's response to the new friends remain the next observations.
+
 ## Practical limits
 
 - Chrome and Playwright WebKit on a desktop with emulated touch are not a physical iPad or iPhone. Shipping Safari behavior, actual device frame pacing, battery use, and orientation changes still need a real-device pass.

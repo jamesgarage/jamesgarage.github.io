@@ -21,7 +21,7 @@ Preserve save version 1, all six thresholds, assisted driving/jumps/loop, positi
 - [x] Enrich world/adventure materials and implement src/world-life.mjs plus focused geometry/resource tests. update(dt,{race,reducedMotion,mode}), reset(variant=0), dispose() keep ownership explicit. Inspect scenery in moving-camera views and report resource cost.
 - [x] Root integrates seeded starts, renderer signals/steering in src/buddies.mjs, optional quiet buddy audio in src/audio.mjs, scene world-life hooks and diagnostics. Add meaningful renderer and browser regressions for actual visible reactions, pause and varied replay; use large existing controls.
 - [x] Run all units/build, controlled browser play, both full browser engines, viewport and resource checks. Obtain independent code/visual review; resolve findings.
-- [ ] Update README/roadmap/assets/validation, publish main through Pages, verify head/assets, run public browser suites, refresh screenshots and document remaining physical-device checks.
+- [x] Update README/roadmap/assets/validation, publish main through Pages, verify head/assets, run public browser suites, refresh screenshots and document remaining physical-device checks.
 
 ## Review ledger
 
@@ -30,3 +30,5 @@ Ruling: Keep Three.js and use local deterministic brains. The requested behavior
 Buddy review: fixed blank pictograms caused by opaque material ordering using explicit layer order; reduced badge size and verified real greeting/jump screenshots. Fixed reply sounds omitted from audio allowlist with an observed failing audible-event regression, then six passing audio tests. Independent follow-up closed both findings. Texture review identified stretched vertical waterfall UVs and per-vertex projection seams; stable per-piece water and per-triangle solid mapping resolved them. Independent re-probe of 83,752 textured triangles closed the finding. Final 113 unit tests/build passed; controlled play, lifecycle and 24 scenery views are recorded in docs/VALIDATION.md.
 
 Final production acceptance: seven browser tests passed in Chrome (1.9 minutes) and WebKit (2.3 minutes) after all source corrections, with no runtime/resource errors. Four layout captures passed. Final integration review has no open material findings. Production assets: index-DTXNLMLw.js / index-L73CJAqG.css.
+
+Released runtime fdddcde through successful Pages run 34635802592. Public assets match. Public seven-test suites passed in Chrome (2.0 minutes) and WebKit (2.4 minutes), including a complete race and saved variant-1 replay. Four public viewport captures and independent phone/WebKit visual checks passed. Ten README screenshots show the published build. Physical iPad performance and child-play observations remain explicitly unverified.
