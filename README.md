@@ -69,7 +69,7 @@ These are original models inspired by broad toy and vehicle interests. The game 
 
 Bear Woods climbs a timber bridge beside a giant waterwheel. Rocket Runway adds a launch pad, a tall toy rocket, and a boost toward the next ramp. Gator Falls brings a broad waterfall, reeds, and a waterfront boardwalk to the rainy lagoon. Picnic stops, balloons, friendly bears and alligators, stands, and the finish trophy garden fill out the route.
 
-Wood grain, mottled grass, worn stone and water highlights give those places more texture. Nearby tree crowns have smoother, softly uneven outlines. Low sandy banks have uneven waterlines, gently shaded slopes, and rooted palms and alligator feet. The waterwheel turns beside the bridge and the woodland windmill slowly rotates its sails. Small butterflies flutter beside the woods; cattails sway and gentle ripples move through the lagoon. Gentler motion keeps these extra details still.
+Wood grain, mottled grass, worn stone and water highlights give those places more texture. Nearby tree crowns have smoother, softly uneven outlines, with rounded hills along the horizon. Low sandy banks have uneven waterlines, gently shaded slopes, and rooted palms and alligator feet. The waterwheel turns beside the bridge and the woodland windmill slowly rotates its sails. Small butterflies flutter beside the woods; cattails sway and gentle ripples move through the lagoon. Gentler motion keeps these extra details still.
 
 ![A close race across the raised timber bridge beside its waterwheel](docs/screenshots/bridge.png)
 
@@ -77,7 +77,7 @@ Wood grain, mottled grass, worn stone and water highlights give those places mor
 
 ![The complete raised-edge toy loop and its stunt festival surroundings](docs/screenshots/loop.png)
 
-Steering turns the front wheels and leans the body. Left and right follow the chase camera's view for both touch and keyboard controls. Landings compress the suspension and kick up a brief dust burst and ring. The chase camera frames your truck and its four friends, then pulls aside for an upright view of the loop.
+Steering turns the front wheels and leans the body. Left and right follow the chase camera's view for both touch and keyboard controls. Landings compress the suspension and kick up a brief dust burst and ring; Mega Titan's exposed rear coils shorten with the body dip. The chase camera frames your truck and its four friends, then pulls aside for an upright view of the loop.
 
 ![The rainy skyway passing Gator Falls and its waterfront boardwalk](docs/screenshots/bay.png)
 

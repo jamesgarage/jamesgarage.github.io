@@ -13,6 +13,7 @@ export function makeTruck(spec) {
   const body = new THREE.Group(); body.name = 'sprung-body'; group.add(body);
   const character = new THREE.Group(); character.name = `character-${spec.id}`; body.add(character);
   const wheels = [], arms = [], struts = [];
+  let rearSuspension = null;
   const metal = spec.id === 'chrome-guardian';
   const rescue = spec.id === 'rescue-roarer';
   const shark = spec.id === 'shark-surge';
@@ -348,6 +349,8 @@ export function makeTruck(spec) {
     box(character, p.chrome, [0, 2.62, 1.64], [1.35, .12, .56], .05);
     box(character, p.accent, [0, 1.79, 2.49], [1.58, .27, .17], .05);
     const suspension = new THREE.Group(); suspension.name = 'titan-rear-suspension'; character.add(suspension);
+    // Borrowed pose handle only; this factory retains ownership of all resources.
+    rearSuspension = Object.freeze({ group: suspension, lowerAnchor: 1.77, span: .95 });
     box(suspension, p.dark, [0, 2.72, -2.32], [1.93, .14, .18], .045);
     for (const side of [-1, 1]) {
       cylinder(suspension, p.chrome, [side * .72, 2.2, -2.34], .075, .97, [0, 0, 0]);
@@ -370,7 +373,7 @@ export function makeTruck(spec) {
     const mesh = new THREE.Mesh(geometry, material); mesh.name = `${parent.name}-${material.name}`;
     mesh.castShadow = true; mesh.receiveShadow = true; parent.add(mesh);
   }
-  const truck = { group, body, wheels, arms, head, struts, spec };
+  const truck = { group, body, wheels, arms, head, struts, spec, rearSuspension };
   ownership.set(truck, { geometries: ownedGeometry, materials: new Set(Object.values(palette)) });
   return truck;
 }

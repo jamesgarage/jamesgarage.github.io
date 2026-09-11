@@ -73,7 +73,7 @@ const geo = {
   rock: organicSphere(10, 6),
   crown: organicSphere(20, 12, true),
   farCrown: organicSphere(8, 6, true),
-  hill: organicSphere(14, 8),
+  hill: organicSphere(24, 14),
   palmTrunk: palmTrunk(),
   frond: palmFrond(),
   cone: new THREE.ConeGeometry(1, 1, 9),

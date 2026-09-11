@@ -13,6 +13,7 @@ import { createAdventureScenery } from './adventure.mjs';
 import { WorldLife } from './world-life.mjs';
 import { LandmarkMotion } from './landmark-motion.mjs';
 import { BurstParticles } from './burst-particles.mjs';
+import { poseRearSuspension } from './rear-suspension.mjs';
 export { makeTruck } from './models.mjs';
 export { sampleTrack } from './track.mjs';
 
@@ -88,11 +89,12 @@ export class GameScene {
   }
   setTruck(spec) {
     this.flames.clear();this.weather.reset();this.bursts.clear();
+    poseRearSuspension(this.truck.rearSuspension);
     disposeTruck(this.truck);
     this.scene.remove(this.truck.group);this.truck=makeTruck(spec);this.scene.add(this.truck.group);this.transform=0;this.boost=0;
   }
-  reset(variant=0) {this.flames.clear();this.buddies.reset(variant);this.weather.reset();this.encounters.reset();this.life.reset(variant);this.landmarks.reset(variant);this.bursts.clear();this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;}
-  menu() {this.flames.clear();this.weather.reset();this.bursts.clear();this.mode='menu';this.snapCamera=true;}
+  reset(variant=0) {this.flames.clear();this.buddies.reset(variant);this.weather.reset();this.encounters.reset();this.life.reset(variant);this.landmarks.reset(variant);this.bursts.clear();poseRearSuspension(this.truck.rearSuspension);this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;}
+  menu() {this.flames.clear();this.weather.reset();this.bursts.clear();poseRearSuspension(this.truck.rearSuspension);this.mode='menu';this.snapCamera=true;}
   resize() {this.width=innerWidth;this.height=innerHeight;this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();this.renderer.setSize(this.width,this.height,false);this.snapCamera=true;}
   burst(colorful=true,count=20,origin=this.truck.group.position,reward=false) {
     if(this.reducedMotion||this.mode!=='race')return 0;
@@ -104,6 +106,7 @@ export class GameScene {
     this.time+=dt;
     const isMenu=this.mode==='menu';
     const d=isMenu?14:race.distance;
+    const inLoop=d>LOOP_START-18&&d<LOOP_END+15&&!isMenu;
     const f=sampleTrack(d);const g=this.truck.group;
     g.scale.setScalar(this.truck.spec.scale*(isMenu?(this.width<this.height?1.72:2.1):1));
     g.position.copy(f.position).addScaledVector(f.right,laneOffset(isMenu?0:race.lane)).addScaledVector(f.up,isMenu?0:race.height);
@@ -116,6 +119,7 @@ export class GameScene {
     this.steerLean=lerp(this.steerLean,isMenu?0:-(race.targetLane-race.lane)*.16,1-Math.exp(-dt*7));
     this.truck.body.position.y=this.transform*1.8-this.squash*.2+(isMenu?.035*Math.sin(this.time*2):Math.sin(this.time*16)*.025);
     this.truck.body.rotation.z=-this.steerLean;
+    poseRearSuspension(this.truck.rearSuspension,!isMenu&&!this.reducedMotion&&!inLoop?this.squash*.2:0,this.steerLean);
     this.truck.head.visible=this.transform>.06;this.truck.head.scale.setScalar(Math.max(.01,this.transform));
     this.truck.arms.forEach((arm,i)=>{arm.visible=this.transform>.06;arm.rotation.z=(i===0?-1:1)*this.transform*.85;});
     this.truck.struts.forEach(leg=>{leg.visible=this.transform>.06;leg.scale.y=1.2+this.transform*1.9;leg.position.y=1.7+this.transform*.8;});
@@ -130,7 +134,6 @@ export class GameScene {
     this.landingRing.quaternion.copy(f.quaternion);this.landingRing.rotateX(-Math.PI/2);
     this.landingRing.scale.setScalar((2+(1-this.squash)*5)*this.truck.spec.scale);this.landingRing.material.opacity=this.squash*.55;
     this.sky.position.copy(g.position);
-    const inLoop=d>LOOP_START-18&&d<LOOP_END+15&&!isMenu;
     if(isMenu) {
       const portrait=this.width<this.height;
       const showcaseZoom=(1+(this.truck.spec.scale-1)*.75)*(portrait?1.13:1);

@@ -10,6 +10,7 @@ import { LandmarkMotion } from '../src/landmark-motion.mjs';
 import { RaceWeather } from '../src/weather.mjs';
 import { RoadEncounters } from '../src/encounter-scene.mjs';
 import { BurstParticles } from '../src/burst-particles.mjs';
+import { poseRearSuspension } from '../src/rear-suspension.mjs';
 
 function rig(spec = TRUCKS[0]) {
   const scene = new THREE.Scene();
@@ -108,8 +109,8 @@ test('sustained driving keeps flame storage and scene resources bounded', () => 
   assert.deepEqual(target.scene.children, sceneObjects);
 });
 
-test('scene reset, menu, and truck replacement clear old flames and confetti before teleporting', () => {
-  const target = rig();
+test('scene reset, menu, and truck replacement clear old flames, confetti and spring poses before teleporting', () => {
+  const target = rig(TRUCKS.at(-1));
   // Exercise the real lifecycle methods without constructing a WebGL renderer.
   Object.setPrototypeOf(target, GameScene.prototype);
   Object.assign(target, { stars: [], bursts: new BurstParticles(target.scene), mode: 'race', buddies: new RaceBuddies(target.scene), weather: new RaceWeather(target.scene), encounters: new RoadEncounters(target.scene), life: new WorldLife(target.scene), landmarks: new LandmarkMotion() });
@@ -118,7 +119,12 @@ test('scene reset, menu, and truck replacement clear old flames and confetti bef
     fillTrail(target);
     target.bursts.burst({count:70,origin:target.truck.group.position});
     assert.equal(target.bursts.diagnostics.count,70);
+    const springs = target.truck.rearSuspension;
+    poseRearSuspension(springs,.2);
+    assert.ok(springs.group.scale.y<1);
     action();
+    assert.equal(springs.group.scale.y,1);
+    assert.equal(springs.group.position.y,0);
     assert.equal(target.bursts.diagnostics.count,0);
     assert.ok(target.bursts.particles.every(p=>p.life===0&&!p.mesh.visible));
     assert.equal(target.flames.mesh.count, 0);

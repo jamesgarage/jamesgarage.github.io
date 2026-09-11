@@ -27,6 +27,10 @@ Preserve guided driving, positive crushing/turbo, truthful rank and no-input fir
 
 ## Ledger
 
+At16:42 EDT the final hill/coil increment passes162 units and ten final production browser checks in both engines. Independent spring review catches and closes a sharp-steering contact issue with a small lean taper;192 complete traces then show no added contact. The refined2.5D camera study is complete and remains exploratory because of gate/loop obstruction. Findings and original comparison stills are retained in the iOS research note. Publishing the accepted scenery/mechanical detail now, then verifying public play.
+
+At16:24 EDT runtime80aeecb is live and all ten public checks pass in Chrome/WebKit; docs head19fdcb6 records the release. Accept24x14 distant hills after an18-view matched comparison and independent geometry/visual review. A Titan suspension study and improved side-camera framing remain private experiments pending visible benefit and clearance checks.
+
 At16:18 EDT the distinct truck, softer forest and batched celebration increment passes157 units, ten production browser checks in both engines, independent model/effect review, a144-replacement resource check and three actual consecutive races from an empty save. Publishing this accepted increment. Road-texture and water-offset studies add too little visible benefit and remain unshipped. A paired side-camera study improves truck readability but exposes portrait/bridge framing issues; retain chase for this release.
 
 Second increment: natural lagoon banks (docs/DESIGN-LAGOON-SHORES.md) and a nontextual two-star crush reward cue (docs/DESIGN-CRUSH-STARS.md). Both independently reviewed and visually checked; all141 release units and8 production browser checks in Chrome/WebKit pass. Publication follows. The crew release also completed a controlled public playthrough:54 awarded stars,6 crushed cars,7 landings,1 loop,first place and an earned Bear replay.

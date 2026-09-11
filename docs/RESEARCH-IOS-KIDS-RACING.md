@@ -42,8 +42,16 @@ Use the selection view to show each side/front profile, and make the rear design
 
 Retain guided forward movement, generous road clearance, clear crush rewards, and the existing pause/gentler-motion behavior. Add form and material quality before adding more buttons or additional decorative fragments. Verify ordinary and largest guardian sizes with the actual camera, including a landing and nearby buddies, so the suspension and identity remain visible without crowding the roadway.
 
-## Future 2.5D comparison
+## Our 2.5D camera study
 
-The screenshots support trying a constrained side or three-quarter view as a future experiment: a predictable ground profile can expose vehicle shape and suspension over more of the frame. They do not prove that changing our camera or renderer would make the game easier for this child.
+The reference screenshots prompted a comparison using our actual fire engine, shark and Titan, with the same automatic driving, four friends and 3D world. Six camera arrangements were tested. A rear-oblique angle, closer to the rear in portrait, showed the strongest truck silhouettes while keeping the convoy and upcoming road visible. This experiment used the existing Three.js renderer.
 
-A bounded comparison should reuse the same three original trucks, a short course, the same automatic driving and forgiving outcome, and one crush reward. Compare the current chase view with a fixed side/three-quarter camera. Judge recognition of the fire engine/shark/springs, visibility of the next ramp and reward, amount of screen occupied by controls, and the child's ability to continue unaided. Keep movement and input equivalent so the camera comparison answers a clear question. A renderer migration is unnecessary for that visual experiment.
+![Exploratory rear-oblique view of Rescue Roarer jumping, with the existing controls](screenshots/camera-study-fire.png)
+
+![Exploratory portrait view of Shark Surge and the four friends crossing the bridge](screenshots/camera-study-shark.png)
+
+These are study renders. The public game retains its current chase camera. Twenty-four matched HUD compositions show the three trucks at crush, jump, bridge and loop moments in both tablet orientations. The final fitted composition keeps the truck and friend bounds clear of the HUD in those samples. Six full-course runs cover 23,616 simulated frames and keep all actors and the sampled forward road inside the camera frame. This verifies framing in the experiment; it does not establish child comfort or physical-iPad performance.
+
+The remaining issues are visible: the approach road can obscure the truck during the loop transition, gate posts can cover friends, and reaction pictograms still face the original camera. The landscape loop also makes the player smaller. A production version would need deliberate occlusion handling, active-camera billboards, consistent directional controls, explicit pause/reset behavior and reusable math buffers. It should first become a small playable comparison on the family's device. The study supports further camera work; it does not justify replacing the current renderer or publishing this camera as a finished mode.
+
+Local reproduction and complete findings are retained in `.tmp/refined-camera-study-report.md`, with a private comparison gallery and two motion clips. The original captures above are included in the repository so the visual direction remains reviewable without those scratch artifacts.

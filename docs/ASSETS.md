@@ -37,6 +37,8 @@ The generator reuses one temporary renderer and disposes each truck after captur
 
 `docs/screenshots/menu.png`, `garage.png`, `loop.png`, `bay.png`, and `flames.png` show the game's actual browser rendering. They are not concept art. Viewport emulation does not establish physical-device testing; see [the validation record](VALIDATION.md).
 
+`camera-study-fire.png` and `camera-study-shark.png` are original renders from the private camera comparison described in [the iOS visual study](RESEARCH-IOS-KIDS-RACING.md). They show an exploratory camera with the game's own models and HUD; the public game keeps its existing camera. Official App Store reference images were inspected only as research and are not included as game assets.
+
 Rendering uses [Three.js](https://threejs.org/), distributed under the MIT license. Its copyright and permission notice ships in the built game as `THREE-LICENSE.txt`. Vite and Playwright are development tools; their package license files are supplied with their installed packages.
 
 The project's original code and generated assets are covered by its [MIT license](../LICENSE). Contributions should use original or appropriately licensed material.

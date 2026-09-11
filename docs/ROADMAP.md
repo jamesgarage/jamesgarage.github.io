@@ -93,7 +93,9 @@ Before a rewrite, compare one truck, one ramp, and one landing on a real target 
 
 ## Distinct forms and rendering polish
 
-The garage now adds Rescue Roarer, a full fire engine, and Shark Surge, a complete shark body, while keeping every previous truck and saved selection. Mega Titan exposes large rear coilovers and more of its existing tires. Nearby crowns are smoother and celebration particles share one draw. The [iOS visual study](RESEARCH-IOS-KIDS-RACING.md) compares relevant 3D and side-view references without treating broad App Store chart positions as a toddler suitability ranking. Keep the current guided 3D view; a later matched 2.5D camera experiment can use the same models and controls.
+The garage now adds Rescue Roarer, a full fire engine, and Shark Surge, a complete shark body, while keeping every previous truck and saved selection. Mega Titan exposes rear coilovers that shorten on landing and more of its existing tires. Nearby crowns and distant hills are smoother, and celebration particles share one draw. The [iOS visual study](RESEARCH-IOS-KIDS-RACING.md) compares relevant 3D and side-view references without treating broad App Store chart positions as a toddler suitability ranking.
+
+A private rear-oblique camera experiment improves vehicle readability and portrait convoy framing using the existing renderer. Its full-course review still finds gate and loop obstruction, plus active-camera billboard and control work. Retain the current guided 3D view and use those findings for a later small playable camera comparison.
 
 ## Deferred: playful racing additions
 
