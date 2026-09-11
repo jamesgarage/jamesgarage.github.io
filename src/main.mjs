@@ -132,7 +132,7 @@ try {
     if(hudTick>.08){hudTick=0;$('race-stars').textContent=race.stars;const percent=race.distance/COURSE_LENGTH*100;$('race-progress').value=percent;$('race-distance').textContent=`${Math.floor(percent)}%`;$('energy-fill').style.width=`${race.transformTime>0?race.transformTime/9*100:race.energy}%`;$('transform-btn').disabled=race.energy<100;$('transform-btn').setAttribute('aria-label',race.transformTime>0?'Guardian mode active':race.energy<100?'Transformation charging':'Transform truck');}
   });
   // Read-only diagnostics for local browser smoke tests and frame-budget checks.
-  Object.defineProperty(window,'__skyway',{get:()=>Object.freeze({phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles})});
+  Object.defineProperty(window,'__skyway',{get:()=>Object.freeze({phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles,flames:world.flames.mesh.count})});
 } catch(error) {
   $('loading').hidden=true;$('error').hidden=false;$('error').textContent='This adventure needs a browser with 3D graphics (WebGL 2). Try an updated Safari, Chrome, or Edge with graphics acceleration enabled.';
   $('play-btn').disabled=true;$('garage-btn').disabled=true;console.error('Unable to start Monster Skyway:',error);

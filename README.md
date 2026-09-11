@@ -4,6 +4,10 @@
 
 A cheerful 3D monster truck game for little drivers. Race along a bright toy track, soar over ramps, ride a guided loop, transform into a robot guardian, and grow a garage of increasingly enormous trucks.
 
+Twin exhausts shoot bright flames and leave a fiery trail through jumps and loops. Bigger trucks bring bigger flames, and guardian mode turns them up further. **Gentler motion** keeps small, steady exhaust flames without the moving trail.
+
+![Mega Titan jumping with twin flame trails on an iPad-sized screen](docs/screenshots/flames.png)
+
 This project began with a three-year-old's love of monster trucks, orange stunt tracks, angular silver vehicles, and transforming robots. It explores what a family can create with AI as a development collaborator. The vehicles, characters, sounds, and scenery are original creations.
 
 ![The Monster Skyway garage and an original 3D monster truck](docs/screenshots/menu.png)

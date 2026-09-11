@@ -36,6 +36,7 @@ test('keyboard and touch jumps, pause, and resume work after a garage visit', as
   await page.getByRole('button', { name: 'Close garage', exact: true }).click();
   await page.getByRole('button', { name: "Let's play", exact: true }).click();
   await page.waitForFunction(() => window.__skyway.distance > 20);
+  expect(await page.evaluate(() => window.__skyway.flames)).toBeGreaterThan(6);
 
   // ArrowUp is a global jump key; this also works while a control owns focus.
   await page.keyboard.press('ArrowUp');
@@ -55,6 +56,7 @@ test('keyboard and touch jumps, pause, and resume work after a garage visit', as
   await page.waitForTimeout(250);
   expect(await page.evaluate(() => window.__skyway.distance)).toBe(paused.distance);
   expect(await page.evaluate(() => window.__skyway.height)).toBe(paused.height);
+  expect(await page.evaluate(() => window.__skyway.flames)).toBe(paused.flames);
   await page.getByRole('button', { name: 'Keep going', exact: true }).tap();
   await page.waitForFunction(distance => window.__skyway.distance > distance + 3, paused.distance);
   await expect(page.locator('#pause-overlay')).toBeHidden();
@@ -67,12 +69,17 @@ test('a complete guided race unlocks a truck and saves it for replay', async ({ 
   await page.getByRole('button', { name: "Let's play", exact: true }).tap();
 
   // Run the real game clock with no driving input: little children can finish unaided.
+  await page.waitForFunction(() => window.__skyway.distance >= 750, null, { timeout: 90_000 });
+  expect(await page.evaluate(() => window.__skyway.transformed)).toBe(true);
+  expect(await page.evaluate(() => window.__skyway.flames)).toBeGreaterThan(6);
+  await page.screenshot({ path: testInfo.outputPath('guardian-flames.png') });
   await page.waitForFunction(() => window.__skyway.distance >= 900, null, { timeout: 90_000 });
   const loop = await page.evaluate(() => ({ ...window.__skyway }));
   expect(loop.phase).toBe('running');
   expect(loop.distance).toBeLessThan(1000);
   expect(loop.drawCalls).toBeGreaterThan(0);
   expect(loop.triangles).toBeGreaterThan(0);
+  expect(loop.flames).toBeGreaterThan(6);
   await page.screenshot({ path: testInfo.outputPath('guided-loop.png') });
 
   await expect(page.locator('#results')).toBeVisible({ timeout: 90_000 });
@@ -124,6 +131,7 @@ test('blocked storage and unavailable audio still allow touchscreen play', async
   await page.getByRole('button', { name: 'Close settings', exact: true }).tap();
   await page.getByRole('button', { name: "Let's play", exact: true }).tap();
   await page.waitForFunction(() => window.__skyway.distance > 10);
+  expect(await page.evaluate(() => window.__skyway.flames)).toBe(2);
   await page.getByRole('button', { name: 'Jump', exact: true }).tap();
   await page.waitForFunction(() => window.__skyway.height > 1);
   await expect(page.locator('#error')).toBeHidden();

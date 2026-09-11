@@ -16,7 +16,7 @@ The dark neon monster truck, angular silver truck, orange stunt track, and trans
 
 ## Before calling the release ready
 
-The first local release is implemented. Fifteen unit tests and three portable browser tests pass, including a complete unattended race, saved unlocks, replay, and missing-storage/audio recovery. Desktop and emulated phone/tablet layouts have been inspected. See [the validation record](VALIDATION.md). Real iPad/Safari testing and observation with a child remain the next gates.
+The first release is published. Twenty unit tests and three portable browser tests cover the game, including a complete unattended race, saved unlocks, replay, flame lifecycles, and missing-storage/audio recovery. Desktop and emulated phone/tablet layouts have been inspected. See [the validation record](VALIDATION.md). Real iPad/Safari testing and observation with a child remain the next gates.
 
 1. Run the automated rules tests and production build.
 2. Complete a no-input race and a race with repeated jump and steering input.
@@ -40,6 +40,8 @@ The first local release is implemented. Fifteen unit tests and three portable br
 The current game follows a guided course. A true free-driving toy playground is a future mode with its own vehicle movement, camera, boundaries, ramps, and recovery behavior. It should offer open exploration while preserving the ability to recover easily from any position.
 
 Build and evaluate that mode separately from the dependable guided race.
+
+A future Snake-inspired monster-truck mode could grow a colorful flame tail as the driver collects stars, with roomy turns and gentle recovery when trails cross.
 
 ## Separate construction adventure for iPad
 

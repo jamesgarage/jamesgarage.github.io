@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS } from './core.mjs';
+import { ExhaustFlames } from './flames.mjs';
 
 const TAU = Math.PI * 2;
 const UP = new THREE.Vector3(0, 1, 0);
@@ -102,6 +103,8 @@ export function makeTruck(spec) {
     box(body,0x243e51,[side*1.5,2.88,.5],[.43,.19,.38]);
     box(body,spec.accent,[side*1.34,2.18,-.25],[.06,.28,1.3]);
     box(body,0x344654,[side*1.05,2.5,-1.78],[.17,1.2,.17],undefined,.6);
+    shape(body,'cylinder',0x69808b,[side*1.05,3.05,-1.97],[.23,.43,.23],[Math.PI/2,0,0],.6);
+    shape(body,'cylinder',0x243949,[side*1.05,3.05,-2.19],[.17,.035,.17],[Math.PI/2,0,0]);
     const arm = new THREE.Group(); arm.position.set(side*1.5,2.45,0); body.add(arm);
     box(arm,spec.color,[side*.2,-.43,0],[.55,1.05,.7]);
     box(arm,spec.accent,[side*.2,-1.02,0],[.68,.48,.8]);
@@ -215,6 +218,7 @@ export class GameScene {
     this.scene.add(this.sun,this.sun.target);
     this.world=new THREE.Group();this.scene.add(this.world);this.buildWorld();
     this.truck=makeTruck(spec);this.scene.add(this.truck.group);
+    this.flames=new ExhaustFlames(this.scene);
     this.starGeometry=makeStarGeometry();this.stars=[];this.buildStars();
     this.particles=[];this.particleGeometry=new THREE.BoxGeometry(.16,.16,.16);
     for(let i=0;i<80;i++){const m=new THREE.Mesh(this.particleGeometry,mat([0xffd75e,0xff805a,0x79e5d9,0xf9f0ca][i%4]));m.visible=false;this.scene.add(m);this.particles.push({mesh:m,life:0,v:new THREE.Vector3()});}
@@ -311,12 +315,13 @@ export class GameScene {
     }
   }
   setTruck(spec) {
+    this.flames.clear();
     const shared=new Set(Object.values(geometries));
     this.truck.group.traverse(obj=>{if(obj.isMesh&&!shared.has(obj.geometry))obj.geometry.dispose();});
     this.scene.remove(this.truck.group);this.truck=makeTruck(spec);this.scene.add(this.truck.group);this.transform=0;
   }
-  reset() {this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.squash=0;this.particles.forEach(p=>{p.life=0;p.mesh.visible=false;});}
-  menu() {this.mode='menu';this.snapCamera=true;}
+  reset() {this.flames.clear();this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';this.snapCamera=true;this.transform=0;this.squash=0;this.particles.forEach(p=>{p.life=0;p.mesh.visible=false;});}
+  menu() {this.flames.clear();this.mode='menu';this.snapCamera=true;}
   resize() {this.width=innerWidth;this.height=innerHeight;this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();this.renderer.setSize(this.width,this.height,false);this.snapCamera=true;}
   burst(colorful=true,count=20) {
     let n=0;for(const p of this.particles) {if(p.life>0)continue;p.life=.5+Math.random()*.7;p.mesh.visible=true;p.mesh.position.copy(this.truck.group.position).add(new THREE.Vector3(0,1,0));p.v.set((Math.random()-.5)*11,Math.random()*8+2,(Math.random()-.5)*11);p.mesh.scale.setScalar(colorful?1.5:2.4);if(++n>=count)break;}
@@ -339,6 +344,7 @@ export class GameScene {
     this.truck.arms.forEach((arm,i)=>{arm.visible=this.transform>.06;arm.rotation.z=(i===0?-1:1)*this.transform*.85;});
     this.truck.struts.forEach(leg=>{leg.visible=this.transform>.06;leg.scale.y=1.2+this.transform*1.9;leg.position.y=1.7+this.transform*.8;});
     this.truck.wheels.forEach((wheel,i)=>{wheel.position.x=(i%2===0?-1:1)*(1.65+this.transform*.7);if(!isMenu&&race.phase==='running')wheel.rotation.x+=dt*19;});
+    this.flames.update(dt,{truck:this.truck,time:this.time,mode:this.mode,race,transform:this.transform,reducedMotion:this.reducedMotion});
     const inLoop=d>LOOP_START-18&&d<LOOP_END+15&&!isMenu;
     if(isMenu) {
       const portrait=this.width<this.height;
