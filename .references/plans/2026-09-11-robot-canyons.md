@@ -17,7 +17,7 @@ Preserve all eight trucks, unlock thresholds and version-1 saves. Automatic driv
 - [x] Integration: add track buttons/picker and saved selection; use selected course bounds for progress and finish; integrate robot/Fly labels, bounded smash visuals, alternate scenery and finish marker. Check modal focus, orientation, reset, pause and changing courses repeatedly.
 - [x] Inputs: verify controller menu navigation, action edges, disconnect/reconnect and touch multi-contact, zoom, selection and scrolling.
 - [x] Review: run units/build and independent rules/geometry review, then controlled browser play and the appropriate Chrome/WebKit regression suites. Inspect the actual player view at canyon launches, flight, landings, loop and finish.
-- [ ] Release: commit and publish only the verified result; check the public URL, saves and replay; record validation and screenshots and return the playable link.
+- [x] Release: commit and publish only the verified result; check the public URL, saves and replay; record validation and screenshots and return the playable link.
 
 ## Ownership
 

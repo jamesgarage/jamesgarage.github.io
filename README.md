@@ -16,6 +16,8 @@ On iPad, open the game in Safari. Landscape gives the track more room, and portr
 
 Choose **Let's play** for the saved track, or **Choose a racetrack** for five picture cards: the complete Skyway Adventure, Bear Woods, Sky Loop, Gator Bay, and Canyon Run. Every track is available immediately. The shorter races have their own starting lines and finishes. The truck drives automatically; ramps, the loop and canyon crossings guide the truck through safely. A driver can complete every race without pressing any driving controls.
 
+![Five picture cards let little drivers choose their next racetrack](docs/screenshots/tracks.png)
+
 Sunny and Splash bring two guests to each race: Ember, Pebble, Bolt or Digger. Each friend has a distinct little truck and favorite activity. They greet you with a smile, copy safe jumps after you, and cheer when you crush a car or use turbo. Sunny likes a playful race and can briefly pull ahead; Splash enjoys the puddles. Little pictures above their trucks show what they are doing, with at most two reactions showing together. The guests, reaction timing and butterflies' colors change between completed races, while the familiar route stays easy to follow.
 
 | Friend | Favorite thing | Recognizable detail |
