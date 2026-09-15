@@ -37,6 +37,8 @@ Crushing a toy car gives you a little speed burst; turbo helps you pull ahead ev
 
 **Off-road rescue:** marked dirt shoulders have openings in the rails. In Rival Race, steering too far onto a shoulder calls an orange tow truck, which winches you back while the others keep racing. The recovery pauses with the game. Loops, canyon flights, bridges and finish areas keep their guidance.
 
+![A tow truck winches Mega Titan back onto a bend while the other racers carry on](docs/screenshots/tow.png)
+
 **Trophy time:** the actual winner takes the podium, whether it is you or a rival. The winner hops onto the other four toy trucks, squashes them gently, and everyone springs back intact. Tap **Victory stomp!** to replay the celebration or choose another race at any time. The animation never awards stars again. Every finisher still earns the normal completion reward.
 
 **Closer view:** the chase camera brings tire, bodywork and suspension detail nearer. It gives flying robots and towing more room and pulls aside for the loop. Choose **Wide view** in Grown-up settings if that feels more comfortable.

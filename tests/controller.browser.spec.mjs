@@ -255,6 +255,14 @@ test.describe('controller settings with saved progress and sound enabled', () =>
     await tapButton(page, 0);
     await expect(page.locator('#settings')).toBeVisible();
     await expect(page.locator('#motion-toggle')).toBeFocused();
+    // The camera, rival pace and feedback controls now sit between motion and
+    // reset. Reach each row through the real D-pad navigation before reset.
+    await tapButton(page, 13);
+    await expect(page.locator('[name="camera"][value="wide"]')).toBeFocused();
+    await tapButton(page, 13);
+    await expect(page.locator('[name="rival-rank"][value="2"]')).toBeFocused();
+    await tapButton(page, 13);
+    await expect(page.locator('#feedback-btn')).toBeFocused();
     await tapButton(page, 13);
     await expect(page.locator('#reset-btn')).toBeFocused();
     await tapButton(page, 0);

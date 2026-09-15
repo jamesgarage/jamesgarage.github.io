@@ -44,7 +44,7 @@ function makeStarGeometry() {
 
 export class GameScene {
   constructor(canvas,spec) {
-    this.canvas=canvas;this.reducedMotion=false;this.cameraView='close';this.mode='menu';this.time=0;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;
+    this.canvas=canvas;this.reducedMotion=false;this.cameraView='close';this.mode='menu';this.time=0;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;this.recoveryCameraActive=false;
     this.renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
     this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -168,6 +168,7 @@ export class GameScene {
     this.landingRing.quaternion.copy(f.quaternion);this.landingRing.rotateX(-Math.PI/2);
     this.landingRing.scale.setScalar((2+(1-this.squash)*5)*this.truck.spec.scale);this.landingRing.material.opacity=this.squash*.55;
     this.sky.position.copy(g.position);
+    const recovery=!isMenu&&!inLoop&&race.recovery;
     if(isMenu) {
       const portrait=this.width<this.height;
       const showcaseZoom=(1+(this.truck.spec.scale-1)*.75)*(portrait?1.13:1);
@@ -188,9 +189,22 @@ export class GameScene {
       this.targetLook.copy(f.position).addScaledVector(horizontal,close?-2:-9).add(new THREE.Vector3(0,2.4+race.height*.7+this.transform*1.1,0));
       this.camera.fov=(close?58:55)+(this.reducedMotion?0:this.transform*3+this.boost*3);
       if(!this.reducedMotion)this.targetCamera.y-=this.squash*.32;
+      if(recovery) {
+        // The winch parks on the opposite shoulder at local X +/-14.5. Fit
+        // both trucks into the horizontal field of view, including narrow phones.
+        const centerX=(laneOffset(race.lane)+Math.sign(recovery.fromLane)*14.5)/2;
+        const fitDistance=18/(Math.tan(THREE.MathUtils.degToRad(this.camera.fov/2))*this.camera.aspect)+8;
+        this.targetCamera.copy(f.position).addScaledVector(f.right,centerX)
+          .addScaledVector(horizontal,-Math.max(distance,fitDistance))
+          .add(new THREE.Vector3(0,(portrait?14:10)+(this.truck.spec.scale-1)*2.5,0));
+        this.targetLook.addScaledVector(f.right,centerX);
+      }
     }
     this.camera.updateProjectionMatrix();
-    const blend=this.snapCamera?1:1-Math.exp(-dt*(this.reducedMotion?4:6));
+    // Cut to the rescue view before the tow appears; an interpolated first
+    // frame would crop a vehicle. The return to the chosen chase view is smooth.
+    const blend=this.snapCamera||(recovery&&!this.recoveryCameraActive)?1:1-Math.exp(-dt*(this.reducedMotion?4:6));
+    this.recoveryCameraActive=!!recovery;
     this.camera.position.lerp(this.targetCamera,blend);this.look.lerp(this.targetLook,blend);this.camera.up.copy(UP);this.camera.lookAt(this.look);this.snapCamera=false;
     this.sun.position.copy(g.position).add(new THREE.Vector3(-40,75,30));this.sun.target.position.copy(g.position);
     let collected=0;
