@@ -277,3 +277,17 @@ Public captures repeat all four viewport checks successfully: every garage portr
 - Local saves belong to a browser and site origin; moving between preview and public URLs creates separate garages.
 - Storage is not cloud-synced. Private browsing and storage clearing can remove progress.
 - GitHub Pages publication has been verified; future deployments should repeat the public URL regression suite.
+
+## James's Garage publication (2026-09-15)
+
+The free parent-owned organization is `jamesgarage`; the public source and feedback home is https://github.com/jamesgarage/jamesgarage.github.io and the game is https://jamesgarage.github.io/. Source history, the MIT license, and the Three.js notice are preserved. The former site remains available for existing garages.
+
+Initial link/publication commit `6dab83d7a0893a85464764e4f8cc72335b51cd99` deployed successfully in Pages run `35014950730`. Pages uses the compiled `dist` artifact through the existing workflow, with HTTPS enforced. The automatic source-page build created by the first organization-site push was cancelled before switching to workflow publishing.
+
+Independent publication review verified the root, story, application assets, contribution links, issue template/feedback label, and unchanged license files. Both repositories had zero issues to migrate. The feedback collector returned the new repository and an empty queue successfully.
+
+The existing story browser check passed on the new public root in Chromium and WebKit at 1280x900, 768x1024, 390x844, and 320x640: no horizontal overflow, all images and relative resources loaded, and no script dependencies in the story. Opening the story from a running game's settings kept that race paused; closing settings resumed it in both engines. Local evidence: `.tmp/garage-first-public-check.log`, `.tmp/story-public-check.json`, and `.tmp/story-public-*.png`. The phone story screenshot was visually inspected. Physical iPad/controller checks remain distinct from these browser-engine checks.
+
+Garage transfer adds a parent-settings move button only at the former site. The destination requests consent, validates a bounded versioned fragment, and retains maximum stars, race totals and challenge wins while bringing the source truck/preferences. Source storage is never deleted. Successful import and cancellation remove the fragment; blocked reads/writes retain it for retry. The import rereads destination storage before writing so temporarily unavailable or newer progress is preserved.
+
+Prepublication checks: 245/245 unit tests, 8/8 focused transfer unit tests, production build (49 modules), and 4/4 focused transfer browser cases in each of Chromium and WebKit. Browser cases cover consent, unchanged source, max merge/replay, selected truck/preferences, race start, destination hiding, cancellation, malformed/oversized payloads, blocked writes and recovered blocked reads. Independent review and scoped re-review are clean after adding the recovered-read regression. Browser tests serve the app at the two actual origins inside isolated browser contexts; these are emulated-browser checks, not access to the family's device storage.

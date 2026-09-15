@@ -181,6 +181,12 @@ button.truck-card:hover { transform: translateY(-3px); border-color: #6be3e38a; 
 .setting-row input:checked { background: #31b9b7; }
 .setting-row input:checked::after { transform: translateX(22px); }
 .settings-note { font-size: 12px !important; margin: 19px 0; }
+.garage-transfer-entry { margin: 17px 0; padding: 16px; border: 1px solid #58a9a65c; border-radius: 14px; background: #dff3ed; }
+.garage-transfer-entry p { margin: 0 0 13px; color: #365f67; font-size: 12px; line-height: 1.55; }
+.garage-transfer-entry .button { width: 100%; min-height: 48px; padding: 11px 14px; font-size: 12px; }
+.transfer-card { text-align: left; }
+.transfer-card .modal-actions { margin-top: 20px; }
+#garage-transfer-status { min-height: 1.6em; color: #8a4938; font-weight: 800; }
 .family-story-note { border-top: 1px solid #17324c19; padding-top: 14px; margin: 18px 0 0; }
 .family-story-note a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: #125e69; font-size: 14px; font-weight: 900; text-underline-offset: 3px; }
 .family-story-note a:focus-visible { outline: 3px solid #087e89; outline-offset: 4px; border-radius: 4px; }

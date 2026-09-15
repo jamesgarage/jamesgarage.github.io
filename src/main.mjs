@@ -10,13 +10,15 @@ import { mountFeedback } from './feedback.mjs';
 import { raceStandings } from './race-rules.mjs';
 import { raceCrew } from './crew.mjs';
 import { turnAt } from './turns.mjs';
+import { clearGarageTransferHash, createGarageTransferURL, isGarageDestination, isLegacyGameLocation, mergeGarageProgress, parseGarageTransferHash } from './garage-transfer.mjs';
 
 const $ = id => document.getElementById(id);
 const SAVE_KEY = 'monster-skyway.progress.v1';
-const overlays = ['garage','tracks','pause-overlay','results','settings','feedback'];
+const overlays = ['garage','tracks','pause-overlay','results','settings','feedback','garage-transfer'];
 let progress, storageWorks=true;
 try { progress=createProgress(JSON.parse(localStorage.getItem(SAVE_KEY))); } catch { progress=createProgress(); storageWorks=false; }
 if(!localStorageAvailable())storageWorks=false;
+const pendingGarageTransfer=isGarageDestination(window.location)?parseGarageTransferHash(window.location.hash):{status:'none'};
 function localStorageAvailable(){try{const k='monster-skyway.probe';localStorage.setItem(k,'1');localStorage.removeItem(k);return true;}catch{return false;}}
 let race=createRace(progress.races,progress.courseId,progress.raceMode,{rivalRank:progress.rivalRank}), world, previous=0, accumulator=0, calloutRemaining=0, calloutPriority=0, lastFocus, pausedBySettings=false, shownPlace=0;
 const held=new Set();
@@ -27,7 +29,8 @@ const input={jump:false,steer:0,transform:false,turbo:false};
 const audio=new GameAudio();
 audio.setMuted(progress.muted);
 
-function save() {try{localStorage.setItem(SAVE_KEY,JSON.stringify(progress));storageWorks=true;}catch{storageWorks=false;}updateStorageNote();}
+function persistProgress(candidate) {try{localStorage.setItem(SAVE_KEY,JSON.stringify(candidate));storageWorks=true;}catch{storageWorks=false;}updateStorageNote();return storageWorks;}
+function save() {return persistProgress(progress);}
 function updateStorageNote(){document.querySelector('.settings-note').textContent=storageWorks?'Progress saves on this device. No accounts, no purchases — just play.':'Your browser cannot save progress right now. You can still play; this visit’s trucks stay until you close the page.';}
 function selected(){return TRUCKS.find(t=>t.id===progress.selected)||TRUCKS[0];}
 function say(message,seconds=2.3,priority=1){if(calloutRemaining>0&&priority<calloutPriority)return;calloutRemaining=seconds;calloutPriority=priority;$('callout').textContent=message;$('callout').classList.remove('show');requestAnimationFrame(()=>$('callout').classList.add('show'));}
@@ -43,6 +46,18 @@ function syncPreferences(){
   document.querySelectorAll('[name="camera"]').forEach(input=>input.checked=input.value===progress.cameraView);
   document.querySelectorAll('[name="rival-rank"]').forEach(input=>input.checked=Number(input.value)===progress.rivalRank);
   if(world){world.reducedMotion=progress.reducedMotion;world.cameraView=progress.cameraView;}audio.setMuted(progress.muted);updateStorageNote();
+}
+function dismissGarageTransfer(){clearGarageTransferHash(window.history,window.location);hideModals();}
+function showPendingGarageTransfer(){
+  if(pendingGarageTransfer.status==='none')return;
+  const invalid=pendingGarageTransfer.status==='invalid';
+  $('garage-transfer-title').textContent=invalid?'That transfer link did not work.':'Bring this garage over?';
+  $('garage-transfer-summary').textContent=invalid?'This garage was not changed. You can keep playing safely.':`${pendingGarageTransfer.progress.stars} stars and ${unlockedTrucks(pendingGarageTransfer.progress).length} trucks are ready to bring over.`;
+  $('garage-transfer-status').textContent='';
+  $('garage-transfer-import').hidden=invalid;
+  $('garage-transfer-cancel').textContent=invalid?'Continue':'Keep this garage as it is';
+  showModal('garage-transfer');
+  if(invalid)$('garage-transfer-cancel').focus();
 }
 function nextReward(){const next=TRUCKS.find(t=>t.threshold>progress.stars);return next?`${next.name} is next · ${next.threshold-progress.stars} stars to go`:'Mega Titan unlocked. Your whole crew is ready!';}
 function refreshMenu(){
@@ -137,6 +152,32 @@ document.querySelectorAll('[name="rival-rank"]').forEach(input=>input.addEventLi
 $('feedback-btn').addEventListener('click',()=>{clearInput();showModal('feedback');});
 $('feedback-close').addEventListener('click',()=>{showModal('settings');$('feedback-btn').focus();});
 mountFeedback($('feedback'),{context:()=>({courseId:progress.courseId,raceMode:progress.raceMode})});
+$('garage-transfer-entry').hidden=!isLegacyGameLocation(window.location);
+$('garage-transfer-start').addEventListener('click',()=>window.location.assign(createGarageTransferURL(progress)));
+$('garage-transfer-cancel').addEventListener('click',dismissGarageTransfer);
+$('garage-transfer-import').addEventListener('click',()=>{
+  if(pendingGarageTransfer.status!=='ready')return;
+  let latest=progress;
+  try{
+    const stored=localStorage.getItem(SAVE_KEY);
+    if(stored!==null)latest=mergeGarageProgress(progress,createProgress(JSON.parse(stored)));
+  }catch{
+    storageWorks=false;updateStorageNote();
+    $('garage-transfer-status').textContent='This browser could not read the garage already here. Nothing was changed. Check browser storage, then try again.';
+    $('garage-transfer-import').textContent='Try saving again';
+    $('garage-transfer-import').focus();
+    return;
+  }
+  const merged=mergeGarageProgress(latest,pendingGarageTransfer.progress);
+  if(!persistProgress(merged)){
+    $('garage-transfer-status').textContent='This browser could not save the garage. Nothing was changed. Check browser storage, then try again.';
+    $('garage-transfer-import').textContent='Try saving again';
+    $('garage-transfer-import').focus();
+    return;
+  }
+  progress=merged;world.setTruck(selected());syncPreferences();refreshMenu();
+  dismissGarageTransfer();
+});
 $('reset-btn').addEventListener('click',()=>{$('reset-confirm').hidden=false;$('reset-no').focus();});
 $('reset-no').addEventListener('click',()=>{$('reset-confirm').hidden=true;$('reset-btn').focus();});
 $('reset-yes').addEventListener('click',()=>{progress=createProgress({version:1,muted:progress.muted,reducedMotion:progress.reducedMotion,raceMode:progress.raceMode,rivalRank:progress.rivalRank,cameraView:progress.cameraView});save();world.setTruck(selected());pausedBySettings=false;$('reset-confirm').hidden=true;menu();showGarage();});
@@ -157,14 +198,14 @@ for(const [id,key] of [['left-btn','left'],['right-btn','right']]) {
 }
 installTouchGuard($('app'));
 gamepad=new GamepadControls({getPhase:()=>race.phase,getMenuRoot:()=>{const modal=overlays.find(id=>!$(id).hidden);return modal?$(modal):!$('menu').hidden?$('app'):null;},jump,turbo,transform,pause,resume,
-  back:()=>{const modal=overlays.find(id=>!$(id).hidden);if(modal==='pause-overlay')resume();else if(modal==='garage')$('garage-close').click();else if(modal==='tracks')$('tracks-close').click();else if(modal==='settings')$('settings-close').click();else if(modal==='feedback')$('feedback-close').click();else if(modal==='results')menu();},
+  back:()=>{const modal=overlays.find(id=>!$(id).hidden);if(modal==='pause-overlay')resume();else if(modal==='garage')$('garage-close').click();else if(modal==='tracks')$('tracks-close').click();else if(modal==='settings')$('settings-close').click();else if(modal==='feedback')$('feedback-close').click();else if(modal==='garage-transfer')$('garage-transfer-cancel').click();else if(modal==='results')menu();},
   status:(message,connected)=>{$('controller-status').textContent=message;$('controller-hint').textContent=message;$('controller-hint').hidden=!connected;document.querySelector('.race-keyboard-hint').textContent=connected?'A / ✕ JUMP / FLY · X / □ ROBOT · B / ○ TURBO · MENU PAUSE':'← → STEER · SPACE JUMP · B TURBO · T ROBOT';}
 });
 document.addEventListener('keydown',e=>{
   const modal=overlays.find(id=>!$(id).hidden);
   if(modal){
     if(e.key==='Tab'){const list=[...$(modal).querySelectorAll('button:not(:disabled),input:not([type=hidden]),textarea,a[href]')].filter(el=>!el.closest('[hidden]'));const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){last?.focus();e.preventDefault();}else if(!e.shiftKey&&document.activeElement===last){first?.focus();e.preventDefault();}}
-    if(e.key==='Escape'){e.preventDefault();if(modal==='pause-overlay')resume();else if(modal==='garage')$('garage-close').click();else if(modal==='tracks')$('tracks-close').click();else if(modal==='settings')$('settings-close').click();else if(modal==='feedback')$('feedback-close').click();else if(modal==='results')menu();}
+    if(e.key==='Escape'){e.preventDefault();if(modal==='pause-overlay')resume();else if(modal==='garage')$('garage-close').click();else if(modal==='tracks')$('tracks-close').click();else if(modal==='settings')$('settings-close').click();else if(modal==='feedback')$('feedback-close').click();else if(modal==='garage-transfer')$('garage-transfer-cancel').click();else if(modal==='results')menu();}
     return;
   }
   if(e.key==='Escape'||e.key.toLowerCase()==='p'){if(race.phase==='running'){e.preventDefault();pause();}return;}
@@ -181,7 +222,7 @@ window.addEventListener('resize',()=>world?.resize());
 $('game-canvas').addEventListener('webglcontextlost',e=>{e.preventDefault();pause();$('error').hidden=false;$('error').textContent='The graphics took a little pit stop. Reload to keep playing — your saved trucks are safe.';});
 
 try {
-  world=new GameScene($('game-canvas'),selected());world.setCourse(progress.courseId);syncPreferences();refreshMenu();$('loading').hidden=true;
+  world=new GameScene($('game-canvas'),selected());world.setCourse(progress.courseId);syncPreferences();refreshMenu();$('loading').hidden=true;showPendingGarageTransfer();
   let hudTick=0;
   world.renderer.setAnimationLoop(now=>{
     const dt=Math.min(Math.max((now-previous)/1000,0),.08);previous=now;

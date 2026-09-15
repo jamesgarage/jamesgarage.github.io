@@ -20,6 +20,8 @@ For this family, AI has expanded what they can create and given them another way
 
 ## Play
 
+Already playing at the old address? On the same device and browser, open [the original game](https://yanivalfasykeelusa.github.io/james-monster-skyway/), then choose **Grown-up settings → Move this garage to the new site → Bring over my garage**. This copies your trucks, stars, and preferences to James's Garage. Your original garage stays available; repeating the transfer keeps the higher progress totals without adding duplicate rewards.
+
 On iPad, open the game in Safari. Landscape gives the track more room, and portrait works too. To keep a shortcut beside James's other games, use Safari's Share menu, More if shown, then **Add to Home Screen** and **Add**. See [Apple's instructions](https://support.apple.com/guide/ipad/bookmark-a-website-ipadc602b75b/ipados).
 
 Choose **Let's play** for the saved track, or **Choose a racetrack** for five picture cards: the complete Skyway Adventure, Bear Woods, Sky Loop, Gator Bay, and Canyon Run. Every track is available immediately. The shorter races have their own starting lines and finishes. The truck drives automatically; ramps, the loop and canyon crossings guide the truck through safely. Cruise remains the default for new and existing saves and can be completed without pressing any driving controls. Choose **Rival Race** beside Play for an actual contest: steer through bends, find a passing lane, and time your turbo. Rivals can win. Grown-up settings offer Learning, Racing, and Fast opponents; earning stars never silently changes that choice.
