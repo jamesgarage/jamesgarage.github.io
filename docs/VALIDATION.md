@@ -20,6 +20,10 @@ Browser regression coverage is complete across resumed groups: **35 Chromium cas
 
 Feedback collector tests cover pagination, explicit truncation/errors, PR exclusion and untrusted text retention. The real public repository has Issues enabled and a `feedback` label; its open feedback queue returned an empty result successfully. No public test issue was posted. Feedback requires a parent's GitHub sign-in; no anonymous backend or automatic issue execution is claimed.
 
+The [Rival Race deployment](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34991481792) successfully tested, built and published runtime commit `54b9a14`. The public page serves the verified `index-BSpg09f2.js` and `index-8dWRBAJD.css` assets; both return HTTP 200 with the expected JavaScript/CSS content types. GitHub's clean Node 22 build and both deployment jobs completed successfully.
+
+All **six release browser cases passed against the public HTTPS URL in Chromium (1.0 minute) and WebKit (1.3 minutes)**, with both commands exiting 0 and no JavaScript or console errors. These cover the editable feedback draft and GitHub handoff, phone mode/rank/camera persistence, a real rival winner and four-toy ceremony/replay without another award, off-road rescue with paused recovery and advancing rivals, garage-reset preference retention, and nested-modal focus/resume. Public phone lobby and trophy captures were inspected. No public feedback issue was submitted by the tests. Evidence: `.tmp/rival-public-chromium.log` and `.tmp/rival-public-webkit.log`.
+
 Physical iPad/controller pairing remains a family play check. Automated browser input is simulated, and desktop WebKit does not establish physical iPad frame rate or comfort.
 
 ## Automated rules

@@ -25,7 +25,7 @@ Standing authorization: the user delegated design decisions, implementation, pla
 - [x] Independent rules review: no open material findings.49 independent finish cases and2041 mixed-input Cruise frames matched the prior baseline; report .tmp/rival-rules-review.md.
 - [x] Feedback review fixes: preserve new preferences during garage reset; preserve top-level modal opener across feedback/settings. Both regressions and three controller checks passed; report .tmp/rival-feedback-fix-report.md. Independent final source review found no open material defect (.tmp/rival-final-review.md).
 - [x] Final rendering/browser regression: fresh237-unit suite passed. Completed resumed groups plus final22 Chrome and22 WebKit passing cases cover all35 Chrome and34 WebKit cases, with one intentional WebKit skip. Final affected checks use index-BSpg09f2.js. Eight actual tow scenarios/304 rendered frames and integrated trophy contact/restoration pass without clipping or control overlap; report .tmp/rival-visual-report.md. Interrupted aggregate JSON is not evidence.
-- [ ] Publication: update validation/screenshots, commit and push main, dispatch Pages, verify public assets and key flows.
+- [x] Publication: validation and screenshots updated; main pushed. Pages run34991481792 successfully deployed54b9a14. Public JS/CSS match the tested build and return200. All six public release checks passed in both Chromium and WebKit, with no JavaScript/console errors. See docs/VALIDATION.md for exact evidence and physical-device limits.
 
 ## Review and verification ledger
 
