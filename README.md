@@ -1,6 +1,6 @@
 # Monster Skyway
 
-**[Play Monster Skyway](https://yanivalfasykeelusa.github.io/james-monster-skyway/)** on an iPad, phone, or computer. Open the link in your browser; no game account or download is required.
+**[Play Monster Skyway](https://jamesgarage.github.io/)** on an iPad, phone, or computer. Open the link in your browser; no game account or download is required.
 
 A cheerful 3D monster truck game for little drivers. Choose a gentle Cruise or compete against four real rivals. Squash toy cars, fire up the turbo, become a flying robot, leap across canyons, steer through sweeping bends, and grow a garage of increasingly enormous wheels.
 
@@ -16,7 +16,7 @@ James is now three. He loves monster trucks, enormous tires, flames, transformin
 
 For this family, AI has expanded what they can create and given them another way to spend time together. We are sharing the game to show those possibilities and invite other families to play, suggest their own adventures, and help make it better. The hope is that projects like this help more people create things they care about and bring them closer together. The vehicles, characters, sounds, and scenery are original creations.
 
-**[Read our story](https://yanivalfasykeelusa.github.io/james-monster-skyway/about.html)** · **[Help improve the game](CONTRIBUTING.md)**
+**[Read our story](https://jamesgarage.github.io/about.html)** · **[Help improve the game](CONTRIBUTING.md)**
 
 ## Play
 
@@ -193,7 +193,7 @@ See [the validation record](docs/VALIDATION.md) for recorded test results, scree
 
 The included workflow runs only when started manually with **Run workflow**. After choosing a repository, enable GitHub Pages with **GitHub Actions** as its source, then run **Deploy Monster Skyway** from the Actions tab. It installs dependencies, runs tests, builds the game, and publishes the `dist/` artifact to Pages.
 
-The project is published from [yanivalfasykeelusa/james-monster-skyway](https://github.com/yanivalfasykeelusa/james-monster-skyway), with the playable site at [Monster Skyway](https://yanivalfasykeelusa.github.io/james-monster-skyway/). Its Pages source is GitHub Actions. Source changes remain separate from the live site until the deployment workflow is run.
+The project is published from [jamesgarage/jamesgarage.github.io](https://github.com/jamesgarage/jamesgarage.github.io), with the playable site at [Monster Skyway](https://jamesgarage.github.io/). Its Pages source is GitHub Actions. Source changes remain separate from the live site until the deployment workflow is run.
 
 ## Next adventures
 

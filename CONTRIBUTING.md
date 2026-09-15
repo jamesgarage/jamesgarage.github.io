@@ -4,11 +4,11 @@ James's parent works in AI operations and wanted to spend time creating things w
 
 This project is about expanding what people can create and bringing them closer together through making things. We welcome other families, developers, artists, and testers who want to help little drivers enjoy it too.
 
-Start by [playing the game](https://yanivalfasykeelusa.github.io/james-monster-skyway/) and reading [our story](https://yanivalfasykeelusa.github.io/james-monster-skyway/about.html). You can help without writing any code.
+Start by [playing the game](https://jamesgarage.github.io/) and reading [our story](https://jamesgarage.github.io/about.html). You can help without writing any code.
 
 ## Share an idea or a play observation
 
-Use **Grown-up settings → Share an idea** in the game, or visit [GitHub issues](https://github.com/yanivalfasykeelusa/james-monster-skyway/issues). The in-game form prepares a public issue for a parent to review and submit through GitHub. A GitHub account is needed to submit an issue; none is needed to play.
+Use **Grown-up settings → Share an idea** in the game, or visit [GitHub issues](https://github.com/jamesgarage/jamesgarage.github.io/issues). The in-game form prepares a public issue for a parent to review and submit through GitHub. A GitHub account is needed to submit an issue; none is needed to play.
 
 Useful feedback includes:
 

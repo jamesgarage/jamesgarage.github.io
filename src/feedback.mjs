@@ -1,4 +1,4 @@
-export const FEEDBACK_REPOSITORY='yanivalfasykeelusa/james-monster-skyway';
+export const FEEDBACK_REPOSITORY='jamesgarage/jamesgarage.github.io';
 export const FEEDBACK_DRAFT_KEY='monster-skyway.feedback.v1';
 const clean=(value,max)=>typeof value==='string'?value.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g,'').slice(0,max):'';
 
