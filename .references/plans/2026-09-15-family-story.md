@@ -9,4 +9,4 @@ Verification: build; check the story's real desktop/phone rendering, scrolling, 
 - [x] Story page and game link
 - [x] README and contribution guide
 - [x] Browser/layout verification and independent source review: both engines, four widths, no overflow or asset errors; live race pause/new-tab/return checked; existing controller settings regression passed.
-- [ ] Publish and verify public URLs
+- [x] Publish and verify public URLs: Pages run 34992600388 deployed 164dda5; public story and game settings entry passed both-engine layout, asset and paused-race return checks. Source and contributor guide are on GitHub. Family photo can be added when supplied.

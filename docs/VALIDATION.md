@@ -8,6 +8,8 @@ The production build passed. A bounded Playwright check passed in Chromium and W
 
 Desktop/phone screenshots were visually inspected. Evidence: `.tmp/story-check-final.log`, `.tmp/story-check.json`, `.tmp/story-controller.log` and `.tmp/story-{chromium,webkit}-*.png`. This change does not alter race rules, so no new unit tests or repeated full gameplay matrix were added.
 
+The [family story deployment](https://github.com/yanivalfasykeelusa/james-monster-skyway/actions/runs/34992600388) successfully tested, built and published commit `164dda5`. The public game serves `index-yAPXYBap.js` / `index-Bb0GJt_E.css` and the settings story link. Both Chromium and WebKit passed the same four-width story/asset/scrolling checks and live-race new-tab/pause/return checks against the public HTTPS site, with no browser errors. The public story is available at [about.html](https://yanivalfasykeelusa.github.io/james-monster-skyway/about.html). Evidence: `.tmp/story-public-check.log` and `.tmp/story-public-check.json`.
+
 ## Rival racing and feedback: 2026-09-15
 
 Current local rules/geometry suite: **237 tests passed**. This includes 240 complete competitive races across all eight trucks, five courses and three seeds with contrasting driving patterns. Untouched challenge runs can lose; deliberate steering and available turbo can win. An independent review compared 2,041 mixed-input Cruise frames against the previous committed implementation, with every legacy state field and event matching. Forty-nine separate finish-boundary cases matched an independent crossing-time calculation.
