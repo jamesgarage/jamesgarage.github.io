@@ -2,7 +2,7 @@
 
 **[Play Monster Skyway](https://yanivalfasykeelusa.github.io/james-monster-skyway/)** on an iPad, phone, or computer. Open the link in your browser; no game account or download is required.
 
-A cheerful 3D monster truck game for little drivers. Race with four friendly trucks, squash toy cars, fire up the turbo, become a flying robot, leap across canyons, ride a giant guided loop, and grow a garage of increasingly enormous wheels.
+A cheerful 3D monster truck game for little drivers. Choose a gentle Cruise or compete against four real rivals. Squash toy cars, fire up the turbo, become a flying robot, leap across canyons, steer through sweeping bends, and grow a garage of increasingly enormous wheels.
 
 Rounded bodywork, sculpted tires, visible suspension, reflective paint and glass, warm sunlight and shadows give the trucks their toy-box feel. The raised orange track visits rounded woodland canopies, the Sky Loop festival, and Gator Bay, with cheering stands, playful landmarks, muddy splashes, and a gentle shower along the way.
 
@@ -14,7 +14,7 @@ This project began with a three-year-old's love of monster trucks, orange stunt 
 
 On iPad, open the game in Safari. Landscape gives the track more room, and portrait works too. To keep a shortcut beside James's other games, use Safari's Share menu, More if shown, then **Add to Home Screen** and **Add**. See [Apple's instructions](https://support.apple.com/guide/ipad/bookmark-a-website-ipadc602b75b/ipados).
 
-Choose **Let's play** for the saved track, or **Choose a racetrack** for five picture cards: the complete Skyway Adventure, Bear Woods, Sky Loop, Gator Bay, and Canyon Run. Every track is available immediately. The shorter races have their own starting lines and finishes. The truck drives automatically; ramps, the loop and canyon crossings guide the truck through safely. A driver can complete every race without pressing any driving controls.
+Choose **Let's play** for the saved track, or **Choose a racetrack** for five picture cards: the complete Skyway Adventure, Bear Woods, Sky Loop, Gator Bay, and Canyon Run. Every track is available immediately. The shorter races have their own starting lines and finishes. The truck drives automatically; ramps, the loop and canyon crossings guide the truck through safely. Cruise remains the default for new and existing saves and can be completed without pressing any driving controls. Choose **Rival Race** beside Play for an actual contest: steer through bends, find a passing lane, and time your turbo. Rivals can win. Grown-up settings offer Learning, Racing, and Fast opponents; earning stars never silently changes that choice.
 
 ![Five picture cards let little drivers choose their next racetrack](docs/screenshots/tracks.png)
 
@@ -33,7 +33,13 @@ Sunny and Splash bring two guests to each race: Ember, Pebble, Bolt or Digger. E
 
 ![Sunny and Splash copying a jump, with an arrow above each friend](docs/screenshots/friends.png)
 
-Crushing a toy car gives you a little speed burst; turbo helps you pull ahead even faster. Gentle steering assistance keeps close passes clear. The position badge follows the actual race, and your chosen truck takes the spotlight at the finish. Winning does not make the next race harder.
+Crushing a toy car gives you a little speed burst; turbo helps you pull ahead even faster. In Rival Race, each competitor has a fixed personal pace and timed boosts. Ember and Bolt sometimes guard a lane briefly; the others look for a clear pass. Opponents follow actual track positions and crossing times, with space around the trucks. There are no last-second teleports or guaranteed player wins.
+
+**Off-road rescue:** marked dirt shoulders have openings in the rails. In Rival Race, steering too far onto a shoulder calls an orange tow truck, which winches you back while the others keep racing. The recovery pauses with the game. Loops, canyon flights, bridges and finish areas keep their guidance.
+
+**Trophy time:** the actual winner takes the podium, whether it is you or a rival. The winner hops onto the other four toy trucks, squashes them gently, and everyone springs back intact. Tap **Victory stomp!** to replay the celebration or choose another race at any time. The animation never awards stars again. Every finisher still earns the normal completion reward.
+
+**Closer view:** the chase camera brings tire, bodywork and suspension detail nearer. It gives flying robots and towing more room and pulls aside for the loop. Choose **Wide view** in Grown-up settings if that feels more comfortable.
 
 - **Touch:** use the large on-screen controls to jump or fly, steer, fire the turbo, or become a robot. Steering and actions support separate fingers. Game surfaces suppress accidental pinch zoom, double-tap zoom and text selection; the garage and track picker still scroll.
 - **Keyboard:** use the arrow keys to steer, Space to jump, B or Shift for turbo, T to transform, and P or Escape to pause. Menus also support Tab and Enter.
@@ -62,7 +68,7 @@ Gold outlines show the selected menu item. Disconnecting during a race pauses it
 
 The lobby shows your selected truck in the live 3D world. Garage cards use portraits rendered from the same models you drive.
 
-![A first-place celebration with the winning truck and earned stars](docs/screenshots/victory.png)
+![The trophy ceremony celebrates the actual race winner](docs/screenshots/victory.png)
 
 | Truck | Stars to unlock | Design |
 | --- | ---: | --- |
@@ -99,7 +105,7 @@ Wood grain, mottled grass, worn stone and water highlights give those places mor
 
 ![The complete raised-edge toy loop and its stunt festival surroundings](docs/screenshots/loop.png)
 
-Steering turns the front wheels and leans the body. Left and right follow the chase camera's view for both touch and keyboard controls. Landings compress the suspension and kick up a brief dust burst and ring; Mega Titan's exposed rear coils shorten with the body dip. The chase camera frames your truck and its four friends, then pulls aside for an upright view of the loop.
+Steering turns the front wheels and leans the body. Left and right follow the chase camera's view for both touch and keyboard controls. Landings compress the suspension and kick up a brief dust burst and ring; Mega Titan's exposed rear coils shorten with the body dip. The chase camera follows your truck through the bends, then pulls aside for an upright view of the loop. Its wider option shows more of the surrounding race.
 
 ![The rainy skyway passing Gator Falls and its waterfront boardwalk](docs/screenshots/bay.png)
 
@@ -108,6 +114,12 @@ Shallow mud patches send little flecks from the tires, and a short, gentle showe
 Twin exhausts have pale hot cores, flowing amber flames and a soft cooling trail through jumps and loops. Bigger trucks bring bigger flames; guardian mode and turbo turn them up further. **Gentler motion** reduces camera movement, removes the landing ring, moving flame trail, rain, and tire spray, and keeps two small, steady exhaust flames and the mud scenery. Crushed cars show their flattened state immediately with this setting.
 
 ![Mega Titan airborne with twin exhaust flames and a fiery trail](docs/screenshots/flames.png)
+
+## Suggest the next adventure
+
+A parent can open **Grown-up settings → Share an idea** to describe a feature or problem. The form saves a local draft, then prepares a public GitHub issue for review. A GitHub sign-in is required to submit; opening the link does not send it. Please leave out private or identifying details. No account is needed to play.
+
+Maintainers can run `npm run feedback:queue` to collect the open feedback. Suggestions are checked for suitability, duplicates, feasibility, compatibility and performance before implementation. See [the feedback review workflow](docs/FEEDBACK.md). The queue never executes issue text or automatically adds unreviewed features.
 
 ## Run locally
 

@@ -10,7 +10,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "play": "node scripts/serve.mjs",
     "test": "node --test tests/*.test.mjs",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "feedback:queue": "node scripts/feedback-queue.mjs"
   },
   "dependencies": { "three": "0.186.0" },
   "devDependencies": { "vite": "8.3.0", "@playwright/test": "1.58.2" }

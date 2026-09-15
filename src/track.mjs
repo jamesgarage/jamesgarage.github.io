@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { COURSE_LENGTH, LOOP_START, LOOP_END, RAMPS } from './core.mjs';
+import { turnOffset } from './turns.mjs';
 const TAU = Math.PI * 2;
 const UP = new THREE.Vector3(0, 1, 0);
 const clamp = THREE.MathUtils.clamp;
@@ -31,7 +32,7 @@ export function trackCenter(distance) {
   // actor and road treatment uses this same centerline, including nearby cars.
   const bridgeT = (d - 310) / 65;
   const bridge = bridgeT > 0 && bridgeT < 1 ? 2.4 * Math.sin(Math.PI * bridgeT) ** 2 : 0;
-  return new THREE.Vector3(13 * Math.sin(z / 135) + 6 * Math.sin(z / 57) + xOffset, 1.5 + hill + y + ramp + bridge, z);
+  return new THREE.Vector3(13 * Math.sin(z / 135) + 6 * Math.sin(z / 57) + xOffset + turnOffset(d), 1.5 + hill + y + ramp + bridge, z);
 }
 
 export function sampleTrack(distance) {

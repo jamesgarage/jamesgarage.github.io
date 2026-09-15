@@ -313,3 +313,94 @@ test.describe('controller garage with earned progress', () => {
     await previousCard.dispose();
   });
 });
+
+test.describe('controller Rival Race and parent feedback', () => {
+  test.use({ controllerProgress: {
+    version: 1, stars: 0, races: 0, selected: 'rumbler', muted: true,
+    courseId: 'woods', rivalRank: 2,
+  } });
+
+  test('controller chooses Rival Race, replays with A and leaves results with B or Menu without extra rewards', async ({ page }) => {
+    test.setTimeout(150_000);
+    await openGame(page);
+    await tapButton(page, 13);
+    await expect(page.locator('#tracks-btn')).toBeFocused();
+    await tapButton(page, 13);
+    await expect(page.locator('[data-mode="cruise"]')).toBeFocused();
+    await tapButton(page, 15);
+    await expect(page.locator('[data-mode="race"]')).toBeFocused();
+    await tapButton(page, 0);
+    await expect(page.locator('[data-mode="race"]')).toHaveAttribute('aria-pressed', 'true');
+    await tapButton(page, 9);
+    await page.waitForFunction(() => window.__skyway.phase === 'running');
+    expect(await page.evaluate(() => window.__skyway.raceMode)).toBe('race');
+
+    for (const [index, exitButton] of [0, 1, 9].entries()) {
+      await page.waitForFunction(() => window.__skyway.phase === 'finished', null, { timeout: 45_000 });
+      await expect(page.locator('#results')).toBeVisible();
+      await expect(page.locator('#race-again-btn')).toBeFocused();
+      const finished = await page.evaluate(() => window.__skyway);
+      expect(finished.races).toBe(index + 1);
+      expect(finished.result.won).toBe(false);
+      expect(finished.winnerId).not.toBe('player');
+      expect(finished.ceremony.winnerId).toBe(finished.winnerId);
+      await tapButton(page, exitButton);
+      await expect(page.locator('#results')).toBeHidden();
+      const after = await page.evaluate(() => window.__skyway);
+      expect(after.phase).toBe(exitButton === 0 ? 'running' : 'ready');
+      expect(after.ceremony.active).toBe(false);
+      expect(after.totalStars).toBe(finished.totalStars);
+      expect(after.races).toBe(finished.races);
+      expect(after.height).toBe(0);
+      if (exitButton === 1) {
+        await expect(page.locator('#play-btn')).toBeFocused();
+        await tapButton(page, 9);
+        await page.waitForFunction(() => window.__skyway.phase === 'running');
+      }
+    }
+    await controller(page);
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('monster-skyway.progress.v1')));
+    expect(saved.races).toBe(3);
+    expect(saved.raceMode).toBe('race');
+    expect(await page.evaluate(() => window.__skyway.phase)).toBe('ready');
+  });
+
+  test('a connected controller preserves feedback typing and selection, then B and Menu resume the paused race', async ({ page }) => {
+    await startRace(page);
+    await page.locator('#settings-btn').click();
+    await page.locator('#feedback-btn').click();
+    await expect(page.locator('#feedback')).toBeVisible();
+    const paused = await page.evaluate(() => window.__skyway);
+    expect(paused.phase).toBe('paused');
+    const title = page.locator('#feedback-summary');
+    const details = page.locator('#feedback-details');
+    await title.fill('A muddy tow-truck adventure');
+    await details.focus();
+    await page.keyboard.type('Turbo, ramps and turns.\nPlease add a mud tunnel.', { delay: 20 });
+    await page.keyboard.press('Shift+Home');
+    const selection = await details.evaluate(element => ({ start: element.selectionStart, end: element.selectionEnd }));
+    expect(selection.end).toBeGreaterThan(selection.start);
+    await controller(page);
+    await expect(details).toBeFocused();
+    expect(await details.evaluate(element => ({ start: element.selectionStart, end: element.selectionEnd }))).toEqual(selection);
+    await page.keyboard.type('Big jumps and turbo, please.', { delay: 20 });
+    await expect(details).toHaveValue('Turbo, ramps and turns.\nBig jumps and turbo, please.');
+    await expect(page.locator('[data-feedback-link]')).toBeHidden();
+    const editing = await page.evaluate(() => window.__skyway);
+    expect(editing.distance).toBe(paused.distance);
+    expect(editing.robotMode).toBe(paused.robotMode);
+    expect(editing.turboTime).toBe(paused.turboTime);
+    expect(editing.controller.connected).toBe(true);
+    await tapButton(page, 1);
+    await expect(page.locator('#feedback')).toBeHidden();
+    await expect(page.locator('#settings')).toBeVisible();
+    await expect(page.locator('#feedback-btn')).toBeFocused();
+    await tapButton(page, 9);
+    await page.waitForFunction(() => window.__skyway.phase === 'running');
+    expect(await page.evaluate(() => window.__skyway.robotMode)).toBe(paused.robotMode);
+    await page.locator('#settings-btn').click();
+    await page.locator('#feedback-btn').click();
+    await expect(title).toHaveValue('A muddy tow-truck adventure');
+    await expect(details).toHaveValue('Turbo, ramps and turns.\nBig jumps and turbo, please.');
+  });
+});

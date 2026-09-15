@@ -116,7 +116,7 @@ test('all progression thresholds unlock exactly the earned vehicles', () => {
 test('the expanded garage preserves existing saves and adds fire and shark unlocks to earned balances', () => {
   for (const selected of ['rumbler','bear-crusher','night-stomper','gator-claw','chrome-guardian','mega-titan']) {
     const saved={version:1,stars:110,races:4,selected,muted:true,reducedMotion:false};
-    assert.deepEqual(createProgress(saved),{ ...saved, courseId: 'skyway' });
+    assert.deepEqual(createProgress(saved),{ ...saved, courseId: 'skyway', raceMode: 'cruise', rivalRank: 1, cameraView: 'close', challengeWins: 0 });
     assert.equal(unlockedTrucks(createProgress(saved)).length,8);
   }
   const rescue=createProgress({version:1,stars:40,selected:'rescue-roarer'});
@@ -139,7 +139,7 @@ test('corrupted, future-version, and locked-truck saves recover to safe values',
   }), defaults);
   assert.deepEqual(createProgress({
     version: 1, stars: 32.9, races: 2.9, selected: 'gator-claw', muted: true, reducedMotion: true,
-  }), { version: 1, stars: 32, races: 2, selected: 'gator-claw', courseId: 'skyway', muted: true, reducedMotion: true });
+  }), { version: 1, stars: 32, races: 2, selected: 'gator-claw', courseId: 'skyway', raceMode: 'cruise', rivalRank: 1, cameraView: 'close', challengeWins: 0, muted: true, reducedMotion: true });
   assert.equal(createProgress({ version: 1, stars: Infinity }).stars, 0);
   assert.equal(createProgress({ version: 1, stars: -1 }).stars, 0);
 });

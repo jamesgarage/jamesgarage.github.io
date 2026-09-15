@@ -21,6 +21,8 @@ import { poseGuardian } from './guardian-pose.mjs';
 import { SmashTargets } from './smash-scene.mjs';
 import { createCourseFinish } from './course-finish.mjs';
 import { sampleFlight } from './flight.mjs';
+import { VictoryCeremony } from './victory-ceremony.mjs';
+import { TowTruck } from './tow-truck.mjs';
 export { makeTruck } from './models.mjs';
 export { sampleTrack } from './track.mjs';
 
@@ -42,7 +44,7 @@ function makeStarGeometry() {
 
 export class GameScene {
   constructor(canvas,spec) {
-    this.canvas=canvas;this.reducedMotion=false;this.mode='menu';this.time=0;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;
+    this.canvas=canvas;this.reducedMotion=false;this.cameraView='close';this.mode='menu';this.time=0;this.transform=0;this.boost=0;this.squash=0;this.steerLean=0;
     this.renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
     this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -74,6 +76,7 @@ export class GameScene {
     this.smashTargets=new SmashTargets(this.scene);
     this.courseFinish=createCourseFinish();this.scene.add(this.courseFinish.group);this.course=getCourse();
     this.life=new WorldLife(this.scene);
+    this.towTruck=new TowTruck();this.scene.add(this.towTruck.group);
     const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=128;
     const shadowContext=shadowCanvas.getContext('2d');const gradient=shadowContext.createRadialGradient(64,64,8,64,64,64);
     gradient.addColorStop(0,'rgba(25,32,35,.75)');gradient.addColorStop(.5,'rgba(25,32,35,.38)');gradient.addColorStop(1,'rgba(25,32,35,0)');
@@ -102,6 +105,11 @@ export class GameScene {
     disposeTruck(this.truck);
     this.scene.remove(this.truck.group);this.truck=makeTruck(spec);this.scene.add(this.truck.group);this.transform=0;this.boost=0;
   }
+  showCeremony(result) {
+    this.flames.clear();this.bursts.clear();this.towTruck.reset();
+    this.ceremony??=new VictoryCeremony({environment:this.environment.texture});
+    this.ceremony.start(result);this.ceremony.resize(this.width,this.height);this.mode='ceremony';
+  }
   setCourse(id) {
     this.course=getCourse(id);
     const canyon=this.course.theme==='canyon';
@@ -117,9 +125,9 @@ export class GameScene {
     for(const star of this.stars){const gap=this.course.gaps.find(item=>star.distance>=item.launch&&star.distance<=item.land);star.flightLift=gap?sampleFlight({start:gap.launch,end:gap.land,height:gap.height},star.distance).height:0;}
     this.snapCamera=true;this.weather.reset();
   }
-  reset(variant=0) {this.flames.clear();this.buddies.reset(variant);this.weather.reset();this.encounters.reset();this.smashTargets?.reset();this.life.reset(variant);this.landmarks.reset(variant);this.bursts.clear();poseRearSuspension(this.truck.rearSuspension);poseGuardian(this.truck,{menu:true});this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';if(this.courseFinish)this.courseFinish.group.visible=this.course.end<1900;this.snapCamera=true;this.transform=0;this.flight=0;this.boost=0;this.squash=0;this.steerLean=0;}
-  menu() {this.flames.clear();this.weather.reset();this.bursts.clear();this.smashTargets?.reset();poseRearSuspension(this.truck.rearSuspension);poseGuardian(this.truck,{menu:true});this.mode='menu';if(this.courseFinish)this.courseFinish.group.visible=false;this.snapCamera=true;}
-  resize() {this.width=innerWidth;this.height=innerHeight;this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();this.renderer.setSize(this.width,this.height,false);this.snapCamera=true;}
+  reset(variant=0) {this.ceremony?.reset();this.towTruck.reset();this.flames.clear();this.buddies.reset(variant);this.weather.reset();this.encounters.reset();this.smashTargets?.reset();this.life.reset(variant);this.landmarks.reset(variant);this.bursts.clear();poseRearSuspension(this.truck.rearSuspension);poseGuardian(this.truck,{menu:true});this.stars.forEach(s=>{s.collected=false;s.mesh.visible=true;});this.mode='race';if(this.courseFinish)this.courseFinish.group.visible=this.course.end<1900;this.snapCamera=true;this.transform=0;this.flight=0;this.boost=0;this.squash=0;this.steerLean=0;}
+  menu() {this.ceremony?.reset();this.towTruck.reset();this.flames.clear();this.weather.reset();this.bursts.clear();this.smashTargets?.reset();poseRearSuspension(this.truck.rearSuspension);poseGuardian(this.truck,{menu:true});this.mode='menu';if(this.courseFinish)this.courseFinish.group.visible=false;this.snapCamera=true;}
+  resize() {this.width=innerWidth;this.height=innerHeight;this.camera.aspect=this.width/this.height;this.camera.updateProjectionMatrix();this.renderer.setSize(this.width,this.height,false);this.ceremony?.resize(this.width,this.height);this.snapCamera=true;}
   burst(colorful=true,count=20,origin=this.truck.group.position,reward=false) {
     if(this.reducedMotion||this.mode!=='race')return 0;
     return this.bursts.burst({kind:reward?'reward':colorful?'celebrate':'dust',count,origin,enabled:true});
@@ -127,6 +135,10 @@ export class GameScene {
   land(strength=1) {this.squash=.55+clamp(strength,0,1)*.45;this.burst(false,12);}
   crush() {this.burst(true,14,this.truck.group.position,true);}
   update(dt,race) {
+    if(this.mode==='ceremony') {
+      this.ceremony.update(dt,{paused:race.phase==='paused',reducedMotion:this.reducedMotion});
+      this.renderer.render(this.ceremony.scene,this.ceremony.camera);return 0;
+    }
     this.time+=dt;
     const isMenu=this.mode==='menu';
     const d=isMenu?(this.course?.start??0)+14:race.distance;
@@ -141,7 +153,7 @@ export class GameScene {
     this.flight=lerp(this.flight||0,!isMenu&&race.flying?1:0,1-Math.exp(-dt*6));
     this.boost=lerp(this.boost,!isMenu&&race.turboTime>0?1:0,1-Math.exp(-dt*4));
     this.squash=Math.max(0,this.squash-dt*3.5);
-    this.steerLean=lerp(this.steerLean,isMenu?0:-(race.targetLane-race.lane)*.16,1-Math.exp(-dt*7));
+    this.steerLean=lerp(this.steerLean,isMenu?0:clamp(-(race.targetLane-race.lane)*.16,-.32,.32),1-Math.exp(-dt*7));
     poseGuardian(this.truck,{transform:this.transform,flight:this.flight,lean:this.steerLean,squash:this.squash,time:this.time,reducedMotion:this.reducedMotion,menu:isMenu});
     poseRearSuspension(this.truck.rearSuspension,!isMenu&&!this.reducedMotion&&!inLoop?this.squash*.2:0,this.steerLean);
     this.truck.wheels.forEach((wheel,i)=>{wheel.rotation.order='YXZ';wheel.rotation.y=i>1?this.steerLean*1.4:0;if(!isMenu&&race.phase==='running')wheel.rotation.x+=dt*19*(race.speed??RACE_SPEED)/RACE_SPEED;});
@@ -168,12 +180,13 @@ export class GameScene {
       this.targetLook.copy(base).add(new THREE.Vector3(6,29,0));this.camera.fov=54;
     } else {
       const horizontal=f.forward.clone();horizontal.y=0;horizontal.normalize();
-      // Leave the rear two guests in view while keeping the horizon visible.
       const portrait=this.width<this.height;
-      const distance=(portrait?53:42)+(this.truck.spec.scale-1)*4;
-      this.targetCamera.copy(g.position).addScaledVector(horizontal,-distance).add(new THREE.Vector3(0,(portrait?18:14.5)+race.height*.1+(this.truck.spec.scale-1)*2.5,0));
-      this.targetLook.copy(f.position).addScaledVector(horizontal,-9).add(new THREE.Vector3(0,2.4+race.height*.7+this.transform*1.1,0));
-      this.camera.fov=55+(this.reducedMotion?0:this.transform*3+this.boost*3);
+      const close=this.cameraView!=='wide';
+      const actionRoom=Math.max(this.flight*5,this.transform*3,race.recovery?8:0);
+      const distance=(close?(portrait?35:27):(portrait?53:42))+(this.truck.spec.scale-1)*5+actionRoom;
+      this.targetCamera.copy(g.position).addScaledVector(horizontal,-distance).add(new THREE.Vector3(0,(close?(portrait?14:10):(portrait?18:14.5))+race.height*.1+(this.truck.spec.scale-1)*2.5,0));
+      this.targetLook.copy(f.position).addScaledVector(horizontal,close?-2:-9).add(new THREE.Vector3(0,2.4+race.height*.7+this.transform*1.1,0));
+      this.camera.fov=(close?58:55)+(this.reducedMotion?0:this.transform*3+this.boost*3);
       if(!this.reducedMotion)this.targetCamera.y-=this.squash*.32;
     }
     this.camera.updateProjectionMatrix();
@@ -186,7 +199,7 @@ export class GameScene {
       s.mesh.visible=s.distance>=(this.course?.start??0)&&s.distance<=(this.course?.end??COURSE_LENGTH)&&Math.abs(s.distance-d)<170;
       if(!s.mesh.visible)continue;
       s.mesh.rotation.y=this.time*1.7;s.mesh.position.y=s.base.y+(s.flightLift||0)+Math.sin(this.time*2+s.distance)*.2;
-      if(!isMenu&&race.phase==='running'&&Math.abs(s.distance-d)<2.2&&(this.transform>.3||Math.abs(race.lane-s.lane)<.65)) {s.collected=true;s.mesh.visible=false;if(!this.reducedMotion)this.burst(true,4,s.mesh.position);collected++;}
+      if(!isMenu&&!race.recovery&&race.phase==='running'&&Math.abs(s.distance-d)<2.2&&(this.transform>.3||Math.abs(race.lane-s.lane)<.65)) {s.collected=true;s.mesh.visible=false;if(!this.reducedMotion)this.burst(true,4,s.mesh.position);collected++;}
     }
     this.bursts.update(dt,{phase:race.phase,mode:this.mode,reducedMotion:this.reducedMotion});
     if(race.phase==='running'&&Number.isFinite(dt)&&dt>0&&this.transform>.5&&Math.random()<dt*20&&!this.reducedMotion)this.burst(true,1);
@@ -194,6 +207,7 @@ export class GameScene {
     this.weather.update(dt,{race,truck:this.truck,mode:this.course?.theme==='canyon'?'menu':this.mode,reducedMotion:this.reducedMotion});
     this.encounters.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});
     this.smashTargets.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});
+    this.towTruck.update(dt,race);
     if(this.course?.theme!=='canyon'){this.life.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});this.landmarks.update(dt,{race,mode:this.mode,reducedMotion:this.reducedMotion});}
     this.renderer.render(this.scene,this.camera);
     return collected;

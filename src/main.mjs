@@ -6,18 +6,23 @@ import { getCourse, courseProgress } from './courses.mjs';
 import { renderCourses } from './course-picker.mjs';
 import { installTouchGuard } from './touch-guard.mjs';
 import { GamepadControls } from './gamepad-controls.mjs';
+import { mountFeedback } from './feedback.mjs';
+import { raceStandings } from './race-rules.mjs';
+import { raceCrew } from './crew.mjs';
+import { turnAt } from './turns.mjs';
 
 const $ = id => document.getElementById(id);
 const SAVE_KEY = 'monster-skyway.progress.v1';
-const overlays = ['garage','tracks','pause-overlay','results','settings'];
+const overlays = ['garage','tracks','pause-overlay','results','settings','feedback'];
 let progress, storageWorks=true;
 try { progress=createProgress(JSON.parse(localStorage.getItem(SAVE_KEY))); } catch { progress=createProgress(); storageWorks=false; }
 if(!localStorageAvailable())storageWorks=false;
 function localStorageAvailable(){try{const k='monster-skyway.probe';localStorage.setItem(k,'1');localStorage.removeItem(k);return true;}catch{return false;}}
-let race=createRace(progress.races,progress.courseId), world, previous=0, accumulator=0, calloutRemaining=0, calloutPriority=0, lastFocus, pausedBySettings=false, shownPlace=0;
+let race=createRace(progress.races,progress.courseId,progress.raceMode,{rivalRank:progress.rivalRank}), world, previous=0, accumulator=0, calloutRemaining=0, calloutPriority=0, lastFocus, pausedBySettings=false, shownPlace=0;
 const held=new Set();
 const touchSteering=new Map();
 let gamepad;
+let presentationPaused=false;
 const input={jump:false,steer:0,transform:false,turbo:false};
 const audio=new GameAudio();
 audio.setMuted(progress.muted);
@@ -28,14 +33,16 @@ function selected(){return TRUCKS.find(t=>t.id===progress.selected)||TRUCKS[0];}
 function say(message,seconds=2.3,priority=1){if(calloutRemaining>0&&priority<calloutPriority)return;calloutRemaining=seconds;calloutPriority=priority;$('callout').textContent=message;$('callout').classList.remove('show');requestAnimationFrame(()=>$('callout').classList.add('show'));}
 function clearCallout(){calloutRemaining=0;calloutPriority=0;$('callout').textContent='';}
 function clearInput(){held.clear();touchSteering.clear();gamepad?.clear();input.jump=false;input.steer=0;input.transform=false;input.turbo=false;document.querySelectorAll('.pressed').forEach(el=>el.classList.remove('pressed'));}
-function showModal(id){lastFocus=document.activeElement;overlays.forEach(other=>$(other).hidden=other!==id);$(id).hidden=false;syncInert();if(gamepad?.connected)gamepad.focus(gamepad.defaultFocus($(id)),$(id));else $(id).querySelector('button:not(:disabled),input')?.focus();}
+function showModal(id){if(!overlays.some(other=>!$(other).hidden))lastFocus=document.activeElement;overlays.forEach(other=>$(other).hidden=other!==id);$(id).hidden=false;syncInert();if(gamepad?.connected)gamepad.focus(gamepad.defaultFocus($(id)),$(id));else $(id).querySelector('button:not(:disabled),input')?.focus();}
 function hideModals(){overlays.forEach(id=>$(id).hidden=true);syncInert();if(lastFocus?.isConnected&&!lastFocus.closest('[hidden]'))lastFocus.focus();}
 function syncInert(){const active=overlays.find(id=>!$(id).hidden);$('menu').inert=!!active;$('hud').inert=!!active;$('controls').inert=!!active;document.querySelector('.global-tools').inert=!!active;}
 function syncPreferences(){
   $('sound-btn').setAttribute('aria-pressed',String(!progress.muted));$('sound-btn').setAttribute('aria-label',progress.muted?'Turn sound on':'Turn sound off');
   $('sound-btn').style.filter=progress.muted?'grayscale(1)':'none';
   $('motion-toggle').checked=progress.reducedMotion;document.body.classList.toggle('reduced-motion',progress.reducedMotion);
-  if(world)world.reducedMotion=progress.reducedMotion;audio.setMuted(progress.muted);updateStorageNote();
+  document.querySelectorAll('[name="camera"]').forEach(input=>input.checked=input.value===progress.cameraView);
+  document.querySelectorAll('[name="rival-rank"]').forEach(input=>input.checked=Number(input.value)===progress.rivalRank);
+  if(world){world.reducedMotion=progress.reducedMotion;world.cameraView=progress.cameraView;}audio.setMuted(progress.muted);updateStorageNote();
 }
 function nextReward(){const next=TRUCKS.find(t=>t.threshold>progress.stars);return next?`${next.name} is next · ${next.threshold-progress.stars} stars to go`:'Mega Titan unlocked. Your whole crew is ready!';}
 function refreshMenu(){
@@ -46,6 +53,7 @@ function refreshMenu(){
   $('showcase-tagline').textContent=spec.tagline;
   $('showcase-number').textContent=String(TRUCKS.indexOf(spec)+1).padStart(2,'0');
   $('chosen-course').textContent=getCourse(progress.courseId).name;
+  document.querySelectorAll('[data-mode]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.mode===progress.raceMode)));
 }
 function truckPicture(spec) {
   return `<img src="${import.meta.env.BASE_URL}trucks/${spec.id}.png" alt="" width="720" height="480" draggable="false" />`;
@@ -80,9 +88,9 @@ function renderGarage(){
 function showGarage(){menu();renderGarage();showModal('garage');}
 function chooseCourse(id){progress={...progress,courseId:getCourse(id).id};save();refreshMenu();start();}
 function showTracks(){menu();renderCourses($('course-list'),progress.courseId,chooseCourse);showModal('tracks');}
-function menu(){clearInput();race.phase='ready';audio.setDriving(false);audio.pause();world.menu();hideModals();$('menu').hidden=false;$('hud').hidden=true;$('controls').hidden=true;document.body.classList.remove('playing');clearCallout();refreshMenu();}
+function menu(){clearInput();race.phase='ready';audio.setDriving(false);audio.pause();world.menu();hideModals();$('menu').hidden=false;$('hud').hidden=true;$('controls').hidden=true;$('road-cue').hidden=true;document.body.classList.remove('playing');clearCallout();refreshMenu();}
 function start(){
-  clearInput();hideModals();shownPlace=0;race=createRace(progress.races,progress.courseId);race.truckScale=selected().scale;race.phase='running';world.setCourse(race.courseId);world.reset(race.variant);world.setTruck(selected());
+  clearInput();hideModals();shownPlace=0;race=createRace(progress.races,progress.courseId,progress.raceMode,{rivalRank:progress.rivalRank});race.truckScale=selected().scale;race.phase='running';world.setCourse(race.courseId);world.reset(race.variant);world.setTruck(selected());
   $('menu').hidden=true;$('hud').hidden=false;$('controls').hidden=false;document.body.classList.add('playing');
   previous=performance.now();accumulator=0;void audio.resume();void audio.start();audio.setMuted(progress.muted);audio.setDriving(true);audio.play('start');updateStage();updatePosition();say('Let’s race!',1.6,2);$('jump-btn').focus();
 }
@@ -90,23 +98,30 @@ function pause(){if(race.phase!=='running')return;race.phase='paused';clearInput
 function resume(){if(race.phase!=='paused')return;hideModals();race.phase='running';previous=performance.now();accumulator=0;void audio.resume();audio.setDriving(true);}
 function finish(){
   if(race.rewardGranted)return;race.rewardGranted=true;clearInput();audio.setDriving(false);audio.play('finish');world.burst(true,70);
-  const before=unlockedTrucks(progress).length;progress=awardRace(progress,race.stars);save();
+  const before=unlockedTrucks(progress).length;progress=awardRace(progress,race.stars,race.result);save();
   const unlocked=unlockedTrucks(progress).slice(before);
   const place=racePlace(race);
-  $('result-title').textContent=place===1?'You win!':'Great race!';
+  const crew=raceCrew(race.variant),standings=raceStandings(race);
+  const winnerId=race.result?.winnerId??(place===1?'player':standings[0].id);
+  const winnerName=winnerId==='player'?selected().name:crew.find(friend=>friend.id===winnerId)?.name??'Your rival';
+  $('result-title').textContent=place===1?'You win!':`${winnerName} wins!`;
+  $('winner-name').textContent=place===1?`${winnerName} takes the trophy`:`You finished ${['','1st','2nd','3rd','4th','5th'][place]}. Every race grows your garage!`;
+  world.showCeremony({participants:standings.map(entry=>({id:entry.id,place:entry.place,kind:entry.id==='player'?'player':'buddy',spec:entry.id==='player'?selected():crew.find(friend=>friend.id===entry.id)})),winnerId,reducedMotion:progress.reducedMotion});
   document.querySelector('.victory-medal').innerHTML=`${place}<small>${['','st','nd','rd','th','th'][place]}</small>`;
   document.querySelector('.victory-medal').setAttribute('aria-label',`${['','First','Second','Third','Fourth','Fifth'][place]} place`);
   document.querySelector('.victory-podium').textContent=place===1?'★ CHAMPION ★':'★ FINISHER ★';
   $('result-truck').src=`${import.meta.env.BASE_URL}trucks/${selected().id}.png`;
-  $('result-truck').alt=`${selected().name}, your winning truck`;
+  $('result-truck').alt=`${selected().name}, your truck`;
   $('result-stars').textContent=`+${12+Math.min(50,race.stars)}`;
   $('result-unlock').textContent=unlocked.length?`${unlocked.map(t=>t.name).join(' & ')} joined your crew! Choose your new ride in the garage.`:`12 finish stars + ${Math.min(50,race.stars)} bonus stars. ${nextReward()}`;
-  clearCallout();$('controls').hidden=true;showModal('results');refreshMenu();
+  clearCallout();$('controls').hidden=true;$('hud').hidden=true;$('road-cue').hidden=true;showModal('results');refreshMenu();
 }
 
 $('play-btn').addEventListener('click',start);$('race-again-btn').addEventListener('click',start);
 $('garage-btn').addEventListener('click',showGarage);$('result-garage-btn').addEventListener('click',showGarage);
 $('tracks-btn').addEventListener('click',showTracks);
+document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{progress.raceMode=button.dataset.mode;save();refreshMenu();}));
+$('stomp-btn').addEventListener('click',()=>world.ceremony?.stomp());
 $('tracks-close').addEventListener('click',()=>{hideModals();$('tracks-btn').focus();});
 document.querySelectorAll('[data-race]').forEach(button=>button.addEventListener('click',()=>chooseCourse(button.dataset.race)));
 $('result-garage-btn').insertAdjacentHTML('afterend','<button id="result-tracks-btn" class="button button-quiet" type="button">Choose another track</button>');
@@ -117,9 +132,14 @@ $('sound-btn').addEventListener('click',async()=>{progress.muted=!progress.muted
 $('settings-btn').addEventListener('click',()=>{pausedBySettings=race.phase==='running';if(pausedBySettings){race.phase='paused';clearInput();audio.pause();}showModal('settings');});
 $('settings-close').addEventListener('click',()=>{ $('reset-confirm').hidden=true;hideModals();if(pausedBySettings)resume();pausedBySettings=false;});
 $('motion-toggle').addEventListener('change',()=>{progress.reducedMotion=$('motion-toggle').checked;syncPreferences();save();});
+document.querySelectorAll('[name="camera"]').forEach(input=>input.addEventListener('change',()=>{if(input.checked){progress.cameraView=input.value;syncPreferences();save();}}));
+document.querySelectorAll('[name="rival-rank"]').forEach(input=>input.addEventListener('change',()=>{if(input.checked){progress.rivalRank=Number(input.value);syncPreferences();save();}}));
+$('feedback-btn').addEventListener('click',()=>{clearInput();showModal('feedback');});
+$('feedback-close').addEventListener('click',()=>{showModal('settings');$('feedback-btn').focus();});
+mountFeedback($('feedback'),{context:()=>({courseId:progress.courseId,raceMode:progress.raceMode})});
 $('reset-btn').addEventListener('click',()=>{$('reset-confirm').hidden=false;$('reset-no').focus();});
 $('reset-no').addEventListener('click',()=>{$('reset-confirm').hidden=true;$('reset-btn').focus();});
-$('reset-yes').addEventListener('click',()=>{progress=createProgress({version:1,muted:progress.muted,reducedMotion:progress.reducedMotion});save();world.setTruck(selected());pausedBySettings=false;$('reset-confirm').hidden=true;menu();showGarage();});
+$('reset-yes').addEventListener('click',()=>{progress=createProgress({version:1,muted:progress.muted,reducedMotion:progress.reducedMotion,raceMode:progress.raceMode,rivalRank:progress.rivalRank,cameraView:progress.cameraView});save();world.setTruck(selected());pausedBySettings=false;$('reset-confirm').hidden=true;menu();showGarage();});
 function jump(){if(race.phase==='running')input.jump=true;}
 function transform(){if(race.phase==='running')input.transform=true;}
 function turbo(){if(race.phase==='running')input.turbo=true;}
@@ -137,14 +157,14 @@ for(const [id,key] of [['left-btn','left'],['right-btn','right']]) {
 }
 installTouchGuard($('app'));
 gamepad=new GamepadControls({getPhase:()=>race.phase,getMenuRoot:()=>{const modal=overlays.find(id=>!$(id).hidden);return modal?$(modal):!$('menu').hidden?$('app'):null;},jump,turbo,transform,pause,resume,
-  back:()=>{const modal=overlays.find(id=>!$(id).hidden);if(modal==='pause-overlay')resume();else if(modal==='garage')$('garage-close').click();else if(modal==='tracks')$('tracks-close').click();else if(modal==='settings')$('settings-close').click();else if(modal==='results')menu();},
+  back:()=>{const modal=overlays.find(id=>!$(id).hidden);if(modal==='pause-overlay')resume();else if(modal==='garage')$('garage-close').click();else if(modal==='tracks')$('tracks-close').click();else if(modal==='settings')$('settings-close').click();else if(modal==='feedback')$('feedback-close').click();else if(modal==='results')menu();},
   status:(message,connected)=>{$('controller-status').textContent=message;$('controller-hint').textContent=message;$('controller-hint').hidden=!connected;document.querySelector('.race-keyboard-hint').textContent=connected?'A / ✕ JUMP / FLY · X / □ ROBOT · B / ○ TURBO · MENU PAUSE':'← → STEER · SPACE JUMP · B TURBO · T ROBOT';}
 });
 document.addEventListener('keydown',e=>{
   const modal=overlays.find(id=>!$(id).hidden);
   if(modal){
-    if(e.key==='Tab'){const list=[...$(modal).querySelectorAll('button:not(:disabled),input')].filter(el=>!el.closest('[hidden]'));const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){last?.focus();e.preventDefault();}else if(!e.shiftKey&&document.activeElement===last){first?.focus();e.preventDefault();}}
-    if(e.key==='Escape'){e.preventDefault();if(modal==='pause-overlay')resume();else if(modal==='garage')$('garage-close').click();else if(modal==='tracks')$('tracks-close').click();else if(modal==='settings')$('settings-close').click();}
+    if(e.key==='Tab'){const list=[...$(modal).querySelectorAll('button:not(:disabled),input:not([type=hidden]),textarea,a[href]')].filter(el=>!el.closest('[hidden]'));const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){last?.focus();e.preventDefault();}else if(!e.shiftKey&&document.activeElement===last){first?.focus();e.preventDefault();}}
+    if(e.key==='Escape'){e.preventDefault();if(modal==='pause-overlay')resume();else if(modal==='garage')$('garage-close').click();else if(modal==='tracks')$('tracks-close').click();else if(modal==='settings')$('settings-close').click();else if(modal==='feedback')$('feedback-close').click();else if(modal==='results')menu();}
     return;
   }
   if(e.key==='Escape'||e.key.toLowerCase()==='p'){if(race.phase==='running'){e.preventDefault();pause();}return;}
@@ -155,7 +175,8 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')held.delete('left');if(e.key==='ArrowRight'||e.key==='d')held.delete('right');});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();pause();}});
-window.addEventListener('blur',()=>{clearInput();pause();});
+window.addEventListener('blur',()=>{presentationPaused=true;clearInput();pause();});
+window.addEventListener('focus',()=>{presentationPaused=false;});
 window.addEventListener('resize',()=>world?.resize());
 $('game-canvas').addEventListener('webglcontextlost',e=>{e.preventDefault();pause();$('error').hidden=false;$('error').textContent='The graphics took a little pit stop. Reload to keep playing — your saved trucks are safe.';});
 
@@ -172,14 +193,14 @@ try {
         const digital=(held.has('right')||touch.includes('right')?1:0)-(held.has('left')||touch.includes('left')?1:0);
         input.steer=digital||padSteer;
         const events=stepRace(race,1/60,input);input.jump=false;input.transform=false;input.turbo=false;accumulator-=1/60;
-        for(const event of events){if(event.type==='crush'){world.crush();say('MONSTER POWER! +2 ★',1.25,2);}if(event.type==='smash'){world.crush();audio.play('crush');say('SMASH! +3 ★',1.25,2);}if(event.type==='flight')say('LET’S FLY!',1.6,4);if(event.type==='canyon')say('CANYON HERO!',1.6,3);if(event.type==='turbo')say('TURBO!',1.1,2);}
+        for(const event of events){if(event.type==='crush'){world.crush();say('MONSTER POWER! +2 ★',1.25,2);}if(event.type==='smash'){world.crush();audio.play('crush');say('SMASH! +3 ★',1.25,2);}if(event.type==='rivalBlock')say(`${event.name} is guarding the lane!`,1.2,1);if(event.type==='offCourse')say('TOW TRUCK TO THE RESCUE!',2.5,5);if(event.type==='flight')say('LET’S FLY!',1.6,4);if(event.type==='canyon')say('CANYON HERO!',1.6,3);if(event.type==='turbo')say('TURBO!',1.1,2);}
         for(const event of events){
           if(event.type==='buddy') {if(event.action==='hello'||event.action==='jump')audio.play(`buddy-${event.id}`);continue;}
           audio.play(event.type);if(event.type==='jump'&&event.auto)say('BIG AIR!',1.25);if(event.type==='land'){world.land(event.strength);if(event.strength>.7)say('Nailed it!',1.15);}if(event.type==='transform'){say('BIG ROBOT!',1.6,3);world.burst(true,25);}if(event.type==='loop')say('LOOP LEGEND!',2.3,3);if(event.type==='finish')finish();
         }
       }
     }
-    const visualDt=race.phase==='paused'?0:dt;
+    const visualDt=race.phase==='paused'||document.hidden||presentationPaused?0:dt;
     if(calloutRemaining>0&&race.phase==='running'){calloutRemaining-=visualDt;if(calloutRemaining<=0)clearCallout();}
     const stars=world.update(visualDt,race);if(stars){race.stars+=stars;audio.play('star');}
     audio.update((race.speed??RACE_SPEED)/RACE_SPEED,race.height>0,race.transformTime>0);
@@ -194,6 +215,17 @@ try {
       $('turbo-btn').disabled=turboActive||race.turboEnergy<100;
       $('turbo-btn').classList.toggle('boosting',turboActive);
       $('turbo-btn').setAttribute('aria-label',turboActive?'Turbo active':race.turboEnergy<100?'Turbo charging':'Turbo boost');
+      const turn=turnAt(race.distance,race.courseId),towing=!!race.recovery;
+      const cue=race.phase==='running'&&race.raceMode==='race'&&(towing||turn.shoulder||Math.abs(turn.steer)>.45);
+      $('road-cue').hidden=!cue;$('road-cue').classList.toggle('towing',towing);
+      $('road-cue-icon').textContent=towing?'⚒':Math.abs(turn.steer)>.2?(turn.steer<0?'↰':'↱'):'⌁';
+      $('road-cue-text').textContent=towing?'Tow truck to the rescue!':turn.shoulder?'Dirt shoulder · stay on track':turn.steer<0?'Bend left':'Bend right';
+      if(world.mode==='ceremony'){
+        const ceremony=world.ceremony.diagnostics;
+        $('stomp-btn').disabled=ceremony.phase==='stomping';
+        $('stomp-btn').textContent=ceremony.phase==='restored'?'One more stomp!':'Victory stomp!';
+        $('ceremony-status').textContent=ceremony.phase==='stomping'?'Boing! Toy-truck victory laps.':ceremony.phase==='restored'?'Everyone pops back up. Ready for another race?':'A toy-truck celebration. Everyone pops back up!';
+      }
     }
   });
   // Read-only diagnostics for local browser smoke tests and frame-budget checks.
@@ -201,7 +233,7 @@ try {
     const frame=sampleTrack(race.distance);
     const center=frame.position.addScaledVector(frame.up,race.height).project(world.camera);
     const screenLane=world.truck.group.position.clone().project(world.camera).x-center.x;
-    return Object.freeze({controller:{connected:gamepad.connected,steer:gamepad.steer,index:gamepad.input.activeIndex},lane:race.lane,targetLane:race.targetLane,touchCount:touchSteering.size,courseId:race.courseId,courseStart:race.courseStart,courseEnd:race.courseEnd,courseProgress:courseProgress(race),robotMode:race.robotMode,flying:race.flying,flight:race.flight?{...race.flight}:null,canyonCrossings:race.canyonCrossings,smashes:race.smashes,smashedTargets:race.smashedTargets?.slice(),smashModels:world.smashTargets.diagnostics,phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,variant:race.variant,place:racePlace(race),buddies:world.buddies.poses.map(p=>({...p})),buddySignals:world.buddies.signals.badges.filter(b=>b.visible).map(b=>b.userData.signal),worldLife:world.life.diagnostics,landmarks:world.landmarks.diagnostics,crew:world.buddies.trucks.map(t=>t.spec.id),screenLane,speed:race.speed,turboTime:race.turboTime,turboEnergy:race.turboEnergy,crushBoostTime:race.crushBoostTime,crushes:race.crushes,crushReward:world.encounters.rewardDiagnostics,crushedCars:race.crushedCars?.slice(),crushedModels:world.encounters.cars.filter(car=>car.crush>.95).map(car=>car.id),rain:world.weather.rain.visible&&world.weather.group.visible,mudSpray:world.weather.spray.count,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles,flames:world.flames.mesh.count});
+    return Object.freeze({raceMode:race.raceMode,rivalRank:race.rivalRank,cameraView:world.cameraView,recovery:race.recovery?{...race.recovery}:null,offCourseCount:race.offCourseCount,finishOrder:race.finishOrder?.map(entry=>({...entry})),winnerId:race.winnerId,result:race.result?structuredClone(race.result):null,ceremony:world.ceremony?.diagnostics??null,controller:{connected:gamepad.connected,steer:gamepad.steer,index:gamepad.input.activeIndex},lane:race.lane,targetLane:race.targetLane,touchCount:touchSteering.size,courseId:race.courseId,courseStart:race.courseStart,courseEnd:race.courseEnd,courseProgress:courseProgress(race),robotMode:race.robotMode,flying:race.flying,flight:race.flight?{...race.flight}:null,canyonCrossings:race.canyonCrossings,smashes:race.smashes,smashedTargets:race.smashedTargets?.slice(),smashModels:world.smashTargets.diagnostics,phase:race.phase,distance:race.distance,height:race.height,landings:race.landings,loops:race.loops,stars:race.stars,energy:race.energy,transformed:race.transformTime>0,selected:progress.selected,totalStars:progress.stars,races:progress.races,variant:race.variant,place:racePlace(race),buddies:world.buddies.poses.map(p=>({...p})),buddySignals:world.buddies.signals.badges.filter(b=>b.visible).map(b=>b.userData.signal),worldLife:world.life.diagnostics,landmarks:world.landmarks.diagnostics,crew:world.buddies.trucks.map(t=>t.spec.id),screenLane,speed:race.speed,turboTime:race.turboTime,turboEnergy:race.turboEnergy,crushBoostTime:race.crushBoostTime,crushes:race.crushes,crushReward:world.encounters.rewardDiagnostics,crushedCars:race.crushedCars?.slice(),crushedModels:world.encounters.cars.filter(car=>car.crush>.95).map(car=>car.id),rain:world.weather.rain.visible&&world.weather.group.visible,mudSpray:world.weather.spray.count,drawCalls:world.renderer.info.render.calls,triangles:world.renderer.info.render.triangles,flames:world.flames.mesh.count});
   }});
 } catch(error) {
   $('loading').hidden=true;$('error').hidden=false;$('error').textContent='This adventure needs a browser with 3D graphics (WebGL 2). Try an updated Safari, Chrome, or Edge with graphics acceleration enabled.';

@@ -1,5 +1,19 @@
 # Validation record
 
+## Rival racing and feedback: 2026-09-15
+
+Current local rules/geometry suite: **237 tests passed**. This includes 240 complete competitive races across all eight trucks, five courses and three seeds with contrasting driving patterns. Untouched challenge runs can lose; deliberate steering and available turbo can win. An independent review compared 2,041 mixed-input Cruise frames against the previous committed implementation, with every legacy state field and event matching. Forty-nine separate finish-boundary cases matched an independent crossing-time calculation.
+
+Actual articulated model checks reproduced and fixed a curved-road tow passing overlap. The corrected competitive margin passed 20,997 close tire comparisons across all eight trucks in normal and robot forms. Shared-route tests check bends, missing/resumed rails, supported shoulders, stunt boundaries, scenery clearances, and tow model ownership/pause/reset. Existing gate, loop, flight, canyon, reward, save and resource checks remain green.
+
+The ceremony's seven focused tests cover every roster winner, four contacts, exact toy restoration, pause/invalid time, skip/replay/reset, borrowed resources, and four viewport layouts. Twenty-four rendered lifecycle resets remained stable; isolated ceremony probes stayed within 115 draws and 111,256 triangles. The actual trophy, winner and squash frames were inspected. Integrated screenshot review also led to a smaller results panel so the front competitors stay visible.
+
+Four new production browser flows passed initially: editable parent feedback with local drafts and encoded GitHub handoff; persisted mode/rank/camera choices on a phone; an actual rival winner with ceremony replay and no second reward; and a real off-course tow with moving rivals and exact pause. A development-server HMR interruption invalidated an earlier ceremony test; the stable production rerun passed. Full browser regression and final publication evidence will be recorded below after completion.
+
+Feedback collector tests cover pagination, explicit truncation/errors, PR exclusion and untrusted text retention. The real public repository has Issues enabled and a `feedback` label; its open feedback queue returned an empty result successfully. No public test issue was posted. Feedback requires a parent's GitHub sign-in; no anonymous backend or automatic issue execution is claimed.
+
+Physical iPad/controller pairing remains a family play check. Automated browser input is simulated, and desktop WebKit does not establish physical iPad frame rate or comfort.
+
 ## Automated rules
 
 The core suite covers no-input completion, six automatic ramp jumps, manual jumps, repeated input, bounded steering, loop completion, automatic and manual transformation, pause, invalid frame times, validated saves, every truck threshold, reward limits, and idempotent finish events.

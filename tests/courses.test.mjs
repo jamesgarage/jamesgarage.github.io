@@ -26,7 +26,7 @@ test('five immutable courses share explicit bounds and four safe canyon launch c
 
 test('course selection survives v1 normalization, truck choice and race rewards', () => {
   const old = { version: 1, stars: 123, selected: 'mega-titan', races: 7, muted: true, reducedMotion: true };
-  assert.deepEqual(createProgress(old), { ...old, courseId: 'skyway' });
+  assert.deepEqual(createProgress(old), { ...old, courseId: 'skyway', raceMode: 'cruise', rivalRank: 1, cameraView: 'close', challengeWins: 0 });
   for (const course of COURSES) {
     const progress = createProgress({ ...old, courseId: course.id });
     assert.equal(progress.courseId, course.id);

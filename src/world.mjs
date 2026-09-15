@@ -6,6 +6,7 @@ import { sampleTrack, trackCenter } from './track.mjs';
 import { isAdventureClearing } from './adventure.mjs';
 import { createSurfaceTexture, surfaceUVs } from './surfaces.mjs';
 import { createShoreBankGeometry } from './shore-banks.mjs';
+import { BENDS, recoveryZones, terrainCenterX, isRecoveryClearing, SHOULDER_HALF_WIDTH } from './turns.mjs';
 
 export const DRIVE_HALF_WIDTH = 8.02;
 
@@ -151,17 +152,29 @@ function roadRibbon(start, end, left, right, paint) {
   const mesh = new THREE.Mesh(geometry, paint);
   mesh.castShadow = true; mesh.receiveShadow = true;
   mesh.userData.roadInterval = Object.freeze([start, end]);
+  mesh.userData.roadRibbon = true;
   return mesh;
 }
 
-export function makeRoad({ gaps = [] } = {}) {
+export function makeRoad({ gaps = [], courseId = gaps.length ? 'canyon' : 'skyway', shoulders = true } = {}) {
   const road = new THREE.Group(); road.name = 'molded-orange-skyway';
   const openings = gaps.filter(gap => Number.isFinite(gap.start) && Number.isFinite(gap.end) && gap.end > gap.start).slice().sort((a, b) => a.start - b.start);
+  const zones = shoulders ? recoveryZones(courseId) : [];
   const paints = {
     top: new THREE.MeshStandardMaterial({ color: 0xf56618, roughness: .66, envMapIntensity: .08, side: THREE.DoubleSide }),
     side: new THREE.MeshStandardMaterial({ color: 0xc53e0c, roughness: .65, envMapIntensity: .08, side: THREE.DoubleSide }),
     rail: new THREE.MeshStandardMaterial({ color: 0xffa62a, roughness: .48, envMapIntensity: .12, side: THREE.DoubleSide }),
     stripe: new THREE.MeshStandardMaterial({ color: 0xffe9ac, roughness: .65, envMapIntensity: .08, side: THREE.DoubleSide }),
+  };
+  const cut = (start, end, holes) => {
+    const spans = []; let cursor = start;
+    for (const hole of holes) {
+      if (hole.end <= cursor || hole.start >= end) continue;
+      if (hole.start > cursor) spans.push([cursor, hole.start]);
+      cursor = Math.max(cursor, Math.min(end, hole.end));
+    }
+    if (cursor < end) spans.push([cursor, end]);
+    return spans;
   };
   // Short sections keep geometry cullable rather than submitting a whole world.
   for (let d = -30; d < COURSE_LENGTH + 70; d += 90) {
@@ -174,25 +187,95 @@ export function makeRoad({ gaps = [] } = {}) {
     }
     if (cursor < sectionEnd) spans.push([cursor, sectionEnd]);
     for (const [start, end] of spans) {
-      const add = (left, right, paint) => {
-        const ribbon = roadRibbon(start, end, left, right, paint);
+      const add = (left, right, paint, kind, a = start, b = end) => {
+        const ribbon = roadRibbon(a, b, left, right, paint);
+        ribbon.userData.roadKind = kind;
         ribbon.userData.roadSection = d; road.add(ribbon);
       };
-      add([-8.5, 0], [8.5, 0], paints.top);
-      add([8.5, -.65], [-8.5, -.65], paints.side);
+      add([-8.5, 0], [8.5, 0], paints.top, 'deck');
+      add([8.5, -.65], [-8.5, -.65], paints.side, 'underside');
       for (const side of [-1, 1]) {
-        add([side * 8.5, -.65], [side * 8.5, .64], paints.side);
-        add([side * 8.5, .64], [side * DRIVE_HALF_WIDTH, .64], paints.rail);
-        add([side * DRIVE_HALF_WIDTH, .64], [side * DRIVE_HALF_WIDTH, .06], paints.rail);
-        add([side * 7.58, .025], [side * 7.77, .025], paints.stripe);
+        for (const [a, b] of cut(start, end, zones)) {
+          add([side * 8.5, -.65], [side * 8.5, .64], paints.side, 'rail', a, b);
+          add([side * 8.5, .64], [side * DRIVE_HALF_WIDTH, .64], paints.rail, 'rail', a, b);
+          add([side * DRIVE_HALF_WIDTH, .64], [side * DRIVE_HALF_WIDTH, .06], paints.rail, 'rail', a, b);
+        }
+        add([side * 7.58, .025], [side * 7.77, .025], paints.stripe, 'stripe');
       }
     }
+  }
+  if (zones.length) {
+    const dirt = new THREE.MeshStandardMaterial({ color: 0xbe975f, roughness: 1, side: THREE.DoubleSide,
+      map: createSurfaceTexture('ground') });
+    for (const zone of zones) for (const side of [-1, 1]) {
+      const section = Math.floor((zone.start + 30) / 90) * 90 - 30;
+      for (const [left, right, kind] of [
+        [[side * 8.5, 0], [side * SHOULDER_HALF_WIDTH, 0], 'shoulder'],
+        [[side * SHOULDER_HALF_WIDTH, 0], [side * 21, -1], 'bank'],
+        [[side * 21, -1], [side * 22, -7], 'bank'],
+      ]) {
+        const mesh = roadRibbon(zone.start, zone.end, left, right, dirt);
+        surfaceUVs(mesh.geometry, 'ground'); mesh.castShadow = false;
+        mesh.userData.roadKind = kind; mesh.userData.recoveryZone = zone.id; mesh.userData.roadSection = section; road.add(mesh);
+      }
+      for (const distance of [zone.start, zone.end]) {
+        const frame = sampleTrack(distance), vertices = [];
+        for (const [x, y] of [[8.5, 0], [SHOULDER_HALF_WIDTH, 0], [8.5, -7], [22, -7]]) {
+          const p = frame.position.clone().addScaledVector(frame.right, side * x).addScaledVector(frame.up, y); vertices.push(...p.toArray());
+        }
+        const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.setIndex([0, 2, 1, 1, 2, 3]); geometry.computeVertexNormals(); surfaceUVs(geometry, 'ground');
+        const mesh = new THREE.Mesh(geometry, dirt); mesh.receiveShadow = true;
+        mesh.userData.roadKind = 'bank-cap'; mesh.userData.roadSection = section; road.add(mesh);
+      }
+    }
+  }
+  if (shoulders) addTurnSigns(road);
+  return road;
+}
+
+function addTurnSigns(road) {
+  const paints = { sign: new THREE.MeshStandardMaterial({ color: 0xffd24e, roughness: .68 }),
+    arrow: new THREE.MeshStandardMaterial({ color: 0x284550, roughness: .7 }),
+    post: new THREE.MeshStandardMaterial({ color: 0xf6eed9, roughness: .85 }) };
+  const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+  for (const bend of BENDS) for (const phase of [.12, .62]) {
+    const distance = bend.start + (bend.end - bend.start) * phase, frame = sampleTrack(distance);
+    const direction = Math.sign(bend.offset) * (phase < .5 ? 1 : -1), side = -direction;
+    const base = frame.position.clone().addScaledVector(frame.right, side * 23);
+    const section = Math.floor((distance + 30) / 90) * 90 - 30;
+    const add = (paint, x, y, z, sx, sy, sz, angle = 0) => {
+      const mesh = new THREE.Mesh(boxGeometry.clone(), paint);
+      mesh.position.copy(base).addScaledVector(frame.right, x).addScaledVector(frame.up, y).addScaledVector(frame.forward, z);
+      mesh.quaternion.copy(frame.quaternion); mesh.rotateZ(angle); mesh.scale.set(sx, sy, sz); mesh.updateMatrix();
+      mesh.geometry.applyMatrix4(mesh.matrix); mesh.position.set(0, 0, 0); mesh.quaternion.identity(); mesh.scale.set(1, 1, 1);
+      mesh.castShadow = false; mesh.receiveShadow = true; mesh.userData.roadKind = 'turn-sign'; mesh.userData.roadSection = section;
+      road.add(mesh);
+    };
+    add(paints.post, 0, 1.8, 0, .28, 3.6, .28);
+    add(paints.sign, 0, 3.9, 0, 2.7, 2.7, .2, Math.PI / 4);
+    for (const face of [-1, 1]) for (const arm of [-1, 1]) add(paints.arrow, direction * .08, 3.9 + arm * .37, face * .14, .27, 1.3, .06, direction * arm * Math.PI / 4);
+  }
+  boxGeometry.dispose();
+}
+
+function makeBatchedRoad() {
+  const source = makeRoad(), sections = new Map();
+  for (const mesh of [...source.children]) {
+    const key = mesh.userData.roadSection;
+    if (!sections.has(key)) { const group = new THREE.Group(); group.name = `road-section-${key}`; sections.set(key, group); }
+    sections.get(key).add(mesh);
+  }
+  const road = new THREE.Group(); road.name = source.name;
+  for (const section of sections.values()) {
+    road.add(batch(section));
+    section.traverse(mesh => { if (mesh.isMesh) mesh.geometry.dispose(); });
   }
   return road;
 }
 
 function terrainHeight(x, z) {
-  const trackX = 13 * Math.sin(z / 135) + 6 * Math.sin(z / 57) + (z > LOOP_START ? 13 : 0);
+  const trackX = terrainCenterX(z);
   const shoulder = THREE.MathUtils.smoothstep(Math.abs(x - trackX), 11, 75);
   const hills = 3 + Math.sin(x / 34 + z / 76) * 3.8 + Math.cos(z / 53 - x / 57) * 2.8;
   return z > 920 ? -3.8 : -1.5 + shoulder * hills;
@@ -425,7 +508,7 @@ export function makeLoopSupport() {
 export function createWorld() {
   const world = new THREE.Group(); world.name = 'monster-skyway-world';
   world.userData.shoreBanks = [];
-  world.add(makeTerrain(), makeRoad());
+  world.add(makeTerrain(), makeBatchedRoad());
   const waterMap = createSurfaceTexture('water');
   const waterPaint = new THREE.MeshStandardMaterial({ color: 0x32b8bd, roughness: .38, envMapIntensity: .11, map: waterMap, bumpMap: waterMap, bumpScale: .045 });
   const waterGeometry = new THREE.PlaneGeometry(550, 1100);
@@ -451,7 +534,8 @@ export function createWorld() {
         for (const side of [-1, 1]) {
           const size = 2.4 + noise(d * 2 + side) * 1.8;
           const baseOffset = 17 + noise(d + side) * 13;
-          const offset = side * (bay ? Math.max(baseOffset, 12.5 + 2.5 * size) : baseOffset);
+          const clearing = isRecoveryClearing(d);
+          const offset = side * (bay ? Math.max(baseOffset, (clearing ? 28 : 12.5) + 2.5 * size) : Math.max(baseOffset, clearing ? 31 : 0));
           if (isAdventureClearing(d, offset)) continue;
           const p = f.position.clone().addScaledVector(f.right, offset); p.y = bay ? -1.2 : terrainHeight(p.x, p.z);
           if (bay) {
@@ -463,7 +547,7 @@ export function createWorld() {
             if (clearOfLoop) woodlandTree(chunk, p, size);
             const flowers = f.position.clone().addScaledVector(f.right, side * (11.8 + noise(d + 3) * 2));
             flowers.y = terrainHeight(flowers.x, flowers.z);
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; !clearing && i < 4; i++) {
               const x = flowers.x + i * .33, z = flowers.z + Math.sin(i * 2) * .6;
               piece(chunk, 'cylinder', 0x42874b, [x, flowers.y + .22, z], [.035, .5, .035], undefined, false);
               piece(chunk, 'rock', i % 2 ? 0xffd559 : 0xfff2ae, [x, flowers.y + .5, z], [.2, .1, .2], undefined, false);
@@ -479,7 +563,7 @@ export function createWorld() {
         if ((d + 48) % 96 === 0) {
           const side = Math.floor(d / 96) % 2 ? -1 : 1;
           if (!isAdventureClearing(d, side * 15)) {
-            const p = f.position.clone().addScaledVector(f.right, side * 15);
+            const p = f.position.clone().addScaledVector(f.right, side * (isRecoveryClearing(d) ? 26 : 15));
             p.y = bay ? -.75 : terrainHeight(p.x, p.z);
             if (bay) {
               const mascot = gator(chunk, p, 2.1);

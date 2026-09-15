@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { ExhaustFlames } from '../src/flames.mjs';
+import { TowTruck } from '../src/tow-truck.mjs';
 import { GameScene, makeTruck } from '../src/scene.mjs';
 import { TRUCKS } from '../src/core.mjs';
 import { RaceBuddies } from '../src/buddies.mjs';
@@ -113,7 +114,7 @@ test('scene reset, menu, and truck replacement clear old flames, confetti and sp
   const target = rig(TRUCKS.at(-1));
   // Exercise the real lifecycle methods without constructing a WebGL renderer.
   Object.setPrototypeOf(target, GameScene.prototype);
-  Object.assign(target, { stars: [], bursts: new BurstParticles(target.scene), mode: 'race', buddies: new RaceBuddies(target.scene), weather: new RaceWeather(target.scene), encounters: new RoadEncounters(target.scene), life: new WorldLife(target.scene), landmarks: new LandmarkMotion() });
+  Object.assign(target, { stars: [], towTruck:new TowTruck(), bursts: new BurstParticles(target.scene), mode: 'race', buddies: new RaceBuddies(target.scene), weather: new RaceWeather(target.scene), encounters: new RoadEncounters(target.scene), life: new WorldLife(target.scene), landmarks: new LandmarkMotion() });
   const actions = [() => target.reset(), () => target.menu(), () => target.setTruck(TRUCKS.at(-1))];
   for (const [index, action] of actions.entries()) {
     fillTrail(target);
@@ -140,7 +141,7 @@ test('scene reset, menu, and truck replacement clear old flames, confetti and sp
       assert.ok(Math.abs(matrices[offset + 12] - destination) < 10, 'only the new truck should have visible flames');
     }
   }
-  target.buddies.dispose();target.weather.dispose();target.encounters.dispose();target.life.dispose();target.landmarks.dispose();target.bursts.dispose();
+  target.buddies.dispose();target.weather.dispose();target.encounters.dispose();target.life.dispose();target.landmarks.dispose();target.bursts.dispose();target.towTruck.dispose();
 });
 
 test('exhaust follows larger trucks, guardian body lift, and loop inversion', () => {

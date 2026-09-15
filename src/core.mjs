@@ -4,11 +4,14 @@ import { getCourse } from './courses.mjs';
 import { sampleFlight } from './flight.mjs';
 import { createBuddyMind, normalizeRaceVariant, stepBuddyMind } from './buddy-brain.mjs';
 import { raceCrew } from './crew.mjs';
+import { normalizeRaceMode, normalizeRivalRank, rivalGridDistance, createRivalProfile, stepRivalMovement, recordFinishCrossings,
+  stepChallengeSteering, beginRecovery, stepRecovery, finishRecovery } from './race-rules.mjs';
+import { ROUTE_LOOP_START, ROUTE_LOOP_END } from './turns.mjs';
 
 export const COURSE_LENGTH = getCourse('skyway').end;
 export const RACE_SPEED = 26;
-export const LOOP_START = 820;
-export const LOOP_END = 1000;
+export const LOOP_START = ROUTE_LOOP_START;
+export const LOOP_END = ROUTE_LOOP_END;
 export const RAMPS = Object.freeze([170, 400, 680, 1080, 1510, 1740]);
 export const RAMP_DISTANCES = RAMPS;
 export const MAX_BONUS_STARS = 50;
@@ -57,6 +60,10 @@ export function createProgress(raw) {
     stars,
     selected: selected?.id ?? 'rumbler',
     courseId: getCourse(source.courseId).id,
+    raceMode: normalizeRaceMode(source.raceMode),
+    rivalRank: normalizeRivalRank(source.rivalRank),
+    cameraView: source.cameraView === 'wide' ? 'wide' : 'close',
+    challengeWins: nonnegativeInteger(source.challengeWins),
     muted: source.muted === true,
     reducedMotion: source.reducedMotion === true,
     races: nonnegativeInteger(source.races),
@@ -75,23 +82,35 @@ export function selectTruck(progress, id) {
   return { ...normalized, selected: id };
 }
 
-export function awardRace(progress, bonusStars = 0) {
+export function awardRace(progress, bonusStars = 0, result = null) {
   const normalized = createProgress(progress);
   return {
     ...normalized,
     stars: Math.min(MAX_SAVE_NUMBER, normalized.stars + 12 + nonnegativeInteger(bonusStars, MAX_BONUS_STARS)),
     races: Math.min(MAX_SAVE_NUMBER, normalized.races + 1),
+    challengeWins: Math.min(MAX_SAVE_NUMBER, normalized.challengeWins +
+      (normalized.raceMode === 'race' && result?.place === 1 && result?.winnerId === 'player' ? 1 : 0)),
   };
 }
 
-export function createRace(seed = 0, courseId = 'skyway') {
+export function createRace(seed = 0, courseId = 'skyway', raceMode = 'cruise', options = {}) {
   const variant = normalizeRaceVariant(seed);
   const course = getCourse(courseId);
+  const mode = normalizeRaceMode(raceMode);
+  const rank = normalizeRivalRank(options?.rivalRank);
   return {
     variant,
     courseId: course.id,
     courseStart: course.start,
     courseEnd: course.end,
+    raceMode: mode,
+    rivalRank: rank,
+    finishOrder: [],
+    winnerId: null,
+    result: null,
+    recovery: null,
+    offCourseCount: 0,
+    jumpReleaseRequired: false,
     phase: 'ready',
     distance: course.start,
     elapsed: 0,
@@ -128,7 +147,9 @@ export function createRace(seed = 0, courseId = 'skyway') {
     smashes: 0,
     smashedTargets: [],
     buddySignalCooldown: 0,
-    buddies: raceCrew(variant).map((buddy, slot) => ({ ...buddy, homeLane: buddy.lane, distance: course.start - buddy.gap,
+    buddies: raceCrew(variant).map((buddy, slot) => ({ ...buddy, homeLane: buddy.lane,
+      distance: mode === 'race' ? rivalGridDistance(course.start, slot) : course.start - buddy.gap,
+      ...(mode === 'race' ? { rival: createRivalProfile(variant, buddy.id, rank) } : {}),
       height: 0, velocityY: 0, flight: null, flying: false, ...createBuddyMind(variant, buddy, slot) })),
   };
 }
@@ -299,6 +320,45 @@ function stepBuddies(state, step, steering, events) {
   }
 }
 
+function stepCompetitiveBuddies(state, step, motions, events) {
+  const course = getCourse(state.courseId);
+  const playerEvents = events.map(event => event.type === 'smash' ? { ...event, type: 'crush' } : event);
+  state.buddySignalCooldown = Math.max(0, state.buddySignalCooldown - step);
+  for (const buddy of state.buddies) {
+    const previousDistance = motions.find(motion => motion.id === buddy.id).from;
+    if (buddy.blockStarted) events.push({ type: 'rivalBlock', id: buddy.id, name: buddy.name });
+    const safeJump = buddy.height === 0 && buddy.velocityY === 0 &&
+      (buddy.distance < LOOP_START - 34 || buddy.distance > LOOP_END + 12) &&
+      RAMPS.every(ramp => buddy.distance < ramp - 34 || buddy.distance > ramp + 10) &&
+      course.gaps.every(gap => buddy.distance < gap.launch - 25 || buddy.distance > gap.land + 10);
+    const allowSignal = state.buddySignalCooldown === 0 && state.buddies.filter(friend => friend !== buddy && friend.signalTime > 0).length < 2;
+    const beforeEvents = events.length;
+    const decision = stepBuddyMind(buddy, step, { elapsed: state.elapsed, approach: 1, safeJump, playerEvents, allowSignal }, events);
+    if (events.length > beforeEvents) state.buddySignalCooldown = .24;
+    if (!buddy.signal) buddy.intent = buddy.blocking ? 'block' : 'race';
+    const gapFlight = course.gaps.find(gap => buddy.distance >= gap.launch && buddy.distance < gap.land);
+    if (gapFlight && buddy.flight?.id !== gapFlight.id) buddy.flight = {
+      kind: 'canyon', id: gapFlight.id, start: gapFlight.launch, end: gapFlight.land, height: gapFlight.height, startHeight: buddy.height,
+    };
+    if (buddy.flight) {
+      Object.assign(buddy, sampleFlight(buddy.flight, buddy.distance, buddy.speed));
+      buddy.flying = buddy.distance < buddy.flight.end;
+      if (!buddy.flying) buddy.flight = null;
+    } else if (buddy.distance >= LOOP_START && buddy.distance < LOOP_END) {
+      buddy.height = 0;
+      buddy.velocityY = 0;
+    } else {
+      if (decision.jump) buddy.velocityY = JUMP_SPEED;
+      if (RAMPS.some(ramp => previousDistance < ramp && buddy.distance >= ramp)) buddy.velocityY = RAMP_JUMP_SPEED;
+      if (buddy.height > 0 || buddy.velocityY > 0) {
+        buddy.velocityY -= GRAVITY * step;
+        buddy.height = Math.max(0, buddy.height + buddy.velocityY * step);
+        if (buddy.height === 0) buddy.velocityY = 0;
+      }
+    }
+  }
+}
+
 /**
  * Advance a running race in seconds, returning one-shot audiovisual events.
  * Lanes are normalized to [-1, 1]. Steering changes a persistent target lane;
@@ -313,6 +373,17 @@ export function stepRace(state, dt, inputs = {}) {
   const previousDistance = state.distance;
   const previous = { distance: previousDistance, lane: state.lane, height: state.height };
   state.truckScale = Number.isFinite(state.truckScale) ? clamp(state.truckScale, 1, 1.5) : 1;
+  if (state.raceMode === 'race' && state.recovery) {
+    state.elapsed += step;
+    stepRecovery(state, step, inputs);
+    const motions = stepRivalMovement(state, step, previous);
+    stepCompetitiveBuddies(state, step, motions, events);
+    for (const entry of recordFinishCrossings(state, motions, state.elapsed - step, step)) {
+      if (entry.id !== 'player') events.push({ type: 'rivalFinish', id: entry.id, place: entry.place });
+    }
+    if (finishRecovery(state)) events.push({ type: 'recovered' });
+    return events;
+  }
   state.turboTime = Math.max(0, state.turboTime - step);
   state.crushBoostTime = Math.max(0, state.crushBoostTime - step);
   state.turboEnergy = Math.min(100, state.turboEnergy + step * 100 / 8);
@@ -320,16 +391,34 @@ export function stepRace(state, dt, inputs = {}) {
   if (turboPressed && !state.turboHeld && state.turboEnergy >= 100) activateTurbo(state, events, 'manual');
   state.turboHeld = turboPressed;
   state.speed = travelSpeed(state);
-  state.distance = Math.min(course.end, previousDistance + state.speed * step);
+  state.distance = state.raceMode === 'race' ? previousDistance + state.speed * step : Math.min(course.end, previousDistance + state.speed * step);
   state.elapsed += step;
   state.jumpCooldown = Math.max(0, state.jumpCooldown - step);
 
   const steering = Number.isFinite(inputs.steer) ? Math.max(-1, Math.min(1, inputs.steer)) : 0;
-  state.targetLane = Math.max(-1, Math.min(1, state.targetLane + steering * step * 2.4));
-  state.lane += (state.targetLane - state.lane) * (1 - Math.exp(-10 * step));
+  let recoveryZone = null;
+  if (state.raceMode === 'race') {
+    recoveryZone = stepChallengeSteering(state, step, steering, previous);
+  } else {
+    state.targetLane = Math.max(-1, Math.min(1, state.targetLane + steering * step * 2.4));
+    state.lane += (state.targetLane - state.lane) * (1 - Math.exp(-10 * step));
+  }
   // Keep the requested target: an occupied side only postpones the final part
   // of a merge, with no braking or penalty, until the friendly truck clears.
-  holdClearLane(state, previous.lane);
+  if (state.raceMode !== 'race') holdClearLane(state, previous.lane);
+  const competitiveMotions = state.raceMode === 'race' ? stepRivalMovement(state, step, previous) : null;
+  if (recoveryZone) {
+    events.push(beginRecovery(state, recoveryZone));
+    state.turboHeld = Boolean(inputs.turbo);
+    state.transformHeld = Boolean(inputs.transform);
+    state.jumpHeld = Boolean(inputs.jump);
+    state.jumpReleaseRequired = Boolean(inputs.jump);
+    stepCompetitiveBuddies(state, step, competitiveMotions, events);
+    for (const entry of recordFinishCrossings(state, competitiveMotions.map(motion => motion.id === 'player' ? { ...motion, eligible: false } : motion), state.elapsed - step, step)) {
+      events.push({ type: 'rivalFinish', id: entry.id, place: entry.place });
+    }
+    return events;
+  }
 
   for (const pad of TURBO_PADS) {
     if (pad.distance <= course.start || pad.distance >= course.end) continue;
@@ -364,13 +453,14 @@ export function stepRace(state, dt, inputs = {}) {
   }
   const onLoop = state.distance >= LOOP_START && state.distance < LOOP_END;
   const crossedRamp = RAMPS.some(ramp => previousDistance < ramp && state.distance >= ramp);
-  const jumpPressed = Boolean(inputs.jump);
+  if (!inputs.jump) state.jumpReleaseRequired = false;
+  const jumpPressed = Boolean(inputs.jump) && !state.jumpReleaseRequired;
   const flyPressed = jumpPressed && !state.jumpHeld;
   state.jumpHeld = jumpPressed;
   const gap = course.gaps.find(candidate => state.distance >= candidate.launch && state.distance < candidate.land);
   if (gap && state.flight?.id !== gap.id) {
     beginFlight(state, { kind: 'canyon', id: gap.id, start: gap.launch, end: gap.land, height: gap.height }, events);
-  } else if (!state.flight && !onLoop && state.transformTime > 0 && flyPressed) {
+  } else if (!state.flight && !onLoop && state.transformTime > 0 && flyPressed && (state.raceMode !== 'race' || Math.abs(state.lane) <= 1)) {
     const end = Math.min(state.distance + 110, course.end - 12, state.distance < LOOP_START ? LOOP_START - 24 : Infinity);
     if (end - state.distance >= 18) beginFlight(state, {
       kind: 'rocket', id: `rocket-${state.elapsed}`, start: state.distance, end, height: Math.min(12, (end - state.distance) * .11),
@@ -387,7 +477,7 @@ export function stepRace(state, dt, inputs = {}) {
     }
     state.height = 0;
     state.velocityY = 0;
-  } else if (crossedRamp || (jumpPressed && state.transformTime === 0 && state.height === 0 && state.jumpCooldown === 0)) {
+  } else if (crossedRamp || (jumpPressed && state.transformTime === 0 && state.height === 0 && state.jumpCooldown === 0 && (state.raceMode !== 'race' || Math.abs(state.lane) <= 1))) {
     state.velocityY = crossedRamp ? RAMP_JUMP_SPEED : JUMP_SPEED;
     state.jumpCooldown = 0.35;
     events.push({ type: 'jump', auto: crossedRamp });
@@ -429,8 +519,15 @@ export function stepRace(state, dt, inputs = {}) {
       events.push({ type: 'smash', id: target.id, kind: target.kind, stars: 3 });
     }
   }
-  state.speed = travelSpeed(state);
-  stepBuddies(state, step, steering, events);
+  if (competitiveMotions) {
+    stepCompetitiveBuddies(state, step, competitiveMotions, events);
+    for (const entry of recordFinishCrossings(state, competitiveMotions, state.elapsed - step, step)) {
+      if (entry.id !== 'player') events.push({ type: 'rivalFinish', id: entry.id, place: entry.place });
+    }
+  } else {
+    state.speed = travelSpeed(state);
+    stepBuddies(state, step, steering, events);
+  }
 
   if (previousDistance < LOOP_END && state.distance >= LOOP_END) {
     state.loops += 1;

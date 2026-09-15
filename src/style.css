@@ -618,3 +618,87 @@ button.route-chip { text-align: left; cursor: pointer; font-family: inherit; min
 @media (max-width: 680px) and (orientation: portrait) {
   .callout { top: calc(max(22px, env(safe-area-inset-top)) + 120px); }
 }
+
+/* Race choices stay beside the familiar Play action. */
+.race-mode-choice { display: flex; gap: 7px; margin-top: 11px; width: min(360px,100%); }
+.race-mode-choice button { flex: 1; border: 1px solid #8cc0cd69; border-radius: 12px; padding: 8px 10px; min-height: 48px; background: #173b50e6; color: #dcece9; font: inherit; font-size: 13px; font-weight: 900; text-align: left; }
+.race-mode-choice small { display: block; margin-top: 3px; font-size: 9px; font-weight: 400; }
+.race-mode-choice [aria-pressed="true"] { background: #ffe16b; color: #193849; border-color: #ffedaa; box-shadow: 0 3px 0 #b9802a; }
+.road-cue { position: absolute; top: 100px; right: max(30px,env(safe-area-inset-right)); display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: #193c49; background: #fff3cce8; border: 2px solid #fff9e8; border-radius: 16px; pointer-events: none; font-size: 13px; font-weight: 900; max-width: 245px; }
+#road-cue-icon { color: #bd6235; font-size: 35px; line-height: 1; }
+.road-cue.towing { background: #ffdd8af2; }
+.preference-group { border: 1px solid #b7cccd; padding: 12px; margin: 16px 0; border-radius: 14px; text-align: left; }
+.preference-group legend { font-size: 14px; font-weight: 900; padding: 0 6px; }
+.preference-group label { display: inline-flex; align-items: center; gap: 6px; min-height: 42px; margin-right: 12px; font-size: 13px; }
+.preference-group small { display: block; color: #526b75; font-size: 11px; line-height: 1.5; }
+.preference-group input { accent-color: #087b85; width: 19px; height: 19px; }
+.feedback-card { width: min(590px,100%); text-align: left; }
+.feedback-card h2 { margin-top: 6px; }
+.feedback-card form { display: grid; gap: 10px; }
+.feedback-card label { font-size: 13px; font-weight: 900; }
+.feedback-card .feedback-disclosure { border-left: 3px solid #57a6ac; padding-left: 12px; font-size: 12px; }
+.feedback-card input[type="text"], .feedback-card textarea { display: block; width: 100%; font: inherit; font-size: 16px; line-height: 1.5; border: 1px solid #93b4bb; border-radius: 10px; padding: 10px 12px; color: #163847; background: white; resize: vertical; }
+#app .feedback-card input[type="text"], #app .feedback-card textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; touch-action: pan-y; }
+.feedback-card textarea:focus-visible, .feedback-card a:focus-visible { outline: 4px solid #087e89; outline-offset: 3px; }
+.feedback-kind { display: flex; gap: 8px; margin-bottom: 8px; }
+.feedback-kind button { min-height: 44px; flex: 1; border-radius: 10px; border: 1px solid #96b7bc; color: #254350; background: #e0edeb; font: inherit; font-size: 13px; }
+.feedback-kind [aria-pressed="true"] { color: white; background: #246b7c; }
+.feedback-handoff { display: flex; flex-wrap: wrap; gap: 12px; }
+[data-feedback-status] { min-height: 2em; }
+#app input[type="hidden"] { display: none; }
+
+/* The trophy is a living scene; this panel leaves the toys in view. */
+#results { background: none; backdrop-filter: none; padding: 0; pointer-events: none; }
+.ceremony-heading { position: absolute; top: max(25px,env(safe-area-inset-top)); left: 20px; right: 20px; text-align: center; color: #193d54; text-shadow: 0 1px 0 #fff9; }
+.ceremony-heading .eyebrow { margin: 0 0 6px; color: #2e707e; }
+.ceremony-heading h2 { font-size: clamp(28px,4vw,48px); margin: 0; }
+.ceremony-heading > p:last-child { font-size: 14px; margin: 8px 0 0; }
+#results .result-card { position: absolute; bottom: max(16px,env(safe-area-inset-bottom)); width: min(680px,calc(100% - 28px)); max-width: 680px; padding: 14px 22px; border-radius: 22px; display: block; pointer-events: auto; max-height: 44%; box-shadow: 0 7px 22px #1f416936; background: #fff9e8f2; }
+#results .result-score { margin: 0; font-size: 18px; flex-wrap: nowrap; gap: 6px; }
+#results #result-stars { font-size: 27px; letter-spacing: -1px; }
+#results .result-score > span:last-child { width: auto; font-size: 8px; max-width: 45px; letter-spacing: .4px; text-align: left; }
+#results .result-score svg { width: 22px; height: 22px; }
+#results .result-unlock { margin: 3px 0; padding: 6px 10px; font-size: 11px; line-height: 1.4; }
+#stomp-btn { min-height: 44px; font-size: 17px; padding: 10px 22px; }
+#stomp-btn:disabled { opacity: .65; }
+#results .ceremony-status { margin: 7px 0; font-size: 11px; }
+#results .modal-actions { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
+#results .modal-actions .button { min-height: 44px; padding: 9px 12px; font-size: 12px; flex: 1; }
+#results #result-tracks-btn { flex-basis: auto; }
+@media (min-height: 560px), (orientation: portrait) {
+  #results .result-card { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; }
+  #results .result-score { grid-column: 1; grid-row: 1; }
+  #results #stomp-btn { grid-column: 2; grid-row: 1; justify-self: end; }
+  #results .result-unlock { grid-column: 1 / -1; grid-row: 2; }
+  #results .ceremony-status { grid-column: 1 / -1; grid-row: 3; margin: 0; }
+  #results .modal-actions { grid-column: 1 / -1; grid-row: 4; margin: 0; }
+}
+@media (max-width: 700px) {
+  .race-mode-choice { margin-top: 8px; gap: 6px; }
+  .race-mode-choice button { font-size: 11px; min-height: 44px; padding: 6px 8px; }
+  .race-mode-choice small { font-size: 8px; }
+  .menu-next { display: none; }
+  .road-cue { top: 95px; right: 18px; padding: 6px 10px; font-size: 11px; max-width: 175px; }
+  #road-cue-icon { font-size: 24px; }
+  #results .result-card { padding: 12px; }
+  #results .result-unlock { max-height: 34px; overflow: auto; }
+  #results .modal-actions .button { font-size: 11px; padding: 8px; }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .menu-description { margin: 10px 0 14px; }
+  .race-mode-choice { display: inline-flex; margin-left: 8px; width: 235px; vertical-align: middle; }
+  .race-mode-choice button { min-height: 38px; font-size: 10px; padding: 6px; }
+  .race-mode-choice small { display: none; }
+  .ceremony-heading { top: 10px; }
+  .ceremony-heading .eyebrow, .ceremony-heading > p:last-child { display: none; }
+  #results .result-card { bottom: 8px; padding: 8px 14px; max-height: 40%; }
+  #results .result-unlock, #results .ceremony-status { display: none; }
+  #results .result-score { display: inline-flex; margin-right: 20px; }
+  #results .modal-actions { margin-top: 5px; }
+}
+@media (max-height: 559px) and (orientation: landscape) {
+  #results .result-card { right: 10px; bottom: 14px; top: 14px; width: min(320px,38vw); max-height: none; display: flex; flex-direction: column; justify-content: center; }
+  #results .modal-actions { flex-direction: column; }
+  #results .result-score { margin-right: 0; }
+  .ceremony-heading { right: calc(min(320px,38vw) + 25px); }
+}

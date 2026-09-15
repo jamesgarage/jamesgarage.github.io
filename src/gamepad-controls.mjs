@@ -1,7 +1,7 @@
 import { GamepadInput } from './gamepad-input.mjs';
 
 function selectable(root) {
-  return [...root.querySelectorAll('button:not(:disabled),input:not(:disabled)')].filter(element=>!element.closest('[hidden]')&&element.getClientRects().length>0);
+  return [...root.querySelectorAll('button:not(:disabled),input:not(:disabled),textarea:not(:disabled),a[href]')].filter(element=>!element.closest('[hidden]')&&element.getClientRects().length>0);
 }
 
 /** DOM navigation and game actions share the same buttons used by touch/keys. */
@@ -19,6 +19,7 @@ export class GamepadControls {
   defaultFocus(root){
     const choices=selectable(root);
     if(root.id==='app')return choices.find(element=>element.id==='play-btn');
+    if(root.id==='settings')return choices.find(element=>element.id==='motion-toggle');
     return choices.find(element=>element.getAttribute('aria-pressed')==='true')
       ??choices.find(element=>['race-again-btn','resume-btn','motion-toggle'].includes(element.id))
       ??choices.find(element=>!element.classList.contains('close-button'))??choices[0];

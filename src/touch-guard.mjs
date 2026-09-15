@@ -5,7 +5,8 @@ export function installTouchGuard(root) {
   const on=(type,handler,options)=>{root.addEventListener(type,handler,options);listeners.push([type,handler,options]);};
   const stop=event=>{if(event.cancelable)event.preventDefault();};
   const gameplay=event=>!event.target.closest?.('.overlay:not([hidden])')&&root.ownerDocument.body.classList.contains('playing');
-  for(const type of ['gesturestart','gesturechange','gestureend','selectstart','contextmenu','dragstart'])on(type,stop,{passive:false});
+  for(const type of ['gesturestart','gesturechange','gestureend'])on(type,stop,{passive:false});
+  for(const type of ['selectstart','contextmenu','dragstart'])on(type,event=>{if(!event.target.closest?.('input,textarea'))stop(event);},{passive:false});
   on('touchstart',event=>{if(event.touches.length>1)stop(event);},{passive:false});
   on('touchmove',event=>{if(event.touches.length>1||gameplay(event))stop(event);},{passive:false});
   // Driving buttons use pointerdown, so suppressing the compatibility tap

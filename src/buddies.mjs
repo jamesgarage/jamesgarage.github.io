@@ -4,6 +4,7 @@ import { raceCrew } from './crew.mjs';
 import { normalizeRaceVariant } from './buddy-brain.mjs';
 import { sampleTrack, laneOffset } from './track.mjs';
 import { BuddySignals } from './buddy-signals.mjs';
+import { raceStandings } from './race-rules.mjs';
 
 const TAU = Math.PI * 2;
 const JUMP_SPEED = 16;
@@ -42,6 +43,9 @@ export function sampleRaceBuddies(race) {
 }
 
 export function racePlace(race) {
+  if (race?.raceMode === 'race' && Array.isArray(race.buddies)) {
+    return race.result?.place ?? raceStandings(race).find(entry => entry.id === 'player').place;
+  }
   const distance = playerDistance(race);
   return 1 + sampleRaceBuddies(race).filter(buddy => buddy.distance > distance).length;
 }

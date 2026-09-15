@@ -228,6 +228,50 @@ test('actual normal and guardian tires never intersect during a late merge or im
   assert.ok(closeFrames > 1000, 'The check exercises actual close passes and waiting beside the player');
 });
 
+test('competitive passes and tow merges keep actual articulated tires clear on the bent road', () => {
+  let comparisons = 0, towTraces = 0;
+  for (const spec of TRUCKS) for (const robot of [false, true]) {
+    const race = { ...createRace(0, 'woods', 'race'), phase: 'running', truckScale: spec.scale };
+    const player = makeTruck(spec), field = new RaceBuddies(new THREE.Scene());
+    let transform = 0, lean = 0;
+    try {
+      for (let frame = 0; frame < 5000 && !race.finished; frame++) {
+        const dt = frame % 2 ? .05 : 1 / 60;
+        stepRace(race, dt, { steer: frame % 240 < 120 ? 1 : -1, turbo: frame % 20 === 0, transform: robot && frame === 0 });
+        transform += ((race.transformTime > 0 ? 1 : 0) - transform) * (1 - Math.exp(-dt * 5));
+        const targetLean = Math.max(-.32, Math.min(.32, -(race.targetLane - race.lane) * .16));
+        lean += (targetLean - lean) * (1 - Math.exp(-dt * 7));
+        poseGuardian(player, { transform, lean, time: race.elapsed, flight: race.flying });
+        player.wheels.forEach((wheel, index) => {
+          wheel.rotation.order = 'YXZ'; wheel.rotation.y = index > 1 ? lean * 1.4 : 0;
+          wheel.rotation.x += dt * 19 * race.speed / RACE_SPEED;
+        });
+        field.update(dt, race);
+        const road = sampleTrack(race.distance);
+        player.group.position.copy(road.position).addScaledVector(road.right, laneOffset(race.lane)).addScaledVector(road.up, race.height);
+        player.group.quaternion.copy(road.quaternion);
+        if (race.height > 0) player.group.rotateX(Math.max(-.28, Math.min(.35, -race.velocityY * .025)));
+        player.group.updateMatrixWorld(true);
+        const actors = [{ id: 'player', distance: race.distance, truck: player },
+          ...field.trucks.map((truck, index) => ({ id: race.buddies[index].id, distance: race.buddies[index].distance, truck }))];
+        for (let i = 0; i < actors.length; i++) for (let j = i + 1; j < actors.length; j++) {
+          const a = actors[i], b = actors[j];
+          if (Math.abs(a.distance - b.distance) > 9) continue;
+          const first = a.truck.wheels.map(wheel => new THREE.Box3().setFromObject(wheel));
+          const second = b.truck.wheels.map(wheel => new THREE.Box3().setFromObject(wheel));
+          comparisons++;
+          assert.ok(first.every(box => second.every(other => !box.intersectsBox(other))),
+            `${spec.id} robot${robot} frame${frame}: ${a.id}/${b.id} actual tire overlap`);
+        }
+      }
+      assert.ok(race.finished, `${spec.id} robot${robot} completes after actual recoveries`);
+      if (race.offCourseCount > 0) towTraces++;
+    } finally { disposeTruck(player); field.dispose(); }
+  }
+  assert.ok(comparisons > 1000, 'Close physical comparisons include player/rival and rival/rival passes');
+  assert.equal(towTraces, 16, 'Every truck and form really exercises a tow merge');
+});
+
 test('each buddy takes all six automatic jumps with ascending, apex, descending and landed poses', () => {
   const initial = sampleRaceBuddies({ distance: 0 });
   for (const [i, buddy] of initial.entries()) for (const ramp of RAMPS) {

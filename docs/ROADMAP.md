@@ -80,6 +80,12 @@ All five races are selectable immediately, including three shorter destination r
 
 Next, observe whether James can independently choose a track, recognize Robot/Fly/Truck, enjoy the canyon landings and return to his favorite truck. Check the exact iPad/controller pairing, comfort during flights, and two-finger touch control before adding more controls.
 
+## Rival Race, rescues and feedback
+
+The easy game remains Cruise. Rival Race adds four independently paced opponents, three explicit strength choices, honest finish standings, authored bends, off-road shoulders and a winch tow while the other racers continue. The closer camera retains Wide view. A new trophy scene lets the actual winner squash the other toy racers before everyone springs back intact. Parents can submit reviewed feature ideas through GitHub, with local drafts and a read-only collection tool.
+
+See [the rival racing design](DESIGN-RIVAL-RACING.md) and [feedback workflow](FEEDBACK.md). The next family play check is whether the Cruise/Rival Race choice, turn cues, tow recovery and a rival winning are enjoyable at James's pace. Tune that choice from observation rather than automatically increasing difficulty.
+
 ## Next: physical device and child observations
 
 The playful-world increment gives Sunny and Splash independent local decision state: staggered greetings, delayed safe jump imitation, bounded celebrations and different preferences for racing or puddles. Completed races vary reaction timing and incidental world accents. Original material tiles add grass, timber, stone and water detail; small butterflies, moving cattails and ripples add life around the unchanged route. See [the design](DESIGN-PLAYFUL-WORLD.md) and [primary-source engine/game research](RESEARCH-PLAYFUL-WORLD.md).

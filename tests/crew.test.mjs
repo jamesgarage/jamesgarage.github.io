@@ -43,7 +43,7 @@ test('invalid seeds and old garage saves retain deterministic compatible behavio
   assert.deepEqual(raceCrew(4.9), raceCrew(4));
   assert.deepEqual(raceCrew(1e30), raceCrew(1_000_000_000));
   const save = createProgress({ version: 1, selected: 'mega-titan', stars: 125, races: 9, muted: true, reducedMotion: true });
-  assert.deepEqual(save, { version: 1, selected: 'mega-titan', courseId: 'skyway', stars: 125, races: 9, muted: true, reducedMotion: true });
+  assert.deepEqual(save, { version: 1, selected: 'mega-titan', courseId: 'skyway', raceMode: 'cruise', rivalRank: 1, cameraView: 'close', challengeWins: 0, stars: 125, races: 9, muted: true, reducedMotion: true });
   assert.deepEqual(createRace(save.races).buddies.map(friend => friend.id), raceCrew(9).map(friend => friend.id));
   const changed = raceCrew(0);
   changed[0].name = 'Edited only here';
