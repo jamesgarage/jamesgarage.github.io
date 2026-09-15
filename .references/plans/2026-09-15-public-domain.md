@@ -26,9 +26,9 @@ Files: README.md, CONTRIBUTING.md, public/about.html, src/feedback.mjs; existing
 - [x] Update current play/source/feedback links to the new organization. Keep historical validation evidence. Add brief parent transfer instructions.
 - [x] Run unit tests, production build, focused browser/controller checks, and independent review.
 - [x] Create public organization repository, push reviewed history, configure Pages build_type workflow, create feedback label, and dispatch workflow.
-- [ ] Verify new HTTPS root, story, assets, links and live gameplay before publishing the transfer entry point on the former site.
-- [ ] Publish the tested transfer build on the former site without removing its save/page. Switch local origin to organization, retaining old remote as legacy.
-- [ ] Record commit/run IDs and verification, and give parent the play address and one-time iPad transfer instructions.
+- [x] Verify new HTTPS root, story, assets, links and live gameplay before publishing the transfer entry point on the former site.
+- [x] Publish the tested transfer build on the former site without removing its save/page. Switch local origin to organization, retaining old remote as legacy.
+- [x] Record commit/run IDs and verification, and give parent the play address and one-time iPad transfer instructions.
 
 ## Execution record
 
@@ -36,3 +36,5 @@ Files: README.md, CONTRIBUTING.md, public/about.html, src/feedback.mjs; existing
 
 - Link/publication commit: 6dab83d. Independent publication preflight found no material issues; MIT/Three licenses and complete source history preserved. Both repositories have no issues to migrate. Initial organization Pages workflow 35014950730 succeeded. The auto-created legacy Pages build was cancelled and its configuration replaced with workflow publishing.
 - Transfer review found a recoverable-storage edge case: startup could not read an existing destination save, then import could overwrite it after access returned. The implementation now rereads the destination immediately before import and max-merges stored, in-memory, and transferred counters. A focused regression covers read failure at boot and successful retry. Scoped independent re-review is clean.
+
+- Complete: new runtime run 35015771628 and legacy run 35015982861 succeeded. Real two-origin transfer plus full race passed in Chrome and WebKit, as did targeted controller cases. Source save and higher destination counters survived; imported progress persisted after reload. Details and physical-device limits are recorded in docs/VALIDATION.md. Canonical local remote is now origin=jamesgarage/jamesgarage.github.io, with legacy retained.
