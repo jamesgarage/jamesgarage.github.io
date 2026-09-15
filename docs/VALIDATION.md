@@ -1,5 +1,13 @@
 # Validation record
 
+## Family story and contribution guide: 2026-09-15
+
+Added a static story page based on the parent's supplied account: work in AI operations, creating games together from age two and a half, James being three now, and AI expanding creativity and family connection. No family photograph was available; the page uses the existing Mega Titan game artwork. Added a link from Grown-up settings, matching README story, and contributor guidance under the existing MIT license. Independent source review found no material content, path, accessibility or integration issues.
+
+The production build passed. A bounded Playwright check passed in Chromium and WebKit at 1280×900, 768×1024, 390×844 and 320×640: no horizontal overflow, artwork loaded, local links/assets returned 200, normal page scrolling, and the correct story content. The page has no JavaScript and loads independently of the game's touch restrictions. Both engines verified opening the story in a separate tab from settings, retaining the paused race, and resuming that same race after returning. No JavaScript/console errors were recorded. The existing controller settings/reset-safety regression also passed in Chromium. An initial probe incorrectly required 200 for WebKit's cached document reload; accepting the valid 304 response fixed the probe without changing the application.
+
+Desktop/phone screenshots were visually inspected. Evidence: `.tmp/story-check-final.log`, `.tmp/story-check.json`, `.tmp/story-controller.log` and `.tmp/story-{chromium,webkit}-*.png`. This change does not alter race rules, so no new unit tests or repeated full gameplay matrix were added.
+
 ## Rival racing and feedback: 2026-09-15
 
 Current local rules/geometry suite: **237 tests passed**. This includes 240 complete competitive races across all eight trucks, five courses and three seeds with contrasting driving patterns. Untouched challenge runs can lose; deliberate steering and available turbo can win. An independent review compared 2,041 mixed-input Cruise frames against the previous committed implementation, with every legacy state field and event matching. Forty-nine separate finish-boundary cases matched an independent crossing-time calculation.

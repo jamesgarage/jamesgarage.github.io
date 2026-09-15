@@ -8,7 +8,15 @@ Rounded bodywork, sculpted tires, visible suspension, reflective paint and glass
 
 ![The live Monster Skyway lobby with its featured 3D truck](docs/screenshots/menu.png)
 
-This project began with a three-year-old's love of monster trucks, orange stunt tracks, angular silver vehicles, and transforming robots. It explores what a family can create with AI as a development collaborator. The vehicles, characters, sounds, and scenery are original creations.
+## Meet James
+
+Monster Skyway grew out of a simple wish: spend more time together. James's parent works in AI operations, and they began using AI to create projects together. At two and a half, James was already creating complete games with his parent's help and AI.
+
+James is now three. He loves monster trucks, enormous tires, flames, transforming robots, sharks, and fire trucks. As one of Monster Skyway's creators, he shapes the game through his ideas and playtesting: more things to crush, canyons to jump, and a tow truck to bring a driver back onto the track. His parent guides development, and AI helps turn their ideas into code, artwork, and tests.
+
+For this family, AI has expanded what they can create and given them another way to spend time together. We are sharing the game to show those possibilities and invite other families to play, suggest their own adventures, and help make it better. The hope is that projects like this help more people create things they care about and bring them closer together. The vehicles, characters, sounds, and scenery are original creations.
+
+**[Read our story](https://yanivalfasykeelusa.github.io/james-monster-skyway/about.html)** · **[Help improve the game](CONTRIBUTING.md)**
 
 ## Play
 
@@ -122,6 +130,8 @@ Twin exhausts have pale hot cores, flowing amber flames and a soft cooling trail
 A parent can open **Grown-up settings → Share an idea** to describe a feature or problem. The form saves a local draft, then prepares a public GitHub issue for review. A GitHub sign-in is required to submit; opening the link does not send it. Please leave out private or identifying details. No account is needed to play.
 
 Maintainers can run `npm run feedback:queue` to collect the open feedback. Suggestions are checked for suitability, duplicates, feasibility, compatibility and performance before implementation. See [the feedback review workflow](docs/FEEDBACK.md). The queue never executes issue text or automatically adds unreviewed features.
+
+You do not need to write code to help: tell us what made your little driver smile, what was confusing, or which controls did not work on your device. Developers, artists, and testers can use the [contribution guide](CONTRIBUTING.md) to propose a focused improvement or send a pull request. The game is shared under the [MIT license](LICENSE).
 
 ## Run locally
 
