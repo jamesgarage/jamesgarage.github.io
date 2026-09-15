@@ -12,7 +12,7 @@ Rounded bodywork, sculpted tires, visible suspension, reflective paint and glass
 
 Monster Skyway grew out of a simple wish: spend more time together. James's parent works in AI operations, and they began using AI to create projects together. At two and a half, James was already creating complete games with his parent's help and AI.
 
-James is now three. He loves monster trucks, enormous tires, flames, transforming robots, sharks, and fire trucks. As one of Monster Skyway's creators, he shapes the game through his ideas and playtesting: more things to crush, canyons to jump, and a tow truck to bring a driver back onto the track. His parent guides development, and AI helps turn their ideas into code, artwork, and tests.
+James is now three. He loves monster trucks, enormous tires, flames, transforming robots, sharks, and fire trucks. His dream is to become a monster truck driver when he grows up, something he's already shared at school. As one of Monster Skyway's creators, he shapes the game through his ideas and playtesting: more things to crush, canyons to jump, and a tow truck to bring a driver back onto the track. His parent guides development, and AI helps turn their ideas into code, artwork, and tests.
 
 For this family, AI has expanded what they can create and given them another way to spend time together. We are sharing the game to show those possibilities and invite other families to play, suggest their own adventures, and help make it better. The hope is that projects like this help more people create things they care about and bring them closer together. The vehicles, characters, sounds, and scenery are original creations.
 
