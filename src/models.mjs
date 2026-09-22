@@ -140,14 +140,8 @@ export function makeTruck(spec) {
   const radioY = rescue ? 3.68 : shark ? 3.46 : roofY + .18;
   const radioZ = rescue ? 1.15 : shark ? -.08 : -.62;
   box(radio, p.dark, [0, radioY, radioZ], [.74, .26, .39], .055);
-  box(radio, p.chrome, [0, radioY + .01, radioZ + .21], [.64, .16, .035], .018);
-  box(radio, p.accent, [0, radioY + .1, radioZ + .14], [.3, .06, .025], .012);
-  for (const side of [-1, 1]) {
-    cylinder(radio, p.chrome, [side * .22, radioY, radioZ + .22], .082, .035, [Math.PI / 2, 0, 0]);
-    cylinder(radio, p.dark, [side * .22, radioY, radioZ + .232], .055, .02, [Math.PI / 2, 0, 0]);
-  }
-  cylinder(radio, p.chrome, [0, radioY + .23, radioZ - .03], .02, .27, [0, 0, 0]);
-  box(radio, p.accent, [0, radioY + .38, radioZ - .03], [.1, .05, .05], .018);
+  box(radio, p.dark, [0, radioY + .23, radioZ - .03], [.03, .27, .03], .012);
+  box(radio, p.dark, [0, radioY + .38, radioZ - .03], [.1, .05, .05], .018);
 
   // Real tire cross section: recessed bead, rounded sidewall, broad crown.
   const profile = [[.46, -.36], [.54, -.415], [.67, -.447], [.82, -.445], [.94, -.385], [1.025, -.275], [1.067, -.13], [1.075, 0], [1.067, .13], [1.025, .275], [.94, .385], [.82, .445], [.67, .447], [.54, .415], [.46, .36], [.46, -.36]];
