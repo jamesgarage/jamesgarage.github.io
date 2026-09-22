@@ -1,12 +1,12 @@
 # James's Sand Yard — continue on the Mac
 
-Updated 2026-09-22. The parent approved development and has now confirmed a **MacBook Air with M2** and an **iPad Pro 12.9-inch, third generation**. Continue the approved native Unity experiment on that Mac. The installed macOS and iPadOS versions still need checking; this Windows session has not accessed the Mac.
+Updated 2026-09-22. The parent approved development and has confirmed a **MacBook Air with M2** and an **iPad Pro 12.9-inch, third generation, running iPadOS 26.6.2**. The iPadOS version is parent-reported. Continue the approved native Unity experiment on that Mac. Its installed macOS version still needs checking; this Windows session has not accessed the Mac.
 
 ## Resume in Codex
 
 Open the repository on the Mac and give Codex this instruction:
 
-> Read docs/sand-sandbox/MAC-HANDOFF.md and continue James's approved iPad sand game. First inspect this Mac's tools, then prepare the pinned Unity project and prove an empty build on the physical iPad. P0A is complete. The target is an iPad Pro 12.9-inch third generation; this Mac is an M2 MacBook Air. Continue on main and preserve unrelated changes.
+> Read docs/sand-sandbox/MAC-HANDOFF.md and continue James's approved iPad sand game. First inspect this Mac's tools, then prepare the pinned Unity project and prove an empty build on the physical iPad. P0A is complete. The target is an iPad Pro 12.9-inch third generation running iPadOS 26.6.2; this Mac is an M2 MacBook Air. Continue on main and preserve unrelated changes.
 
 Use an existing checkout if available. Otherwise, from the folder where you keep projects:
 
@@ -56,7 +56,7 @@ fi
 
 Record the macOS version, host architecture, installed full Xcode version and available disk space. An M2 running a native terminal normally reports `arm64`; inspect a reported `x86_64` before choosing editor architecture. Command Line Tools alone do not supply the full Xcode iPad build workflow.
 
-Ask for the iPadOS version from Settings > General > About, or read it through Xcode after the parent connects and trusts the iPad. Do not infer the installed OS from the model's compatibility list.
+The parent has already reported **iPadOS 26.6.2**; use it when selecting Xcode. Confirm the device-reported version through Xcode after the parent connects and trusts the iPad, and record any difference. Do not ask the parent for the same version again unless new evidence conflicts with it.
 
 ## Install and verify the native toolchain
 

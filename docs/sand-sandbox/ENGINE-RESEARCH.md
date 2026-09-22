@@ -63,7 +63,7 @@ Unreal's standard game licensing page lists a **5% royalty on attributable lifet
 
 Every number below is an initial proposed acceptance target, not an observed result. Record the final protocol before comparing implementations.
 
-1. The parent has now confirmed an iPad Pro 12.9-inch third generation and an M2 MacBook Air. Verify their installed operating systems and tools through the [Mac handoff](MAC-HANDOFF.md). This iPad is the first test target; a marketed minimum supported model still requires measurements.
+1. The parent has confirmed an iPad Pro 12.9-inch third generation on iPadOS 26.6.2 and an M2 MacBook Air. Inspect macOS and tools through the [Mac handoff](MAC-HANDOFF.md), and confirm the reported iPadOS when connecting the device. This iPad is the first test target; a marketed minimum supported model still requires measurements.
 2. Build a native scene with one sandbox patch, one working scoop, and a dump-truck bed. Repeat scoop, lift, carry, pour, and pile settling. Add a repeatable wheel-track pass to expose terrain-contact costs.
 3. Run a signed device build for **20 minutes** with the same scene, input sequence, graphics settings, and recorded ambient/test conditions. Target **60 fps**; provisionally require frame-interval **P95 at or below 20 ms** and **P99 at or below 33.3 ms**. Record CPU/GPU timings, memory peak, thermal state, and late-session performance. A desktop editor result does not pass this gate.
 4. Measure touch-to-visible response with high-speed video where available. Start with proposed median **50 ms or less** and P95 **80 ms or less**. Distinguish measured display latency from internal event timestamps.

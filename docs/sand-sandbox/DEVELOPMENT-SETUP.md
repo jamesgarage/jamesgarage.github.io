@@ -2,7 +2,7 @@
 
 Status checked 2026-09-22. The game design and P0A plan are approved. This document records the next native build prerequisites; it is not evidence of an iPad build or performance result.
 
-**Current route:** the parent confirmed an **M2 MacBook Air** and **iPad Pro 12.9-inch, third generation**, and agreed to move development to the Mac. Follow [MAC-HANDOFF.md](MAC-HANDOFF.md). Installed macOS/iPadOS and Mac tools remain unverified. The Windows findings below are historical setup evidence; completing the Windows editor installation is no longer a prerequisite.
+**Current route:** the parent confirmed an **M2 MacBook Air** and **iPad Pro 12.9-inch, third generation, running iPadOS 26.6.2**, and agreed to move development to the Mac. Follow [MAC-HANDOFF.md](MAC-HANDOFF.md). Installed macOS and Mac tools remain unverified; iPadOS is parent-reported. The Windows findings below are historical setup evidence; completing the Windows editor installation is no longer a prerequisite.
 
 ## Confirmed tools
 
@@ -44,7 +44,7 @@ Do not select the optional Visual Studio installation for the initial editor/C# 
 Record these facts before advancing from setup to the sand simulation experiment:
 
 1. Unity editor launches with a valid license, and the exact version is captured.
-2. The confirmed iPad Pro 12.9-inch third generation's installed iPadOS version is recorded.
+2. The parent-reported iPadOS 26.6.2 on the iPad Pro 12.9-inch third generation is confirmed when Xcode connects to the device.
 3. The confirmed M2 MacBook Air's macOS and compatible full Xcode installation are verified.
 4. An empty URP project at `games/sand-sandbox/unity/` imports successfully. Commit the editor-generated project settings, package lock and `.meta` files. The existing `Assets/SandYard/Core/` source folder alone is not a Unity project.
 5. The empty project builds, signs, installs and launches on the physical iPad. Record editor/package/Xcode/SDK/device versions and source commit.
