@@ -1,12 +1,12 @@
 # James's Sand Yard — development roadmap
 
-2026-09-22. Proposed sequence; estimates below are planning ranges, not delivery promises. Read the [design](DESIGN.md), [engine research](ENGINE-RESEARCH.md), [sand research](SAND-RESEARCH.md), and [first executable plan](../../.references/plans/2026-09-22-james-sandbox-implementation.md) together.
+2026-09-22. Approved development sequence; estimates below are planning ranges, not delivery promises. Read the [design](DESIGN.md), [engine research](ENGINE-RESEARCH.md), [sand research](SAND-RESEARCH.md), and [first executable plan](../../.references/plans/2026-09-22-james-sandbox-implementation.md) together.
 
 ## Milestones
 
 | Stage | Playable or reviewable result | Exit gate | Rough focused effort |
 | --- | --- | --- | --- |
-| P0A — reference kernel | Exact material transfers, bounded containers, a small terrain grid, conservative pile relaxation, and a repeatable 100-cycle check. | Accounting and edge tests pass; limitations recorded. | 1–3 engineer-days |
+| P0A — reference kernel (complete) | Exact material transfers, bounded containers, a small terrain grid, conservative pile relaxation, and a repeatable 100-cycle check. | Passed on Windows with .NET 10.0.401; independent final review clean; source pushed to main. | Completed 2026-09-22 |
 | P0B — native sand lab | Finger tool, one bucket, one tilting bed, real material flow, sound, and instrumentation on James's iPad. | Device/feel/conservation gates in the design pass. Engine and solver decision recorded. | 2–4 engineer-weeks, with further R&D possible |
 | P1A — construction loop | Drive excavator and dump truck, scoop, carry, spill and unload in a small site. | Entire loop works without desktop input; load weight, capacity, digging contact and save/reload behave correctly. | 3–6 engineer-weeks |
 | P1B — giant wheels and ball | Monster truck deforms sand; wrecking ball swings through reusable block structures. | Ruts affect driving; crane and impacts are stable; recovery works with touch. | 2–4 engineer-weeks |
@@ -87,8 +87,8 @@ GitHub Pages can host a project page and an intentionally limited browser experi
 | Construction vehicle racing/fighting | P2A/P2B offline opponents and reversible destruction |
 | Kinetic/magnetic-sand feeling | Separate P0B material candidate if prioritized; no claim that dry sand covers molding |
 | Apple Developer if needed | Native installation first, membership/distribution at P1D |
-| James's GitHub | Existing verified repo for these documents; insulated source path proposed |
+| James's GitHub | Existing verified repo; source implemented under `games/sand-sandbox/` |
 
 ## Planning handoff
 
-Current deliverable: researched design, roadmap, and P0A implementation plan. Next action after review is to implement P0A while arranging the physical iPad build route, then write the native-lab implementation plan against the measured toolchain. No phase is marked complete on the strength of this document.
+The approved P0A reference source is implemented under [games/sand-sandbox](../../games/sand-sandbox/README.md). The Windows checks report 100 cycles, 50,000 g moved and zero accounting error; physical sand behavior and native device gates remain untested. The [development setup](DEVELOPMENT-SETUP.md) records the Unity toolchain and remaining account/device/build prerequisites. Next, prove an empty signed iPad build, then write and execute the native-lab implementation plan against that measured toolchain.

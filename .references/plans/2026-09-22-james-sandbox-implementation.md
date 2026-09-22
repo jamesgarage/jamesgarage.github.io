@@ -6,7 +6,7 @@
 
 **Architecture:** Plain C# owns mass and capacities independently of a game engine. A fixed-density grid supplies the first terrain reference; bounded stores represent bucket, airborne and truck-bed mass, and a package-free console runner exercises invariants. The later native lab replaces shortcut transfers with physical contact and flow while retaining these accounting checks.
 
-**Tech Stack:** C# 9 runtime source; .NET 10 check runner using the installed SDK 10.0.401; Git on main. Unity 6.3 LTS/URP/Metal is the provisional downstream engine and is not installed or required for this milestone.
+**Tech Stack:** C# 9 runtime source; .NET 10 check runner using the installed SDK 10.0.401; Git on main. Unity 6.3 LTS/URP/Metal is the provisional downstream engine and is not required for this milestone. Current installation status lives in [development setup](../../docs/sand-sandbox/DEVELOPMENT-SETUP.md).
 
 **Spec:** [P0A core specification](../../docs/sand-sandbox/CORE-SPEC.md). Also read the [game design](../../docs/sand-sandbox/DESIGN.md), [research](../../docs/sand-sandbox/SAND-RESEARCH.md) and [full roadmap](../../docs/sand-sandbox/ROADMAP.md).
 
@@ -27,7 +27,7 @@
 
 ## Status and execution boundary
 
-This is a ready-to-review plan, not a completed implementation. All implementation steps remain unchecked. The code below is a proposed reference implementation and its tests. The planning session may compile extracted examples in ignored scratch space to check this document; that does not create or deliver the game source.
+The parent approved this plan on 2026-09-22. P0A implementation, verification, independent final review and source push are complete. Checkboxes below record actual implementation progress. The code below defines the reference implementation and its tests. Earlier compilation of extracted examples in ignored scratch space validated this document; it did not create or deliver the game source.
 
 The user's immediate request includes research and planning for a much larger game. P0A is intentionally one small deliverable. P0B, described in the roadmap, is the decisive native sand-and-touch experiment. Wrecking ball, monster truck, large map and races remain explicit later milestones, not missing features of an alleged finished app.
 
@@ -53,7 +53,7 @@ The `unity/Assets` directory is only a source location at P0A. Do not claim it i
 
 **Interfaces:** consumes no previous runtime code. Produces `SandYard.Core.Load(long capacityGrams, long grams = 0)`, read-only `Grams`/`CapacityGrams`, and `SandTransfer.Move(Load source, Load destination, long requestedGrams) -> long`.
 
-- [ ] **Step 1: confirm the target and create the check project.** Run these read-only commands from the target repository; stop if the current branch is not main. Preserve the existing game's dirty paths.
+- [x] **Step 1: confirm the target and create the check project.** Run these read-only commands from the target repository; stop if the current branch is not main. Preserve the existing game's dirty paths.
 
 ```powershell
 git branch --show-current
@@ -92,7 +92,7 @@ Create `SandCoreChecks.csproj` with:
 </Project>
 ```
 
-- [ ] **Step 2: write the failing transfer checks.** Create `Program.cs` below. Task 2 and Task 3 will add methods and calls explicitly; do not add empty methods in advance.
+- [x] **Step 2: write the failing transfer checks.** Create `Program.cs` below. Task 2 and Task 3 will add methods and calls explicitly; do not add empty methods in advance.
 
 ```csharp
 using System;
@@ -154,7 +154,7 @@ internal static class Program
 }
 ```
 
-- [ ] **Step 3: run the checks and observe the missing-core failure.**
+- [x] **Step 3: run the checks and observe the missing-core failure.**
 
 ```powershell
 dotnet run --project games/sand-sandbox/checks/SandCoreChecks.csproj -c Release
@@ -162,7 +162,7 @@ dotnet run --project games/sand-sandbox/checks/SandCoreChecks.csproj -c Release
 
 Expected: nonzero exit and a compiler error for missing `SandYard.Core`/`Load`; not a missing SDK or restore/network error. Fix tooling failures separately.
 
-- [ ] **Step 4: implement the bounded stores.** Create `Load.cs` with:
+- [x] **Step 4: implement the bounded stores.** Create `Load.cs` with:
 
 ```csharp
 using System;
@@ -216,8 +216,8 @@ namespace SandYard.Core
 }
 ```
 
-- [ ] **Step 5: rerun the command from Step 3.** Expected: exit 0 and `PASS: transfer checks`. Inspect the tests; deliberately removing the capacity clamp must cause failure, then restore it. This checks a meaningful conservation/capacity requirement.
-- [ ] **Step 6: inspect and commit only these files.**
+- [x] **Step 5: rerun the command from Step 3.** Expected: exit 0 and `PASS: transfer checks`. Inspect the tests; deliberately removing the capacity clamp must cause failure, then restore it. This checks a meaningful conservation/capacity requirement.
+- [x] **Step 6: inspect and commit only these files.**
 
 ```powershell
 git add -- games/sand-sandbox/.gitignore games/sand-sandbox/checks/SandCoreChecks.csproj games/sand-sandbox/checks/Program.cs games/sand-sandbox/unity/Assets/SandYard/Core/Load.cs
@@ -234,7 +234,7 @@ Do not commit if the staged diff includes unrelated paths.
 
 **Interfaces:** consumes `Load` and its internal debit/credit operations from Task 1. Produces the constructor, accessors, `Scoop`, `Deposit`, and `Relax` defined in the core spec. The core classes remain in one assembly.
 
-- [ ] **Step 1: add terrain checks before implementing terrain.** Add this method inside `Program` and call `CheckTerrain();` immediately after `CheckTransfers();` in `Main`.
+- [x] **Step 1: add terrain checks before implementing terrain.** Add this method inside `Program` and call `CheckTerrain();` immediately after `CheckTransfers();` in `Main`.
 
 ```csharp
 private static void CheckTerrain()
@@ -267,6 +267,15 @@ private static void CheckTerrain()
     Equal(1, extra.Grams, "overflow preserves source");
     Equal(long.MaxValue, full.MassAt(0, 0), "overflow preserves cell");
 
+    const long largeMass = 4611686018427382904;
+    var large = new SandField(2, 1, 1, 1600, largeMass);
+    var removed = new Load(377);
+    Equal(377, large.Scoop(1, 0, removed, 377), "large-mass scoop");
+    Equal(188, large.Relax(0), "large-mass exact half difference");
+    Equal(1, large.MassAt(0, 0) - large.MassAt(1, 0), "large-mass rounding bound");
+    Equal(0, large.Relax(0), "large-mass settled");
+    Equal(largeMass * 2 - 377, large.TotalGrams, "large-mass conservation");
+
     for (int sweep = 0; sweep < 5000; sweep++)
         if (field.Relax(31) == 0) break;
     long sum = 0;
@@ -292,8 +301,8 @@ private static void CheckTerrain()
 }
 ```
 
-- [ ] **Step 2: run `dotnet run --project games/sand-sandbox/checks/SandCoreChecks.csproj -c Release`.** Expected: nonzero compilation failure for missing `SandField`.
-- [ ] **Step 3: create the reference terrain implementation.**
+- [x] **Step 2: run `dotnet run --project games/sand-sandbox/checks/SandCoreChecks.csproj -c Release`.** Expected: nonzero compilation failure for missing `SandField`.
+- [x] **Step 3: create the reference terrain implementation.**
 
 ```csharp
 using System;
@@ -397,9 +406,14 @@ namespace SandYard.Core
         {
             int high = mass[a] >= mass[b] ? a : b;
             int low = high == a ? b : a;
-            double excessGrams = (double)mass[high] - mass[low] - maxRise * GramsPerHeightMetre;
-            if (excessGrams <= 0) return 0;
-            long moved = (long)Math.Min(mass[high] / 2.0, Math.Floor(excessGrams / 2.0));
+            long difference = mass[high] - mass[low];
+            double allowedGrams = maxRise * GramsPerHeightMetre;
+            if (allowedGrams >= long.MaxValue) return 0;
+            // Round only the geometric allowance; keep the mass difference exact.
+            // Ceiling plus the final odd gram stays within the two-gram tolerance.
+            long allowedDifference = (long)Math.Ceiling(allowedGrams);
+            if (difference <= allowedDifference) return 0;
+            long moved = (difference - allowedDifference) / 2;
             mass[high] -= moved;
             mass[low] += moved;
             return moved;
@@ -410,8 +424,8 @@ namespace SandYard.Core
 
 `activity` saturates because the same mass can cross many pairs in a sweep. The mass itself never saturates. This is a deliberately slow sequential reference, not the production solver.
 
-- [ ] **Step 4: run the checks again and inspect the result.** Expected: exit 0. Change the success message to `PASS: transfer and terrain checks`. Check both exact mass and the slope bound; a solver that never moves anything must fail the spread/slope assertions.
-- [ ] **Step 5: stage only the two task files and commit.**
+- [x] **Step 4: run the checks again and inspect the result.** Expected: exit 0. Change the success message to `PASS: transfer and terrain checks`. Check both exact mass and the slope bound; a solver that never moves anything must fail the spread/slope assertions.
+- [x] **Step 5: stage only the two task files and commit.**
 
 ```powershell
 git add -- games/sand-sandbox/unity/Assets/SandYard/Core/SandField.cs games/sand-sandbox/checks/Program.cs
@@ -426,7 +440,7 @@ git commit -m "feat(sand): add conservative reference terrain"
 
 **Interfaces:** consumes all Task 1/2 types. Produces an executable 100-cycle accounting acceptance check and a documented native-lab boundary. No new runtime interfaces.
 
-- [ ] **Step 1: add the cycle check below to `Program`, and call `CheckCycles();` after `CheckTerrain();`.** The cycle is a test of the already implemented API, so it may pass immediately; do not manufacture a failing production change. Verify its failure sensitivity separately.
+- [x] **Step 1: add the cycle check below to `Program`, and call `CheckCycles();` after `CheckTerrain();`.** The cycle is a test of the already implemented API, so it may pass immediately; do not manufacture a failing production change. Verify its failure sensitivity separately.
 
 ```csharp
 private static void CheckCycles()
@@ -462,7 +476,7 @@ private static void CheckCycles()
 }
 ```
 
-- [ ] **Step 2: update the success message to `PASS: all sand-core checks` and run the runner.**
+- [x] **Step 2: update the success message to `PASS: all sand-core checks` and run the runner.**
 
 ```powershell
 dotnet run --project games/sand-sandbox/checks/SandCoreChecks.csproj -c Release
@@ -476,8 +490,8 @@ cycles,transferred_g,initial_g,final_g,error_g
 PASS: all sand-core checks
 ```
 
-- [ ] **Step 3: demonstrate that duplication is detected.** Temporarily remove `source.Debit(grams);` in `SandTransfer.Move`, rerun, and expect a nonzero exit from an exact-total/source check. Restore the line and rerun to a clean pass. Do not commit the mutation. This is a check of the oracle, not a physical simulation result.
-- [ ] **Step 4: create the README with this content.**
+- [x] **Step 3: demonstrate that duplication is detected.** Temporarily remove `source.Debit(grams);` in `SandTransfer.Move`, rerun, and expect a nonzero exit from an exact-total/source check. Restore the line and rerun to a clean pass. Do not commit the mutation. This is a check of the oracle, not a physical simulation result.
+- [x] **Step 4: create the README with this content.**
 
 ```markdown
 # James's Sand Yard — reference core
@@ -505,7 +519,7 @@ Planning: ../../docs/sand-sandbox/DESIGN.md
 Roadmap: ../../docs/sand-sandbox/ROADMAP.md
 ```
 
-- [ ] **Step 5: record implementation validation, review, and commit.** Add the actual run date, SDK, commit context and observed command result to the README. Do not copy a planning-time scratch check as if it were a completed source milestone. Review for signed/unsigned overflow, failed-operation mutation, and any public mutation bypass.
+- [x] **Step 5: record implementation validation, review, and commit.** Add the actual run date, SDK, commit context and observed command result to the README. Do not copy a planning-time scratch check as if it were a completed source milestone. Review for signed/unsigned overflow, failed-operation mutation, and any public mutation bypass.
 
 ```powershell
 git add -- games/sand-sandbox/checks/Program.cs games/sand-sandbox/README.md
@@ -514,7 +528,7 @@ git diff --cached --stat
 git commit -m "test(sand): verify repeated material transfers"
 ```
 
-- [ ] **Step 6: inspect the new game's complete diff and the remote before a normal push.** `git status --short`, `git log -3 --oneline`, and `git ls-remote origin refs/heads/main` establish what will be shared. Push only if the commit series contains this task's work and the push is fast-forward; otherwise reconcile the task without stashing, reverting or committing the other game's work. Do not dispatch Pages.
+- [x] **Step 6: inspect the new game's complete diff and the remote before a normal push.** `git status --short`, `git log -3 --oneline`, and `git ls-remote origin refs/heads/main` establish what will be shared. Push only if the commit series contains this task's work and the push is fast-forward; otherwise reconcile the task without stashing, reverting or committing the other game's work. Do not dispatch Pages.
 
 ## P0B handoff: native feasibility comes next
 
@@ -536,4 +550,20 @@ The five C# blocks and the project XML were extracted into ignored `.tmp/sand-co
 
 Relative links across the six planning documents were checked. An independent review checked requirements, scope boundaries and repository isolation; its competing-budget/latency finding was fixed by making the design's native gate table authoritative.
 
-This validates the code examples in a planning document. No implementation files were added under `games/`, no Unity project was created, and no iPad/native/thermal/touch test was run. The implementation checkboxes correctly remain unchecked.
+That earlier check validated planning examples only. At that point no implementation files had been added under `games/` and the checkboxes were unchecked. The subsequent approved implementation is tracked by the checkboxes above and the source README. No iPad/native/thermal/touch result follows from either accounting check.
+
+## Implementation record — 2026-09-22
+
+After parent approval, source was implemented on `main` in three scoped commits:
+
+- `cc03dfe`: bounded loads and exact transfers.
+- `fa6ec33`: reference terrain, overflow rejection and conservative settling.
+- `2f1483d`: repeated-cycle check and runnable README.
+
+All three tasks passed independent specification and code-quality review. The controller repeated the complete Release check from the actual source with SDK 10.0.401: exit 0, `100,50000,64000,64000,0`, `PASS: all sand-core checks`. Missing-capacity-clamp, disabled-settling and missing-debit mutations each caused the expected failure; each mutation was restored before committing.
+
+The terrain review found precision loss when two large integer masses were converted to doubles before subtraction. The regression reproduced an incorrect 256 g move instead of 188 g. The fix retains integer mass differences and rounds only the geometric slope allowance, respecting the two-gram bound; the regression and existing checks then passed. Decision: use this exact integer exchange for the reference oracle. If that decision were wrong, large valid totals could silently settle incorrectly; the focused boundary regression guards this risk.
+
+Execution used separate implementers and an independent reviewer. Task 2 fell back to controller implementation after two agent-capacity errors; it retained independent review and a fix/review cycle. No finding was deferred. Final whole-milestone review approved the complete source series with no findings. A normal push succeeded, and a remote read confirmed main at 2f1483ddce8bdf85d671307514d19b0b5ee9261b. These commit IDs record the source milestone; later documentation commits can advance main.
+
+The prior Monster Skyway edits remained outside this commit series. No Pages workflow was dispatched. P0B still needs Unity account activation, the target iPad details, and a macOS/Xcode route before an empty signed device build can be demonstrated.

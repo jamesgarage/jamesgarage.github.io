@@ -1,6 +1,6 @@
 # James's Sand Yard — proposed game design
 
-Date: 2026-09-22. Working title; James can name the game. Status: researched design ready for family review. No native game or iPad performance result exists yet.
+Date: 2026-09-22. Working title; James can name the game. Status: design approved by the parent in this conversation; implementation started. No native game or iPad performance result exists yet.
 
 ## The experience
 
@@ -22,7 +22,7 @@ The reason to repeat an action should be the action itself: a clean scoop, the f
 | Controls | Landscape first, finger input sufficient, no reading or multi-button coordination needed to begin. |
 | Initial play | Offline, single player, immediate access to the sand and core vehicles. |
 | GitHub | Existing `jamesgarage/jamesgarage.github.io` is confirmed by its local remote and a successful remote read. |
-| Source location | Propose `games/sand-sandbox/` in that repository; isolate its build from Monster Skyway. A future extraction to its own repo can preserve history. |
+| Source location | `games/sand-sandbox/` in that repository; its build is isolated from Monster Skyway. A future extraction to its own repo can preserve history. |
 
 The [engine research](ENGINE-RESEARCH.md), [sand research](SAND-RESEARCH.md), and [middleware comparison](SOLVER-OPTIONS.md) distinguish verified capabilities from these engineering decisions. Unity is provisional; no source establishes that the complete vision already runs at our desired fidelity on an iPad. Obi's granular mode is a candidate for the active-sand experiment if a license is available; no paid dependency is selected.
 
@@ -120,10 +120,10 @@ The [first implementation plan](../../.references/plans/2026-09-22-james-sandbox
 
 The [roadmap](ROADMAP.md) covers P0B native feasibility, the phase 1 game, and phase 2. Each downstream subsystem gets a detailed implementation plan after its prerequisite interface/benchmark is real. This avoids pretending an unmeasured research problem has already been solved in a giant fixed plan.
 
-## Decisions needed for execution
+## Execution inputs
 
 - Exact iPad model/OS and Mac or other legitimate macOS build access.
 - Dry loose sand first versus making cohesive sand the primary research target.
-- Review of this proposed native Unity route and phase order.
+- The parent approved the proposed native Unity route and phase order on 2026-09-22. This approval covers beginning implementation; it does not certify device performance or authorize paid asset purchases.
 
 No engine, asset package, membership, or cloud build purchase has been made. No app, TestFlight build, or website deployment has been performed.
