@@ -40,12 +40,76 @@ internal static class Program
         Equal(120, source.Grams + destination.Grams, "rejections did not mutate");
     }
 
+    private static void CheckTerrain()
+    {
+        var field = new SandField(9, 9, 0.125, 1600, 0);
+        var pile = new Load(64000, 64000);
+        Equal(64000, field.Deposit(4, 4, pile, 64000), "seed pile");
+        Equal(0, pile.Grams, "seed source emptied");
+        Require(Math.Abs(field.HeightAt(4, 4) - 2.56) < 1e-10, "mass to height units");
+        var bucket = new Load(500);
+        Equal(500, field.Scoop(4, 4, bucket, 1000), "bounded scoop");
+        Equal(63500, field.TotalGrams, "terrain debited");
+        Equal(0, field.Scoop(4, 4, bucket, 1), "full bucket");
+        Equal(500, field.Deposit(4, 4, bucket, 1000), "bounded deposit");
+        Equal(0, field.Deposit(4, 4, bucket, 1000), "empty deposit");
+        Reject<ArgumentOutOfRangeException>(() => field.Scoop(4, 4, bucket, -1));
+        Reject<ArgumentOutOfRangeException>(() => field.Deposit(4, 4, bucket, -1));
+        Reject<ArgumentOutOfRangeException>(() => field.Scoop(-1, 0, bucket, 1));
+        Reject<ArgumentOutOfRangeException>(() => field.Relax(double.NaN));
+        Reject<ArgumentOutOfRangeException>(() => field.Relax(89));
+        Reject<ArgumentOutOfRangeException>(() => new SandField(0, 1, 1, 1600, 0));
+        Reject<ArgumentOutOfRangeException>(() => new SandField(1, 1, 0, 1600, 0));
+        Reject<ArgumentOutOfRangeException>(() => new SandField(1, 1, 1, double.PositiveInfinity, 0));
+        Reject<OverflowException>(() => new SandField(2, 1, 1, 1600, long.MaxValue));
+        Equal(64000, field.TotalGrams, "rejections did not change terrain");
+
+        var full = new SandField(1, 1, 1, 1600, long.MaxValue);
+        var extra = new Load(1, 1);
+        Reject<OverflowException>(() => full.Deposit(0, 0, extra, 1));
+        Equal(1, extra.Grams, "overflow preserves source");
+        Equal(long.MaxValue, full.MassAt(0, 0), "overflow preserves cell");
+
+        const long largeMass = 4611686018427382904;
+        var large = new SandField(2, 1, 1, 1600, largeMass);
+        var removed = new Load(377);
+        Equal(377, large.Scoop(1, 0, removed, 377), "large-mass scoop");
+        Equal(188, large.Relax(0), "large-mass exact half difference");
+        Equal(1, large.MassAt(0, 0) - large.MassAt(1, 0), "large-mass rounding bound");
+        Equal(0, large.Relax(0), "large-mass settled");
+        Equal(largeMass * 2 - 377, large.TotalGrams, "large-mass conservation");
+
+        for (int sweep = 0; sweep < 5000; sweep++)
+            if (field.Relax(31) == 0) break;
+        long sum = 0;
+        double maxDifference = 0;
+        for (int z = 0; z < field.Depth; z++)
+        for (int x = 0; x < field.Width; x++)
+        {
+            Require(field.MassAt(x, z) >= 0, "nonnegative cell");
+            sum += field.MassAt(x, z);
+            if (x + 1 < field.Width)
+                maxDifference = Math.Max(maxDifference,
+                    Math.Abs(field.HeightAt(x, z) - field.HeightAt(x + 1, z)));
+            if (z + 1 < field.Depth)
+                maxDifference = Math.Max(maxDifference,
+                    Math.Abs(field.HeightAt(x, z) - field.HeightAt(x, z + 1)));
+        }
+        Equal(64000, sum, "settling preserves mass");
+        Equal(sum, field.TotalGrams, "counter matches cells");
+        double allowed = Math.Tan(31 * Math.PI / 180) * field.CellSideMetres
+            + 2.0 / field.GramsPerHeightMetre;
+        Require(maxDifference <= allowed + 1e-10, "pile reaches repose bound");
+        Require(field.MassAt(4, 4) < 64000, "pile actually spreads");
+    }
+
     private static int Main()
     {
         try
         {
             CheckTransfers();
-            Console.WriteLine("PASS: transfer checks");
+            CheckTerrain();
+            Console.WriteLine("PASS: transfer and terrain checks");
             return 0;
         }
         catch (Exception error)
