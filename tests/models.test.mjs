@@ -43,6 +43,13 @@ for (const spec of TRUCKS) test(`${spec.name} preserves animation and exhaust co
       wheel.rotation.x = 1.2;
       wheel.position.x += Math.sign(wheel.position.x) * .7;
     });
+    const radio = truck.body.getObjectByName('monster-truck-radio');
+    assert.ok(radio, 'Truck keeps the Monster Truck Radio detail');
+    truck.group.scale.setScalar(1);
+    const radioBounds = visibleBounds(radio);
+    assert.ok(radioBounds.max.y > 3.45 && radioBounds.max.y < 4.15, 'Radio stays mounted high on the truck without exceeding the roof envelope');
+    assert.ok(radioBounds.getSize(new THREE.Vector3()).x > .5 && radioBounds.getSize(new THREE.Vector3()).z > .2, 'Radio remains a visible accessory');
+    truck.group.scale.setScalar(spec.scale);
     truck.body.position.y = 1.8;
     truck.arms.forEach((arm, index) => {
       assert.equal(arm.parent, truck.body); arm.visible = true; arm.rotation.z = (index === 0 ? -1 : 1) * .85;
