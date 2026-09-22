@@ -1,0 +1,8 @@
+checks/bin/
+checks/obj/
+unity/Library/
+unity/Temp/
+unity/Obj/
+unity/Logs/
+unity/UserSettings/
+unity/Builds/
