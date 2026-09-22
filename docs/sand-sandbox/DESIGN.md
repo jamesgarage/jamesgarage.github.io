@@ -24,7 +24,7 @@ The reason to repeat an action should be the action itself: a clean scoop, the f
 | GitHub | Existing `jamesgarage/jamesgarage.github.io` is confirmed by its local remote and a successful remote read. |
 | Source location | Propose `games/sand-sandbox/` in that repository; isolate its build from Monster Skyway. A future extraction to its own repo can preserve history. |
 
-The [engine research](ENGINE-RESEARCH.md) and [sand research](SAND-RESEARCH.md) distinguish verified capabilities from these engineering decisions. Unity is provisional; no source establishes that the complete vision already runs at our desired fidelity on an iPad.
+The [engine research](ENGINE-RESEARCH.md), [sand research](SAND-RESEARCH.md), and [middleware comparison](SOLVER-OPTIONS.md) distinguish verified capabilities from these engineering decisions. Unity is provisional; no source establishes that the complete vision already runs at our desired fidelity on an iPad. Obi's granular mode is a candidate for the active-sand experiment if a license is available; no paid dependency is selected.
 
 ## Phase 1 scope
 
