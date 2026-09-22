@@ -103,13 +103,46 @@ internal static class Program
         Require(field.MassAt(4, 4) < 64000, "pile actually spreads");
     }
 
+    private static void CheckCycles()
+    {
+        var ground = new SandField(8, 8, 0.125, 1600, 1000);
+        var bucket = new Load(500);
+        var flow = new Load(500);
+        var bed = new Load(2000);
+        long initial = ground.TotalGrams;
+        long movedTotal = 0;
+        Action checkTotal = () => Equal(initial,
+            ground.TotalGrams + bucket.Grams + flow.Grams + bed.Grams, "cycle conservation");
+        for (int cycle = 0; cycle < 100; cycle++)
+        {
+            int x = cycle % 8;
+            int z = (cycle / 8) % 8;
+            Equal(500, ground.Scoop(x, z, bucket, 500), "scoop");
+            checkTotal();
+            Equal(500, SandTransfer.Move(bucket, flow, 500), "bucket to flow");
+            checkTotal();
+            Equal(500, SandTransfer.Move(flow, bed, 500), "flow to bed");
+            checkTotal();
+            Equal(500, SandTransfer.Move(bed, flow, 500), "bed to flow");
+            checkTotal();
+            Equal(500, ground.Deposit((x + 1) % 8, z, flow, 500), "flow to ground");
+            checkTotal();
+            movedTotal += 500;
+        }
+        Equal(0, bucket.Grams + flow.Grams + bed.Grams, "containers empty");
+        Equal(initial, ground.TotalGrams, "final ground total");
+        Console.WriteLine("cycles,transferred_g,initial_g,final_g,error_g");
+        Console.WriteLine("100," + movedTotal + "," + initial + "," + ground.TotalGrams + ",0");
+    }
+
     private static int Main()
     {
         try
         {
             CheckTransfers();
             CheckTerrain();
-            Console.WriteLine("PASS: transfer and terrain checks");
+            CheckCycles();
+            Console.WriteLine("PASS: all sand-core checks");
             return 0;
         }
         catch (Exception error)
