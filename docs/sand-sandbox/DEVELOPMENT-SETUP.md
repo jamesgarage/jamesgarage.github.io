@@ -2,6 +2,8 @@
 
 Status checked 2026-09-22. The game design and P0A plan are approved. This document records the next native build prerequisites; it is not evidence of an iPad build or performance result.
 
+**Current route:** the parent confirmed an **M2 MacBook Air** and **iPad Pro 12.9-inch, third generation**, and agreed to move development to the Mac. Follow [MAC-HANDOFF.md](MAC-HANDOFF.md). Installed macOS/iPadOS and Mac tools remain unverified. The Windows findings below are historical setup evidence; completing the Windows editor installation is no longer a prerequisite.
+
 ## Confirmed tools
 
 - Windows 11 x64 workstation, 32 GB class memory, discrete NVIDIA GPU and sufficient disk space for the editor.
@@ -33,7 +35,7 @@ The verified dry run includes only the x86_64 editor and `ios` module, approxima
 
 **Observed install result:** the editor installer downloaded, matched the Unity release feed's checksum, and launched at the intended user-writable location. It returned a generic failure; the CLI reported `INSTALL_FAILED: 2 item(s) failed to install`. The iOS module could not install because its parent editor failed. `unity editors --installed` remained empty. The exact installer cause is unknown; this is not evidence of a license or Windows policy rejection. The CLI's `--no-elevate` flag skips its helper's elevation but does not guarantee the editor installer will never request elevation.
 
-**Next action:** use Unity Hub interactively to install the pinned editor and iOS Build Support, so any Windows prompt or installer error is visible. Record that result before retrying automation. The parent has been asked to perform this step and confirm Unity sign-in/license activation. No security controls were changed and no elevated retry was made.
+**Windows fallback only:** if Windows authoring is wanted later, use Unity Hub interactively to expose any installer prompt or error before retrying automation. Native work now proceeds on the confirmed Mac. No security controls were changed and no elevated retry was made.
 
 Do not select the optional Visual Studio installation for the initial editor/C# checks. A later Windows IL2CPP build would need its own C++/Windows SDK toolchain.
 
@@ -42,8 +44,8 @@ Do not select the optional Visual Studio installation for the initial editor/C# 
 Record these facts before advancing from setup to the sand simulation experiment:
 
 1. Unity editor launches with a valid license, and the exact version is captured.
-2. James's iPad model and iPadOS version are identified.
-3. A Mac with compatible Xcode, or an explicitly arranged macOS build service, is available.
+2. The confirmed iPad Pro 12.9-inch third generation's installed iPadOS version is recorded.
+3. The confirmed M2 MacBook Air's macOS and compatible full Xcode installation are verified.
 4. An empty URP project at `games/sand-sandbox/unity/` imports successfully. Commit the editor-generated project settings, package lock and `.meta` files. The existing `Assets/SandYard/Core/` source folder alone is not a Unity project.
 5. The empty project builds, signs, installs and launches on the physical iPad. Record editor/package/Xcode/SDK/device versions and source commit.
 

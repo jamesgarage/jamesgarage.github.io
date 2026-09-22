@@ -17,8 +17,8 @@ The reason to repeat an action should be the action itself: a clean scoop, the f
 | Sand | Dry sand first. A cohesive kinetic-style material is a separately evaluated material, not a “stickiness” slider promised to work. |
 | First experiment | A 4 m × 4 m tray, movable bucket, movable/tilting truck bed, finger tool, fixed camera, and measurement tools. |
 | First large playground | Proposed 64 m × 64 m construction site with bounded active simulation; size is negotiable after device evidence. |
-| Device | James's exact iPad and iPadOS version have been requested and remain unknown. No supported-device claim yet. |
-| Build access | Windows workstation confirmed. A Mac/Xcode build and physical iPad test route still needs identifying. |
+| Device | Parent confirmed iPad Pro 12.9-inch, third generation (A12X). Use it as the first performance/feel target; installed iPadOS and actual performance remain unverified. |
+| Build access | Parent confirmed an M2 MacBook Air and is moving native development there. Inspect its macOS, Unity and Xcode; no signed device build has run yet. |
 | Controls | Landscape first, finger input sufficient, no reading or multi-button coordination needed to begin. |
 | Initial play | Offline, single player, immediate access to the sand and core vehicles. |
 | GitHub | Existing `jamesgarage/jamesgarage.github.io` is confirmed by its local remote and a successful remote read. |
@@ -122,7 +122,7 @@ The [roadmap](ROADMAP.md) covers P0B native feasibility, the phase 1 game, and p
 
 ## Execution inputs
 
-- Exact iPad model/OS and Mac or other legitimate macOS build access.
+- iPad Pro 12.9-inch third generation and M2 MacBook Air confirmed. Remaining inputs: installed iPadOS/macOS and verified Unity/Xcode setup; see the [Mac handoff](MAC-HANDOFF.md).
 - Dry loose sand first versus making cohesive sand the primary research target.
 - The parent approved the proposed native Unity route and phase order on 2026-09-22. This approval covers beginning implementation; it does not certify device performance or authorize paid asset purchases.
 

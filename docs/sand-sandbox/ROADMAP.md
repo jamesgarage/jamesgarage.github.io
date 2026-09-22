@@ -70,7 +70,7 @@ GitHub Pages can host a project page and an intentionally limited browser experi
 ## Resources and decisions
 
 - Start with existing tools and original primitive geometry. No asset, engine plugin, cloud service or Apple membership purchase is required for the planning/accounting stage.
-- A suitable Mac or explicitly arranged macOS build service is needed for the proposed Unity iOS route. An actual target iPad remains necessary even with cloud compilation.
+- The parent confirmed an M2 MacBook Air and an iPad Pro 12.9-inch third generation. Continue via the [Mac handoff](MAC-HANDOFF.md); verify the installed operating systems and toolchain before the first signed device build.
 - A free Apple Account supports limited personal device testing; Apple Developer Program membership supports distribution and is currently US$99/year. Plan family beta distribution after the native experiment succeeds. [Apple membership](https://developer.apple.com/support/compare-memberships/)
 - Check engine/license eligibility before commercial release and before buying packages. Do not assume enterprise physics middleware runs on iPad.
 - The first major decision is **can this sand feel right at sustained device speed?** The world size and later arena are downstream of that evidence.
